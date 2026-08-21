@@ -1,0 +1,15 @@
+---
+description: 遵循项目根 .editorconfig 与 .clang-format（C/C++）
+alwaysApply: true
+---
+
+# 代码格式配置遵循规则
+
+**Frontmatter**：`alwaysApply: true` 时 **`description` 不参与是否注入**（见 Cursor Rules 文档）；保留简短 `description` 便于在 `.cursor/rules/` 中浏览。
+
+- 在本项目中新增或修改代码时，必须遵循项目根目录的 `.editorconfig`。
+- 对 C/C++ 文件（如 `.c`、`.cc`、`.cpp`、`.h`、`.hpp`），必须遵循项目根目录的 `.clang-format`。
+- 若两者都涉及同一格式细节：
+  - 通用编辑行为（缩进、行尾空白等）优先按 `.editorconfig`；
+  - C/C++ 专项排版（括号、换行、空格风格等）按 `.clang-format`。
+- 不要在未说明原因的情况下引入与上述配置冲突的手工格式。

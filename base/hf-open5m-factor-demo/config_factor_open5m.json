@@ -1,0 +1,49 @@
+{
+    "factors_config": {
+        "ev": "./test/ev_data/local/factor_ev",
+        "ev_code_file": "[DATE]/mengmai/lab200005_codelist.h5",
+        "send_times": {
+            "start": 93001,
+            "end": 93419,
+            "interval": 1,
+            "add": [
+                92700
+            ]
+        },
+        "factor_sets": [
+            {
+                "name": "demofw00",
+                "enabled": true
+            }
+        ],
+        "save_info": {
+            "dir": "./test/factor_data/[DATE]/open5m_factor_demo_local",
+            "save_stats": true,
+            "save_times": [
+                92700,
+                100000,
+                103000,
+                110000,
+                113000,
+                133000,
+                140000,
+                143000
+            ]
+        },
+        "thread_num": 8
+    },
+    "skip_missed_time_triggers": false,
+    "remark0": "使用时请参照本文件范式，按实际需求修改配置参数；所有 remark 字段仅用于解释各配置项含义，可整段删除，不影响程序解析与运行",
+    "remark1": "所有时间戳的表达精度要统一,要么都是精度为秒(HHMMSS),要么都是精度为毫秒(HHMMSSmmm)",
+    "remark2": "如果时间戳的表达精度为毫秒(HHMMSSmmm),那么send_times中的interval的单位也会被解析为毫秒,interval=1000就代表1000毫秒",
+    "remark3": "如果时间戳的表达精度为秒(HHMMSS),那么send_times中的interval的单位也会被解析为秒,interval=1就代表1秒",
+    "remark4": "如果send_times中设置了add,那么add中的时间戳会插入到send_times中",
+    "remark5": "如果send_times中设置了skip,那么skip中的时间戳会从send_times中删除",
+    "remark6": "路径可以包含[DATE]字段,会自动用trading_date填充解析",
+    "remark7": "本地版设置EV时,ev参数为ev文件夹路径,里面需要包含解压好了的ev文件,详见docs/ev_management.md",
+    "remark8": "如果没有设置ev,缺省默认为/mnt/beegfs_dev/storage_r/706_wgh/app_working_dir/data/stock_open/ev_v20250605",
+    "remark9": "factors_config.ev_code_file: 在EV中读取股票代码的文件名,缺省默认 [DATE]/mengmai/lab200005_codelist.h5",
+    "remark10": "程序会尝试在ev路径下寻找lab200005_codelist.h5加载股票代码,找不到的话会尝试/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata/[DATE]/per1day",
+    "remark11": "skip_missed_time_triggers用于因子引擎：为true时，跳过所有因行情延迟而错过的触发时间戳；为false时复制上一次的值；默认false",
+    "remark12": "save_info.save_stats: 缺省默认值true，是否将详细耗时统计落盘保存"
+}

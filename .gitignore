@@ -1,0 +1,42 @@
+## Generated build and runtime output
+base/**/build/
+base/**/build*/
+base/**/release/
+base/**/.clangd-build/
+base/**/slurm/
+base/**/logs/
+base/**/output/
+base/**/runtime_generated/
+base/**/tmp/
+base/**/__pycache__/
+base/**/.pytest_cache/
+
+## Large binary and market data artifacts
+**/*.h5
+**/*.hdf5
+**/*.arrow
+**/*.onnx
+**/*.so
+**/*.a
+**/*.o
+**/*.pdf
+base/**/test/ev_data/live/factor_ev_files_*.csv
+base/**/test/ev_data/local/factor_ev/**
+
+## Top-level data and research caches are local inputs by default
+data/**
+research/**
+
+## Local tooling and secrets
+*.log
+*.out
+*.err
+.env
+.env.*
+*.pyc
+
+## Migration scratch
+.migration/
+
+## Nested repository metadata is migration source, not top-level content
+base/hf-open5m-factor-demo/.git/

@@ -1,0 +1,70 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug-factor",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/app_factor/main",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build-debug", // 如果想跳过编译，可以注释掉这一行
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Debug-model",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/app_model/main",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build-debug", // 如果想跳过编译，可以注释掉这一行
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "Debug-live",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/bin/python3.8",
+            "args": [
+                "${workspaceFolder}/app_live/run_strategy.py"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/app_live",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build-debug", // 若想跳过编译可注释本行（需已生成 build/app_live/libstrategy.so）
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
+    ]
+}

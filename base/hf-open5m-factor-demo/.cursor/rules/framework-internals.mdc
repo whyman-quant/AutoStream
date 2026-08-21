@@ -1,0 +1,14 @@
+---
+description: Agent 补充入口：README 边界、AGENTS、何时读 agent-project-guide 与格式规则
+alwaysApply: true
+---
+
+# 一体化框架（Agent 补充上下文）
+
+**Frontmatter**：`alwaysApply: true` 时，官方说明 **`description` 与 `globs` 不参与是否注入**（始终附加）；下文与 `description` 仍便于人类在仓库中速览。
+
+- **人类可读总览（3 接入 × 3 策略模式）**：根目录 **`README.md`**（修改时遵守 **`.cursor/rules/readme-documentation-scope.mdc`**：使用者向；不写 CMake/头文件级实现细节；**不暗示另有统一母工程或分发/拷贝来源**，见该文件「仓库形态」小节）。
+- **Agent 协作约定（必读顺序、产物路径、禁止项）**：根目录 **`AGENTS.md`**。
+- **因子/模型业务开发**（写具体因子、模型逻辑）：以**当前打开仓库根目录 `README.md`** 为准。**分发到各子项目时不携带 `AGENTS.md` 与 `.cursor/`**，使用者向说明须在 **README**（及 **`docs/`**）内自洽；维护区才有 **`AGENTS.md`** 与 **`.cursor/`**。
+- 涉及 **Makefile、CMake、`STRATEGY_SESSION_MODE`、app_live / app_factor / app_model 差异、CGP 九项目拷贝关系** 时，阅读 **`.cursor/rules/agent-project-guide.mdc`**（可在对话里 @ 引用）。
+- 代码格式遵循 **`format-config-follow.mdc`**（`.editorconfig` / `.clang-format`）。

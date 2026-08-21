@@ -1,0 +1,65 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "chmod-clangd-script",
+            "type": "shell",
+            "command": "chmod",
+            "args": [
+                "+x",
+                "${workspaceFolder}/.tools/clangd/update_compdb.sh"
+            ],
+            "presentation": {
+                "reveal": "never"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "refresh-clangd-compile-db",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "${workspaceFolder}/.tools/clangd/update_compdb.sh"
+            ],
+            "dependsOn": [
+                "chmod-clangd-script"
+            ],
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build-debug",
+            "type": "shell",
+            "command": "make clean && make build DEBUG=1",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "build-release",
+            "type": "shell",
+            "command": "make clean && make build",
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make clean",
+            "group": "build",
+            "presentation": {
+                "reveal": "always"
+            }
+        }
+    ]
+}

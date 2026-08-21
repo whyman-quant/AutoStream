@@ -1,0 +1,58 @@
+# clang-format 命令行示例（在仓库根目录执行）：
+#   clang-format -i app_live/config/config_parser.cc
+#   clang-format -i app_live/config/config_parser.h
+#   # 仅预览不落盘：
+#   clang-format app_live/config/config_parser.cc
+#
+# IDE（Cursor/VSCode）使用说明：
+# 1) 安装扩展：xaver.clang-format（Clang-Format）
+# 2) 确认 PATH 可找到 clang-format（建议 ~/.local/bin/clang-format）
+# 3) 建议在 settings.json 配置：
+#    "editor.formatOnSave": true
+#    "[cpp]": { "editor.defaultFormatter": "xaver.clang-format" }
+# 4) 该扩展会自动读取仓库根目录的 .clang-format 规则进行格式化
+#
+# 安装更高版本或指定版本（用户目录，无需 root）：
+#   python3 -m pip install --user --upgrade --only-binary=:all: clang-format
+#   python3 -m pip install --user --upgrade --only-binary=:all: "clang-format==18.1.8"
+#   ~/.local/bin/clang-format --version
+#
+# 注册到 ~/.bashrc（让用户目录版本优先）：
+#   export PATH="$HOME/.local/bin:$PATH"
+#   source ~/.bashrc
+
+# C++ 版本
+Standard: Cpp11
+
+# 以 Google 风格为基准，再叠加本项目自定义项
+BasedOnStyle: Google
+
+# Google 预设里 DerivePointerAlignment 为 true：clang-format 会按上下文推断 * / & 靠类型还是靠变量，
+# 常见结果为 `const auto &name`（类型与 & 之间有空格，& 紧贴变量名）。若希望始终与 PointerAlignment: Left
+# 一致（声明写成 `const auto& name`、`char* p`），须关闭推断。
+DerivePointerAlignment: false
+
+# 基本缩进设置
+IndentWidth: 4   # 设置基本缩进为4个空格
+# IndentWidth: 2   # Google 原生习惯
+TabWidth: 4      # 设置tab宽度为4
+# ForIndentation：仅「行首」缩进用 Tab；行内（如 `#endif  // MACRO`、续行对齐）用空格，
+# 避免保存时 clang-format 把 `#endif` 与 `//` 之间的两个空格收成 Tab。
+# Always 会把行内连续空白也换成 Tab，易出现「两个空格变 Tab」的困扰。
+UseTab: ForIndentation
+# UseTab: Always   # 全用 Tab（含行内），易改写 `#endif  //` 等处
+# UseTab: Never    # Google 原生习惯
+
+# 基本格式设置
+ColumnLimit: 120  # 行宽限制
+MaxEmptyLinesToKeep: 1  # 最多保留1个空行
+BreakBeforeBraces: Attach  # 大括号附加到前面的代码
+SpaceBeforeAssignmentOperators: true  # 赋值运算符前加空格
+SpaceAfterControlStatementKeyword: true  # 控制语句关键字后加空格
+
+# 缩进规则
+IndentCaseLabels: true  # 缩进case标签
+NamespaceIndentation: None  # 命名空间不额外缩进
+AccessModifierOffset: -4  # public/private/protected 顶格，不随成员缩进
+AlignAfterOpenBracket: DontAlign  # 括号换行不做参数对齐，只使用续行缩进
+ContinuationIndentWidth: 4  # 续行缩进为4

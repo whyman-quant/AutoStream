@@ -1,0 +1,31 @@
+{
+    "factors_config": {
+        "ev_code_file": "[DATE]/per1day/lab200005_codelist.h5",
+        "send_times": {
+            "start": 93000,
+            "end": 150000,
+            "interval": 1800,
+            "add": [92700]
+        },
+        "factor_sets": [
+            {
+                "name": "demofw00",
+                "enabled": true
+            }
+        ],
+        "save_info": {
+            "dir": "/home/fangwei/mnt-ssd/AutoStream/data/factor/[DATE]",
+            "save_times": [
+                92700,
+                100000,
+                103000,
+                110000,
+                113000,
+                133000,
+                140000,
+                143000
+            ]
+        }
+    },
+    "skip_empty_time": false
+}

@@ -1,0 +1,121 @@
+---
+description: Makefile、CMakeLists、STRATEGY_SESSION_MODE、CGP（../cgp/config）、app_* 集成与分发说明；改构建或对齐子仓库时查阅
+alwaysApply: false
+---
+
+# 一体化框架工程说明（供 Cursor / 维护者）
+
+**Frontmatter**：`alwaysApply: false` 且**未写 `globs`** 时，对应官方 **「Apply Intelligently」**——由 Agent 根据 `description` 判断是否拉入；若希望**只要打开 Makefile/CMake 就必定附加**，可改为填写 `globs`（多个模式用**英文逗号**分隔，见官方「Glob pattern examples」）。
+
+本文档面向在本仓库或同步后的子仓库中**改框架、改构建、排查集成**的场景。**业务背景、三种策略模式在配置与运行现象上的差异与样例配置文件名**见根目录 **`README.md`**（使用者向，边界见 **`readme-documentation-scope.mdc`**）；**Agent 协作约定**见根目录 **`AGENTS.md`**（与 **`.cursor/`** 一样，**仅维护用源码工作区存在**；**分发到各子项目时不携带**）。
+
+**README 约束提醒**：子项目读者只有 **`README.md`**、`docs/` 与源码；**勿在 README 中链接 `AGENTS.md` 或 `.cursor/`**。
+
+---
+
+## 1. 仓库定位
+
+- **一体化源码目录**：`hf-stock-cross-section-framework`（或同名路径）同时包含 `app_live`、`app_factor`、`app_model`、共享 `factors/`、`models/` 等。
+- **分发仓库**：通过上层 **`cgp/config/*.json`** 从一体化目录 **拷贝子集** 到独立目录（如 `hf-open-live-demo`、`hf-open-factor-demo`），并把**根目录 `README.md`** 一并拷贝为子仓库的 **`README.md`**（在 **`copy_task`** 中显式列出 **`"README.md"`** 即可）。
+- 分发配置位于 **策略框架仓库**下的 `cgp/config/`（相对一体化目录通常为 **`../cgp/config/`**）。示例字段：
+  - `source_base`：一体化框架根路径；
+  - `target_base`：分发目标路径；
+  - `copy_task`：拷贝列表（维护侧可含 `app_*` 子树、`factors`、`models`、`Makefile`、`CMakeLists.txt`、**`README.md`** 等；**实际分发到子项目时默认不包含** **`.cursor/`** 与 **`AGENTS.md`**，故 **`README.md` 必须自洽**）；
+  - 不再维护根目录多份 **`README_open_*` / `README_close_*` / `README_open5m_*`** 与 **`README.md` 的成对映射**；历史任务若仍写 `["README_open_live.md","README.md"]` 应改为直接拷贝 **`README.md`**。
+
+因此：**多数使用者只在子项目仓库读 README**；维护区根目录 **`README.md`** 与分发得到的 **`README.md`** 均不得依赖 **`AGENTS.md`** 或 **`.cursor/`**。**一体化根目录仅保留这一份总 README**；业务扩展说明见 **`factors/README.md`**、**`models/README.md`** 与 **`docs/`**。**编译宏与 Makefile 细节**集中在本文件以便维护者与 Agent 查阅。
+
+---
+
+## 2. 目录与组件（摘要）
+
+| 路径 | 作用 |
+|------|------|
+| `app_live/` | 平台动态库形态：`libstrategy.so`，Python `run_strategy.py` 加载；含因子引擎、模型引擎、行情与回传适配。 |
+| `app_factor/` | 本地可执行 `main`：读行情 HDF5 → 因子 → 写 HDF5。 |
+| `app_model/` | 本地可执行 `main`：读因子 HDF5 → 模型 → 写 HDF5。 |
+| `factors/` | 因子实现与注册入口。 |
+| `models/` | 模型实现与注册入口。 |
+| `docs/` | 如 `ev_management.md`（EV 配置语义）。 |
+| `sdp_handler/` | 与下游/平台交互相关代码（按拷贝任务进入分发仓库）。 |
+
+分发仓库可能**只含其中部分 `app_*`**，以实际目录为准。
+
+---
+
+## 3. 策略会话模式与编译宏 `STRATEGY_SESSION_MODE`
+
+CMake 变量 **`STRATEGY_SESSION_MODE`**：`OPEN` | `CLOSE` | `CONTINUOUS`，用于在**编译期**区分集合竞价开盘 / 集合竞价收盘 / 盘中连续竞价等分支。
+
+- **编译宏**：选定模式后会定义 **`ENABLE_STRATEGY_SESSION_MODE_*`** 之一，与引擎侧条件编译分支一致。
+- **运行时默认矩阵**：各 `app_*/data/runtime_policy.h` 中的 **`runtime_policy::StrategyMatrix`** 描述 merge、HDF5 是否按时间戳拆分、是否走连续竞价相关管线等**默认倾向**；**JSON 中已显式写出的字段仍以配置为准**（默认矩阵可被配置覆盖）。
+- **默认值推断（`Makefile`）**：根据**当前工程根目录名**是否包含 `open`、`close`、`open5m`、`continuous` 等关键字自动设置；无法匹配时多为默认 `OPEN`。
+- **显式覆盖**（在一体化目录构建时）：
+
+```bash
+make build-live STRATEGY_SESSION_MODE=CLOSE
+make build-factor STRATEGY_SESSION_MODE=CONTINUOUS
+```
+
+- 执行 **`make help`** 可查看当前解析结果、`TIME_STATS`、`NATIVE`、`DEBUG` 等变量说明。
+- 若本地 `build` 目录曾用旧变量名配置过 CMake，升级后请**删除构建目录或清理 `CMakeCache.txt`**，避免缓存中残留旧键名与 `STRATEGY_SESSION_MODE` 混用。
+
+---
+
+## 4. 构建与产物
+
+在项目根目录：
+
+```bash
+make help
+make build-live      # build/app_live/libstrategy.so
+make build-factor    # build/app_factor/main
+make build-model     # build/app_model/main
+make build           # 默认：若存在 app_live 则等同 build-live，否则 factor / model 优先级见 Makefile
+```
+
+产物目录默认 **`build/`**（可用 `BUILD_DIR=` 覆盖）。
+
+常用变量：`TIME_STATS=ON/OFF`、`NATIVE=ON/OFF`、`DEBUG=1`、`CMAKE_CXX_STANDARD=`、`DISABLE_AVX512=1` 等。
+
+**ONNX Runtime（全局统一版本）**：
+
+- Makefile / CMake 变量 **`ONNX_RUNTIME`**，默认 **`gpu-1.19.2`**；解析为 `models/_third_party_libs/onnxruntime-linux-x64-gpu-<version>`。
+- 所有 `models/*` 下 ONNX 模型**共用同一版本**，禁止单模型目录单独改 ORT 包；需兼容 1.11 与 1.17+ I/O 名称 API 的 ONNX 模型源码按需 `#include` `models/_share/onnx_compatibility_utils.h`（纯头文件，**不必**链接 `models_share`）。
+- **`models_share` 链接**：各模型 CMakeLists「可选 C」自行决定，仅在使用 `models::hdf5_utils` 时 PRIVATE 链接；与 ONNX / `onnx_compatibility_utils.h` 无关。
+- CentOS7 本机（glibc 2.17）：默认 `gpu-1.19.2` **链接阶段**需 glibc≥2.27；本地开发验证可 `ONNX_RUNTIME=gpu-1.11.1`。ORT 1.17+ 头文件需 **g++≥7**：编译前在 shell 中切换环境（如 `scl enable devtoolset-11`），再 `make build-model`。
+
+```bash
+make build-model ONNX_RUNTIME=gpu-1.11.1
+# 默认 gpu-1.19.2 时：先 scl enable devtoolset-11，再 make build-model
+```
+
+详见 `models/_third_party_libs/README.md`。
+
+---
+
+## 5. 运行（一体化目录）
+
+| 形态 | 入口 |
+|------|------|
+| Live | `cd app_live && python3.8 run_strategy.py`（参数见脚本 `--help`；`runtime_root` / `SIMU_RUNTIME_ROOT`） |
+| 因子 | `./build/app_factor/main date=... thread_num=... config_file=...`（`--help` / `--version`） |
+| 模型 | `./build/app_model/main`（同上） |
+
+分发仓库若仅含单一 `app_*`，则只需对应一种入口。
+
+---
+
+## 6. 配置与产物路径
+
+- JSON 中 **`[DATE]`** 会被替换为交易日。
+- **`send_times`** 可能是数组或对象（`start`/`end`/`interval`/`add`）；时间粒度需对照 **`config_parser`** 与仓库内 **`config_*.json`** 样例。
+- Live 运行产物常在 **`runtime_root`** 下（如 `output/`、`logs/` 等，以实际代码为准）。
+- 耗时统计 CSV（如 `factor_time_stats*.csv`、`model_time_stats*.csv`）由编译开关与配置共同决定。
+
+---
+
+## 7. 修改本文档时的注意点
+
+- 与 **`Makefile` / 顶层 `CMakeLists.txt`** 不一致时，应优先改代码或改本文档，避免误导 Agent。
+- 若 CGP 拷贝列表或分发范围变更，需在本文档第 1 节同步说明。**当前约定：分发到各子项目不携带 `.cursor/` 与 `AGENTS.md`。**

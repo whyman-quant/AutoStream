@@ -1,0 +1,39 @@
+# =============================================================================
+# EditorConfig — 编辑器行为约定（缩进、行尾空白等）
+#
+# 【是否会「自动整理整个项目」？】
+#   不会单独扫盘。本文件只声明规则；是否生效取决于编辑器是否支持 EditorConfig，
+#   以及你是否开启「保存时格式化 / Trim Trailing Whitespace」等选项。
+#
+# 【典型用法】
+#   • Cursor / VS Code：安装并启用「EditorConfig for VS Code」扩展后，新建/保存时会按本节
+#     应用缩进风格；若同时开启 files.trimTrailingWhitespace，会与 trim_trailing_whitespace
+#     协同，按全局规则裁切行尾空白（含 *.md：换行用空行即可，见下方说明）。
+#   • 整仓库批量整理：本文件不负责调用命令；可对 C/C++ 用仓库根的 clang-format（见
+#     .clang-format 注释），其它语言用各自格式化工具或编辑器的「格式化整个文件夹」。
+#
+# 【与 .clang-format 的分工】
+#   • 此处 [*] 管「所有文件」的 tab/缩进与行尾空白。
+#   • C/C++ 的括号换行、空格 around 运算符等细规则由 .clang-format 在「执行 clang-format
+#     时」才生效；未跑 clang-format 的文件不会因此被改。
+# =============================================================================
+
+# 本文件为仓库最顶层配置，子目录勿再设 root = true 覆盖全局
+root = true
+
+# 默认：所有文件
+# Markdown：段落之间用空行分段；标题 #、列表 -、代码块等按语法自然换行，无需行尾双空格「软换行」。
+[*]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# C/C++ 文件
+[*.{c,cc,h,cpp,hpp}]
+indent_style = tab
+indent_size = 4
+
+# Python 文件
+[*.{py,pyx,pyd,ipynb}]
+indent_style = space
+indent_size = 4
