@@ -4,7 +4,7 @@
 
 ## 当前基线
 
-- 顶层仓库提交：`1783c99`
+- 顶层仓库提交：以 `git rev-parse HEAD` 为准；本次记录前基线为 `8d07a9f`
 - 计算底座来源：`base/hf-open5m-factor-demo`
 - 底层完整历史归档：`.migration/hf-open5m-factor-demo.bundle`
 - 顶层工作树：无嵌套 Git、无已跟踪 HDF5/ONNX/Arrow/模型库文件
@@ -43,7 +43,9 @@
 2. `book_imbalance` 单日技术验收；
 3. 逐列 coverage / finite / NaN / Inf / zero 检查；
 4. 评价器输入契约和 `data_missing` 终态；
-5. 单日通过后再恢复 pilot runner。
+5. 单日 8 个 checkpoint 技术验收命令；
+6. 补齐 RankIC、分组收益、累计/年化收益、波动、Sharpe、最大回撤、Calmar、换手核心指标；
+7. 单日通过后再恢复 pilot runner。
 
 暂不恢复：
 
@@ -57,3 +59,11 @@
 恢复的每个文件必须记录来源分支、来源 commit、顶层导入 commit、schema 版本、是否允许进入正式晋级和未解决的 B1–B8 断点。
 
 在没有真实收益标签和留出期成绩单之前，任何输出只能标记为 `technical_evidence_only`。
+
+## 2026-08-24 进展
+
+- `evaluations/run_campaign_technical.py` 已能扫描 20251013 的 8 个 HDF5 checkpoint，
+  当前结果为 8/8 技术通过、12/12 因子列一致；由于没有按代码/事件对齐的未来收益标签，
+  评价状态仍为 `data_missing`，`promotion_allowed=false`。
+- 可用原始行情挂载已确认：`/mnt/beegfs_npqssd`、`/mnt/beegfs_npq107`；
+  尚未确认与该 HDF5 行顺序绑定的 label/交易日收益产物，因此不把原始文件存在误报为可回测。

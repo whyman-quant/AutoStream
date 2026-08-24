@@ -5,6 +5,7 @@ import unittest
 from evaluations.factor_eval import (
     read_hdf5_factor_file,
     evaluate_columns,
+    portfolio_metrics,
     quantile_group_returns,
     rank_ic,
 )
@@ -48,6 +49,22 @@ class FactorEvalTests(unittest.TestCase):
         columns = read_hdf5_factor_file(str(path))
         self.assertEqual(len(columns), 12)
         self.assertEqual(len(next(iter(columns.values()))), 4964)
+
+    def test_portfolio_metrics_include_risk_and_drawdown(self):
+        metrics = portfolio_metrics([0.10, -0.05, 0.02], periods_per_year=3)
+        self.assertAlmostEqual(metrics["cumulative_return"], 1.10 * 0.95 * 1.02 - 1.0)
+        self.assertAlmostEqual(metrics["volatility"], 0.1061446, places=5)
+        self.assertAlmostEqual(metrics["max_drawdown"], -0.05, places=8)
+        self.assertGreater(metrics["sharpe"], 0.0)
+        self.assertGreater(metrics["calmar"], 0.0)
+
+    def test_portfolio_metrics_report_turnover_from_weights(self):
+        metrics = portfolio_metrics(
+            [0.01, 0.02],
+            weights=[[1.0, 0.0], [0.5, 0.5], [0.5, 0.5]],
+            periods_per_year=252,
+        )
+        self.assertAlmostEqual(metrics["average_turnover"], 0.25)
 
 
 if __name__ == "__main__":

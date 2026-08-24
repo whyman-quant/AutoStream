@@ -73,6 +73,74 @@ def quantile_group_returns(factor: Sequence[float], labels: Sequence[float], gro
     }
 
 
+def portfolio_metrics(returns: Sequence[float], *, weights: Optional[Sequence[Sequence[float]]] = None, periods_per_year: int = 252) -> Dict[str, float]:
+    """Calculate deterministic post-cost-ready portfolio summary metrics.
+
+    ``returns`` are decimal period returns.  Risk-free return is assumed to be
+    zero; callers should subtract a benchmark or risk-free series before
+    calling this helper when that is required by the experiment contract.
+    ``weights`` may contain consecutive portfolio vectors; turnover is the
+    average one-way turnover (half the L1 change) between vectors.
+    """
+    if periods_per_year <= 0:
+        raise ValueError("periods_per_year must be positive")
+    values = [float(value) for value in returns]
+    if any(not math.isfinite(value) for value in values):
+        raise ValueError("returns must be finite")
+    if not values:
+        return {
+            "period_count": 0,
+            "cumulative_return": math.nan,
+            "annualized_return": math.nan,
+            "volatility": math.nan,
+            "sharpe": math.nan,
+            "max_drawdown": math.nan,
+            "calmar": math.nan,
+            "average_turnover": math.nan,
+        }
+    growth = 1.0
+    equity = 1.0
+    peak = equity
+    max_drawdown = 0.0
+    for value in values:
+        growth *= 1.0 + value
+        equity *= 1.0 + value
+        peak = max(peak, equity)
+        max_drawdown = min(max_drawdown, equity / peak - 1.0)
+    cumulative = growth - 1.0
+    annualized = -1.0 if growth <= 0.0 else growth ** (periods_per_year / len(values)) - 1.0
+    mean = sum(values) / len(values)
+    volatility = math.sqrt(sum((value - mean) ** 2 for value in values) / len(values))
+    annualized_volatility = volatility * math.sqrt(periods_per_year)
+    sharpe = (mean / volatility) * math.sqrt(periods_per_year) if volatility > 0.0 else math.nan
+    calmar = annualized / abs(max_drawdown) if max_drawdown < 0.0 else math.nan
+    average_turnover = math.nan
+    if weights is not None:
+        vectors = [[float(value) for value in vector] for vector in weights]
+        if len(vectors) < 2:
+            raise ValueError("weights must contain at least two consecutive portfolios")
+        width = len(vectors[0])
+        if width == 0 or any(len(vector) != width for vector in vectors):
+            raise ValueError("weights must be non-empty vectors of equal length")
+        if any(not math.isfinite(value) for vector in vectors for value in vector):
+            raise ValueError("weights must be finite")
+        turnover = [
+            0.5 * sum(abs(current - previous) for current, previous in zip(now, before))
+            for before, now in zip(vectors, vectors[1:])
+        ]
+        average_turnover = sum(turnover) / len(turnover)
+    return {
+        "period_count": len(values),
+        "cumulative_return": cumulative,
+        "annualized_return": annualized,
+        "volatility": annualized_volatility,
+        "sharpe": sharpe,
+        "max_drawdown": max_drawdown,
+        "calmar": calmar,
+        "average_turnover": average_turnover,
+    }
+
+
 def evaluate_columns(columns: Mapping[str, Sequence[float]], labels: Optional[Sequence[float]] = None, *, warmup: int = 0, min_post_warmup_coverage: float = 0.8, groups: int = 10) -> Dict[str, dict]:
     if warmup < 0 or not 0.0 <= min_post_warmup_coverage <= 1.0:
         raise ValueError("invalid warmup or coverage threshold")

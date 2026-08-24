@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "book_imbalance",
+  "experiment_id": "technical-20251013-all",
+  "status": "technical_evidence_only",
+  "technical_status": "technical_pass",
+  "evaluation_status": "data_missing",
+  "promotion_allowed": false,
+  "trading_date": "20251013",
+  "checkpoint_directory": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance/20251013",
+  "checkpoint_count": 8,
+  "factor_count": 12,
+  "event_keys": [92600000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000],
+  "technical_quality": {
+    "factorlist_consistent": true,
+    "finite_columns_per_checkpoint": 12,
+    "nonfinite_columns_per_checkpoint": 0,
+    "post_warmup_coverage": 1.0
+  },
+  "command": "python3 -m evaluations.run_campaign_technical --directory data/sfm_autoresearch_001/acceptance/20251013/book_imbalance/20251013 --output <report.json>",
+  "notes": "All eight mounted checkpoints pass technical schema/finite checks. No row-aligned future-return label table is currently available; this receipt must not be interpreted as investment performance or promotion approval."
+}
