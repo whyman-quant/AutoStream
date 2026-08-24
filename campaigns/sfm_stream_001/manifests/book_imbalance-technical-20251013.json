@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "book_imbalance",
+  "status": "technical_evidence_only",
+  "trading_date": "20251013",
+  "source_snapshot": "092700",
+  "eval_event_key": 92600000,
+  "factor_file": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance/20251013/092700.h5",
+  "factor_file_sha256": "8b664fa11f8985b814ca226a686d672ec41a573339c7064cabbc23d34191c1b3",
+  "row_count": 4964,
+  "factor_count": 12,
+  "technical_quality": {
+    "finite_columns": 12,
+    "non_finite_columns": 0,
+    "post_warmup_coverage": 1.0
+  },
+  "evaluation_status": "data_missing",
+  "promotion_allowed": false,
+  "notes": "Factor HDF5 and provenance are locally mounted; no future-return label table is available, so this receipt does not assert investment performance."
+}

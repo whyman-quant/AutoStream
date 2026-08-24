@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family": "book_imbalance",
+  "candidate_quota": 12,
+  "source_streams": ["quote"],
+  "operator_ids": ["weighted_depth_imbalance", "microprice_displacement", "spread_conditioned_imbalance"],
+  "template_grid": [
+    {"template_id": "book_imbalance_seed_v1_00", "operator_id": "weighted_depth_imbalance", "window": "16_events", "variant": 0, "lag_events": 0, "early_event_status": "diagnostic"},
+    {"template_id": "book_imbalance_seed_v1_01", "operator_id": "microprice_displacement", "window": "32_events", "variant": 0, "lag_events": 1, "early_event_status": "diagnostic"},
+    {"template_id": "book_imbalance_seed_v1_02", "operator_id": "spread_conditioned_imbalance", "window": "64_events", "variant": 0, "lag_events": 2, "early_event_status": "diagnostic"},
+    {"template_id": "book_imbalance_seed_v1_03", "operator_id": "weighted_depth_imbalance", "window": "128_events", "variant": 1, "lag_events": 0, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_04", "operator_id": "microprice_displacement", "window": "16_events", "variant": 1, "lag_events": 1, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_05", "operator_id": "spread_conditioned_imbalance", "window": "32_events", "variant": 1, "lag_events": 2, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_06", "operator_id": "weighted_depth_imbalance", "window": "64_events", "variant": 2, "lag_events": 0, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_07", "operator_id": "microprice_displacement", "window": "128_events", "variant": 2, "lag_events": 1, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_08", "operator_id": "spread_conditioned_imbalance", "window": "16_events", "variant": 2, "lag_events": 2, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_09", "operator_id": "weighted_depth_imbalance", "window": "32_events", "variant": 3, "lag_events": 0, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_10", "operator_id": "microprice_displacement", "window": "64_events", "variant": 3, "lag_events": 1, "early_event_status": "required"},
+    {"template_id": "book_imbalance_seed_v1_11", "operator_id": "spread_conditioned_imbalance", "window": "128_events", "variant": 3, "lag_events": 2, "early_event_status": "required"}
+  ],
+  "constraints": ["canonical_deduplication", "short_state_window", "finite_or_unavailable"]
+}

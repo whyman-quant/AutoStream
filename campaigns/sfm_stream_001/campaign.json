@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "candidate_budget": 48,
+  "factor_families": [
+    {"id": "book_imbalance", "candidate_quota": 12, "idea_path": "ideas/book_imbalance.json"},
+    {"id": "flow_pressure", "candidate_quota": 12, "idea_path": "ideas/flow_pressure.json"},
+    {"id": "liquidity_resilience", "candidate_quota": 12, "idea_path": "ideas/liquidity_resilience.json"},
+    {"id": "impact_efficiency", "candidate_quota": 12, "idea_path": "ideas/impact_efficiency.json"}
+  ],
+  "source_streams": ["quote", "trade", "order"],
+  "source_snapshots": [
+    {"source_snapshot": "092700", "eval_event_key": 92600000},
+    {"source_snapshot": "100000", "eval_event_key": 100000000},
+    {"source_snapshot": "103000", "eval_event_key": 103000000},
+    {"source_snapshot": "110000", "eval_event_key": 110000000},
+    {"source_snapshot": "113000", "eval_event_key": 113000000},
+    {"source_snapshot": "133000", "eval_event_key": 133000000},
+    {"source_snapshot": "140000", "eval_event_key": 140000000},
+    {"source_snapshot": "143000", "eval_event_key": 143000000}
+  ],
+  "labels": ["raw926", "ease926"],
+  "universes": ["000985", "003800", "000906"],
+  "splits": ["training", "validation", "holdout"],
+  "coverage_policy": {
+    "early_event_statuses": ["required", "diagnostic", "warmup_blocked"],
+    "required_event_action": "block_promotion"
+  }
+}
