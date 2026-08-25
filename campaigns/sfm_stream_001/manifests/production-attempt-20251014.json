@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "book_imbalance",
+  "experiment_id": "production-attempt-20251014",
+  "trading_date": "20251014",
+  "status": "data_missing",
+  "binary": "base/hf-open5m-factor-demo/build/hf-open5m-factor-demo/app_factor/main",
+  "config": "base/hf-open5m-factor-demo/config_factor_sfm_stream_001.json",
+  "command": "main date=20251014 thread_num=8 config_file=config_factor_sfm_stream_001.json stock=all",
+  "exit_code": 255,
+  "missing_inputs": [
+    "/mnt/beegfs_dev/storage_r/706_wgh/app_working_dir/data/stock_open/ev_v20250605/20251014/per1day/lab200005_codelist.h5",
+    "/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata/20251014/per1day/lab200019_codes.h5",
+    "/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata/20251014/lab200019_codes.h5"
+  ],
+  "registered_factor_sets": ["book_imbalance", "demofw00"],
+  "promotion_allowed": false,
+  "notes": "The executable loaded the configuration and registered book_imbalance, then stopped before reading market data because no 20251014 EV/code-list input exists on this host."
+}
