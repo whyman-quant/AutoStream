@@ -1,5 +1,6 @@
 {
   "factors_config": {
+    "ev": "/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata",
     "ev_code_file": "[DATE]/per1day/lab200005_codelist.h5",
     "send_times": {
       "start": 93000,

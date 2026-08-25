@@ -16,5 +16,5 @@
   ],
   "registered_factor_sets": ["book_imbalance", "demofw00"],
   "promotion_allowed": false,
-  "notes": "The executable loaded the configuration and registered book_imbalance, then stopped before reading market data because no 20251014 EV/code-list input exists on this host."
+  "notes": "The executable loaded the configuration and registered book_imbalance, then stopped before reading market data because the configured/default code-list candidates did not exist. A later audit found lab200005_codelist.h5 under the mounted basedata root; the production config must point its EV root there."
 }

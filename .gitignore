@@ -10,6 +10,7 @@ base/**/runtime_generated/
 base/**/tmp/
 base/**/__pycache__/
 base/**/.pytest_cache/
+base/**/factor_full_pipeline_segment_time_us.csv
 
 ## Large binary and market data artifacts
 **/*.h5

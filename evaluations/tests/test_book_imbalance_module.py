@@ -19,6 +19,14 @@ class BookImbalanceModuleTests(unittest.TestCase):
 
         config = json.loads((MODULE.parents[1] / "config_factor_sfm_stream_001.json").read_text())
         factors = config["factors_config"]
+        self.assertEqual(
+            factors["ev"],
+            "/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata",
+        )
+        self.assertEqual(
+            factors["ev_code_file"],
+            "[DATE]/per1day/lab200005_codelist.h5",
+        )
         self.assertEqual(factors["factor_sets"], [{"name": "book_imbalance", "enabled": True}])
         self.assertEqual(factors["save_info"]["save_times"], [
             92700, 100000, 103000, 110000, 113000, 133000, 140000, 143000,

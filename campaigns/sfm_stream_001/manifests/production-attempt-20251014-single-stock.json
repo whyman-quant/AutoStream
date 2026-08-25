@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "book_imbalance",
+  "experiment_id": "production-attempt-20251014-single-stock",
+  "trading_date": "20251014",
+  "stock": "000001",
+  "status": "technical_pass",
+  "binary": "base/hf-open5m-factor-demo/build/hf-open5m-factor-demo/app_factor/main",
+  "config": "base/hf-open5m-factor-demo/config_factor_sfm_stream_001.json",
+  "factor_count": 12,
+  "checkpoint_count": 8,
+  "output": "data/sfm_autoresearch_001/production/20251014/book_imbalance/factors.h5",
+  "output_rows": 1,
+  "output_sha256": "sha256:a98455942bea80c4276b02b4ceb56a1348559a70dd67b583fd7d2444f2444aa8",
+  "input_roots": {
+    "ev": "/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata",
+    "raw_data": "/data -> /mnt/beegfs_npq107"
+  },
+  "promotion_allowed": false,
+  "notes": "A single-stock run completed: EV code list loaded, quote/transaction/order streams loaded, all eight saved checkpoints written with 12 factor columns. This is a production smoke test, not a multi-day evaluation."
+}
