@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "factor_root": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow",
+  "label_root": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926",
+  "date_count": 17,
+  "ready_count": 1,
+  "ready": false,
+  "dates": [
+    {
+      "date": "20251009",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251009.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251009.arrow"
+    },
+    {
+      "date": "20251010",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251010.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251010.arrow"
+    },
+    {
+      "date": "20251013",
+      "status": "ready",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251013.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251013.arrow"
+    },
+    {
+      "date": "20251014",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251014.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251014.arrow"
+    },
+    {
+      "date": "20251015",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251015.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251015.arrow"
+    },
+    {
+      "date": "20251016",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251016.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251016.arrow"
+    },
+    {
+      "date": "20251017",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251017.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251017.arrow"
+    },
+    {
+      "date": "20251020",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251020.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251020.arrow"
+    },
+    {
+      "date": "20251021",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251021.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251021.arrow"
+    },
+    {
+      "date": "20251022",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251022.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251022.arrow"
+    },
+    {
+      "date": "20251023",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251023.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251023.arrow"
+    },
+    {
+      "date": "20251024",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251024.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251024.arrow"
+    },
+    {
+      "date": "20251027",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251027.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251027.arrow"
+    },
+    {
+      "date": "20251028",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251028.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251028.arrow"
+    },
+    {
+      "date": "20251029",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251029.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251029.arrow"
+    },
+    {
+      "date": "20251030",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251030.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251030.arrow"
+    },
+    {
+      "date": "20251031",
+      "status": "factor_missing",
+      "factor_path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251031.arrow",
+      "label_path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251031.arrow"
+    }
+  ]
+}
