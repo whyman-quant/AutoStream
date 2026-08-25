@@ -1,0 +1,854 @@
+{
+  "artifacts": {
+    "factor_input": {
+      "path": "data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251013.arrow",
+      "sha256": "9c62bfe861bbea148ab70219ebae5d2bf7f35edf76f519f474fbd82c83eccb2b"
+    },
+    "label_contract": {
+      "path": "evaluations/label_contract.json",
+      "sha256": "2941f07d218daac4848e4563b6d7c9ccf1ebd4c954095906eb0fd6dbcc490640"
+    },
+    "label_input": {
+      "path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251013.arrow",
+      "sha256": "de8cfaad4a7b45ffe94777ec02ad9152eaae8d9a73119e48100130f4447a80e2"
+    }
+  },
+  "combination_count": 6,
+  "combinations": [
+    {
+      "factor_count": 12,
+      "factors": {
+        "book_imbalance_microprice_displacement_w128_v2_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.009757569601413824,
+          "mean_long_short": 0.0015116386386530658,
+          "mean_monotonicity": -0.11666666666666667,
+          "mean_rank_ic": 0.017237945807404263,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w16_v1_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.010040811964129006,
+          "mean_long_short": 0.0014366195510986156,
+          "mean_monotonicity": -0.11515151515151517,
+          "mean_rank_ic": 0.01939341635802466,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w32_v0_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.010033471119040065,
+          "mean_long_short": 0.001424122773794377,
+          "mean_monotonicity": -0.10606060606060608,
+          "mean_rank_ic": 0.019339985186470097,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w64_v3_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.009755619727439819,
+          "mean_long_short": 0.0014972787668783034,
+          "mean_monotonicity": -0.1075757575757576,
+          "mean_rank_ic": 0.019418204784354753,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.03261175704192868,
+          "mean_long_short": 0.002458927425363773,
+          "mean_monotonicity": -0.30606060606060603,
+          "mean_rank_ic": 0.041857181555294345,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.029112722403829422,
+          "mean_long_short": 0.0021444142073178568,
+          "mean_monotonicity": -0.34696969696969693,
+          "mean_rank_ic": 0.040237335296831656,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.024553455382690884,
+          "mean_long_short": 0.0016536895647864393,
+          "mean_monotonicity": -0.2681818181818182,
+          "mean_rank_ic": 0.0318512015947865,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.015057223401732258,
+          "mean_long_short": 0.0016692876643878177,
+          "mean_monotonicity": -0.06515151515151514,
+          "mean_rank_ic": 0.022887520293564428,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.02982982149979461,
+          "mean_long_short": 0.0029015783607915144,
+          "mean_monotonicity": -0.35909090909090907,
+          "mean_rank_ic": 0.03926772551362492,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.01772606280874713,
+          "mean_long_short": 0.001293050949076803,
+          "mean_monotonicity": -0.20909090909090908,
+          "mean_rank_ic": 0.028803909071788966,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.04300372553330439,
+          "mean_long_short": 0.003389319628103309,
+          "mean_monotonicity": -0.5242424242424242,
+          "mean_rank_ic": 0.05812138656083339,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.03905652268558272,
+          "mean_long_short": 0.0029193758390789657,
+          "mean_monotonicity": -0.4909090909090909,
+          "mean_rank_ic": 0.05472438285089465,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "raw926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 12,
+      "factors": {
+        "book_imbalance_microprice_displacement_w128_v2_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.01259732813854261,
+          "mean_long_short": 0.001971048357271891,
+          "mean_monotonicity": -0.05454545454545454,
+          "mean_rank_ic": 0.02230269848605424,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w16_v1_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.013215911606803054,
+          "mean_long_short": 0.0016615205169824988,
+          "mean_monotonicity": -0.025757575757575764,
+          "mean_rank_ic": 0.023831948941855113,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w32_v0_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.013247931731971715,
+          "mean_long_short": 0.0017259879192742546,
+          "mean_monotonicity": -0.021212121212121217,
+          "mean_rank_ic": 0.023891783210865068,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w64_v3_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.01308472430155483,
+          "mean_long_short": 0.002001968527057622,
+          "mean_monotonicity": -0.007575757575757576,
+          "mean_rank_ic": 0.023797216963646728,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.04486548875785416,
+          "mean_long_short": 0.0038892668552598774,
+          "mean_monotonicity": -0.32272727272727264,
+          "mean_rank_ic": 0.05487178976150425,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.03876015487195761,
+          "mean_long_short": 0.003178385241810715,
+          "mean_monotonicity": -0.3196969696969697,
+          "mean_rank_ic": 0.050434651951424485,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.03321989148544628,
+          "mean_long_short": 0.002905117658441067,
+          "mean_monotonicity": -0.2681818181818182,
+          "mean_rank_ic": 0.03935182261693871,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.02069890319688536,
+          "mean_long_short": 0.0024925444182865996,
+          "mean_monotonicity": -0.13484848484848483,
+          "mean_rank_ic": 0.027216123810075474,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.04053360858410179,
+          "mean_long_short": 0.0038908134664677073,
+          "mean_monotonicity": -0.32878787878787874,
+          "mean_rank_ic": 0.05167431037637872,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.025163018247332036,
+          "mean_long_short": 0.0019081285618037262,
+          "mean_monotonicity": -0.16515151515151513,
+          "mean_rank_ic": 0.036221334202318364,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.05769482421441778,
+          "mean_long_short": 0.004476090116630989,
+          "mean_monotonicity": -0.49999999999999994,
+          "mean_rank_ic": 0.07535216743008846,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.05071759237579098,
+          "mean_long_short": 0.003358553803409037,
+          "mean_monotonicity": -0.4454545454545454,
+          "mean_rank_ic": 0.06834603934070194,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "raw926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 12,
+      "factors": {
+        "book_imbalance_microprice_displacement_w128_v2_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.01453340645372205,
+          "mean_long_short": 0.0028753985804701814,
+          "mean_monotonicity": -0.07727272727272726,
+          "mean_rank_ic": 0.01756159600187242,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w16_v1_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.01451149500162036,
+          "mean_long_short": 0.0032485091618790637,
+          "mean_monotonicity": -0.06515151515151511,
+          "mean_rank_ic": 0.019486579130435912,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w32_v0_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.014518926102958392,
+          "mean_long_short": 0.0032485091618790637,
+          "mean_monotonicity": -0.06515151515151511,
+          "mean_rank_ic": 0.019515847963546672,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w64_v3_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.014042705859847363,
+          "mean_long_short": 0.0031214199930867446,
+          "mean_monotonicity": -0.042424242424242406,
+          "mean_rank_ic": 0.01830608271748983,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.05040557877389736,
+          "mean_long_short": 0.005140354785840561,
+          "mean_monotonicity": -0.2363636363636363,
+          "mean_rank_ic": 0.04506633792388297,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.04123075882674921,
+          "mean_long_short": 0.004358820880599049,
+          "mean_monotonicity": -0.20151515151515148,
+          "mean_rank_ic": 0.03644533995866371,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.038667976887607564,
+          "mean_long_short": 0.005032627552288841,
+          "mean_monotonicity": -0.21666666666666662,
+          "mean_rank_ic": 0.027531365057894545,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.030249831389667893,
+          "mean_long_short": 0.003999700245975542,
+          "mean_monotonicity": -0.2454545454545454,
+          "mean_rank_ic": 0.024235991908484588,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.04454951978764395,
+          "mean_long_short": 0.003983455353320604,
+          "mean_monotonicity": -0.26060606060606056,
+          "mean_rank_ic": 0.04140641385529108,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.03390341578007503,
+          "mean_long_short": 0.0037390356251733826,
+          "mean_monotonicity": -0.2984848484848485,
+          "mean_rank_ic": 0.035223644486122946,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.061331211416853014,
+          "mean_long_short": 0.005522251354536899,
+          "mean_monotonicity": -0.3909090909090908,
+          "mean_rank_ic": 0.0632394031562578,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.05057851739641847,
+          "mean_long_short": 0.00400576341172375,
+          "mean_monotonicity": -0.3939393939393939,
+          "mean_rank_ic": 0.05198729502891188,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "raw926",
+      "universe": "000906"
+    },
+    {
+      "factor_count": 12,
+      "factors": {
+        "book_imbalance_microprice_displacement_w128_v2_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.0070556392469662485,
+          "mean_long_short": 0.0009002085062740986,
+          "mean_monotonicity": -0.14999999999999997,
+          "mean_rank_ic": 0.016902568705647988,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w16_v1_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.006510430640668113,
+          "mean_long_short": 0.0007137916239726876,
+          "mean_monotonicity": -0.12575757575757573,
+          "mean_rank_ic": 0.017357328450893113,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w32_v0_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.006545431613734177,
+          "mean_long_short": 0.000722090226475808,
+          "mean_monotonicity": -0.12878787878787878,
+          "mean_rank_ic": 0.01741381335218331,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w64_v3_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.005986180632723325,
+          "mean_long_short": 0.0007160119993077827,
+          "mean_monotonicity": -0.11818181818181818,
+          "mean_rank_ic": 0.016843474249404973,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.024093573644541278,
+          "mean_long_short": 0.001490572122762299,
+          "mean_monotonicity": -0.3363636363636363,
+          "mean_rank_ic": 0.036096604635674316,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.02003368425527415,
+          "mean_long_short": 0.0011162985772101564,
+          "mean_monotonicity": -0.2621212121212121,
+          "mean_rank_ic": 0.03445401720793245,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.016871541264341552,
+          "mean_long_short": 0.0008343234879684074,
+          "mean_monotonicity": -0.21363636363636362,
+          "mean_rank_ic": 0.02827582749749704,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.009263414629304814,
+          "mean_long_short": 0.0009060817960853641,
+          "mean_monotonicity": -0.0939393939393939,
+          "mean_rank_ic": 0.02009195449841265,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.02278252987949514,
+          "mean_long_short": 0.001892417611072625,
+          "mean_monotonicity": -0.4712121212121212,
+          "mean_rank_ic": 0.03518493878733649,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.011854784349229675,
+          "mean_long_short": 0.0005690112539992158,
+          "mean_monotonicity": -0.19848484848484846,
+          "mean_rank_ic": 0.025221880232907726,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.030001279435354796,
+          "mean_long_short": 0.0021302063187712606,
+          "mean_monotonicity": -0.4954545454545454,
+          "mean_rank_ic": 0.046070087092770586,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.02727566308029316,
+          "mean_long_short": 0.001639319123882457,
+          "mean_monotonicity": -0.41818181818181815,
+          "mean_rank_ic": 0.04374629819837407,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "ease926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 12,
+      "factors": {
+        "book_imbalance_microprice_displacement_w128_v2_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.007896206552914401,
+          "mean_long_short": 0.0009695398023717118,
+          "mean_monotonicity": -0.040909090909090916,
+          "mean_rank_ic": 0.019748577186496762,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w16_v1_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.007624501534345627,
+          "mean_long_short": 0.0006752018983312827,
+          "mean_monotonicity": -0.028787878787878772,
+          "mean_rank_ic": 0.01956140546277085,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w32_v0_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.0076509494869814515,
+          "mean_long_short": 0.0007329744809880152,
+          "mean_monotonicity": -0.03333333333333332,
+          "mean_rank_ic": 0.01962348867480496,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w64_v3_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.007380820581746166,
+          "mean_long_short": 0.0009264816369051513,
+          "mean_monotonicity": -0.019696969696969706,
+          "mean_rank_ic": 0.019283669088816655,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.029667422119993188,
+          "mean_long_short": 0.0021139231125892554,
+          "mean_monotonicity": -0.28787878787878785,
+          "mean_rank_ic": 0.045246530174788274,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.024272219132804463,
+          "mean_long_short": 0.0017375657908346243,
+          "mean_monotonicity": -0.28939393939393937,
+          "mean_rank_ic": 0.04167107345845924,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.02105273466519034,
+          "mean_long_short": 0.0015597639915725064,
+          "mean_monotonicity": -0.2212121212121212,
+          "mean_rank_ic": 0.03361371902103327,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.012359790637313638,
+          "mean_long_short": 0.0013244506646458022,
+          "mean_monotonicity": -0.10606060606060605,
+          "mean_rank_ic": 0.02322242081373754,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.026355196964760776,
+          "mean_long_short": 0.0022768021523137285,
+          "mean_monotonicity": -0.3757575757575758,
+          "mean_rank_ic": 0.042029421694621365,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.014923629352088276,
+          "mean_long_short": 0.0006228163269696668,
+          "mean_monotonicity": -0.10909090909090906,
+          "mean_rank_ic": 0.029146497991440076,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.035640095546664786,
+          "mean_long_short": 0.002450844960342181,
+          "mean_monotonicity": -0.38939393939393935,
+          "mean_rank_ic": 0.05455358807034139,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.031011604525222503,
+          "mean_long_short": 0.001525162355971688,
+          "mean_monotonicity": -0.39848484848484844,
+          "mean_rank_ic": 0.050590808315635685,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "ease926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 12,
+      "factors": {
+        "book_imbalance_microprice_displacement_w128_v2_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.005780948584815211,
+          "mean_long_short": 0.0014890469980920228,
+          "mean_monotonicity": -0.08030303030303028,
+          "mean_rank_ic": 0.009966254885228872,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w16_v1_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.004874338748730749,
+          "mean_long_short": 0.0016304907637803136,
+          "mean_monotonicity": -0.09696969696969697,
+          "mean_rank_ic": 0.01093610429574751,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w32_v0_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.004869938013928911,
+          "mean_long_short": 0.0016304907637803136,
+          "mean_monotonicity": -0.09696969696969697,
+          "mean_rank_ic": 0.010934335483712311,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_microprice_displacement_w64_v3_lag1": {
+          "event_count": 8,
+          "mean_ic": 0.004437021022509568,
+          "mean_long_short": 0.0014935989020315448,
+          "mean_monotonicity": -0.08030303030303028,
+          "mean_rank_ic": 0.010189664097638112,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.04431756808453172,
+          "mean_long_short": 0.0038559282836387538,
+          "mean_monotonicity": -0.3636363636363636,
+          "mean_rank_ic": 0.05326375706930059,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.036959752662288035,
+          "mean_long_short": 0.0029568500274609394,
+          "mean_monotonicity": -0.23787878787878788,
+          "mean_rank_ic": 0.047802515588135044,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.03656705720025228,
+          "mean_long_short": 0.0034906686996710517,
+          "mean_monotonicity": -0.2212121212121212,
+          "mean_rank_ic": 0.04215390948143324,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2": {
+          "event_count": 8,
+          "mean_ic": 0.026359872831529508,
+          "mean_long_short": 0.0027741629653302343,
+          "mean_monotonicity": -0.13181818181818178,
+          "mean_rank_ic": 0.027805962148216835,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.04145514931622764,
+          "mean_long_short": 0.002826981111004512,
+          "mean_monotonicity": -0.25303030303030305,
+          "mean_rank_ic": 0.05148955961224193,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.0290524827456569,
+          "mean_long_short": 0.0025624514223739816,
+          "mean_monotonicity": -0.3015151515151515,
+          "mean_rank_ic": 0.03507434725464327,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.051096503408871716,
+          "mean_long_short": 0.003960951696243973,
+          "mean_monotonicity": -0.3409090909090909,
+          "mean_rank_ic": 0.06550894180607875,
+          "rank_ic_count": 8
+        },
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0": {
+          "event_count": 8,
+          "mean_ic": 0.04346834268910628,
+          "mean_long_short": 0.0025242883558521446,
+          "mean_monotonicity": -0.30757575757575756,
+          "mean_rank_ic": 0.05740959417783433,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "ease926",
+      "universe": "000906"
+    }
+  ],
+  "direction_policy": "no_direction_selection_from_acceptance_data",
+  "evaluation_scope": "single_day_acceptance",
+  "evaluator": {
+    "path": "/home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py",
+    "sha256": "3a36339a0b128408fe8012fdcec5b15aeb3b999e359f781eade517ce267f7f9a"
+  },
+  "factor_count": 12,
+  "input_format": "parquet",
+  "inputs": [
+    {
+      "date": "20251013",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0"
+      ],
+      "label": "raw926",
+      "path": "data/sfm_autoresearch_001/evaluation/20251013/raw926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "eba495caf9ab686b7fe2ac51403e66b9905c0f3c9ce02e58921cb3ba79a8f6ed",
+      "universe": "000985"
+    },
+    {
+      "date": "20251013",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0"
+      ],
+      "label": "raw926",
+      "path": "data/sfm_autoresearch_001/evaluation/20251013/raw926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "a0ca284ef8766665d094be559ad4a80155933aee4d250800d985f3645fe183c1",
+      "universe": "003800"
+    },
+    {
+      "date": "20251013",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0"
+      ],
+      "label": "raw926",
+      "path": "data/sfm_autoresearch_001/evaluation/20251013/raw926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "aadb2627aa73bcfec20c29f1194d1092478a28973cfa0e45f2657b510864ea65",
+      "universe": "000906"
+    },
+    {
+      "date": "20251013",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0"
+      ],
+      "label": "ease926",
+      "path": "data/sfm_autoresearch_001/evaluation/20251013/ease926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "47c5edd21a956fdde27fd3c5ed17cf908430d33d559c4b4af7df4d01ca09d45d",
+      "universe": "000985"
+    },
+    {
+      "date": "20251013",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0"
+      ],
+      "label": "ease926",
+      "path": "data/sfm_autoresearch_001/evaluation/20251013/ease926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "d6eb0387d892ececec5ceda409ea25eb3d0c55a4db4317351797b1a58ad470cf",
+      "universe": "003800"
+    },
+    {
+      "date": "20251013",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0"
+      ],
+      "label": "ease926",
+      "path": "data/sfm_autoresearch_001/evaluation/20251013/ease926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "8384cfc65c58d01e31a6e700cc7fd526ca0cc49be49d7cb609ca17931f6e4666",
+      "universe": "000906"
+    }
+  ],
+  "labels": [
+    "raw926",
+    "ease926"
+  ],
+  "promotion_allowed": false,
+  "result_root": "data/sfm_autoresearch_001/evaluation/20251013",
+  "schema_version": 1,
+  "trading_dates": [
+    "20251013"
+  ],
+  "universes": [
+    "000985",
+    "003800",
+    "000906"
+  ]
+}
