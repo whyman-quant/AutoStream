@@ -26,3 +26,27 @@ python3 -m evaluations.run_factor_eval \
 可选传入连续持仓权重向量（换手定义为相邻权重向量 L1 变化的一半）。
 它不负责撮合、手续费或标签构造；这些必须由上游回测适配器显式完成，并在成绩单中记录数据快照、
 成本模型和分段（training/validation/holdout）。
+
+## 真实标签单日验收
+
+现有历史评价工具的标签契约已落在 [label_contract.json](./label_contract.json)：
+`raw926` 使用 `v_1D_v_demean`，`ease926` 使用 `v_1D_v_neuted`，文件来自
+`atan_day_myrisk_neuted_ease_926/YYYYMMDD.arrow`，按 `symbol,event` 连接。
+
+`run_real_label_scorecard.py` 从六个结果目录（两个标签 × 三个股票池）生成机器可读成绩单。
+该成绩单只汇总有符号的 `D1-D10/LS/Monotonicity/IC/RankIC`，禁止在单日 acceptance
+阶段选择方向或晋级：
+
+```bash
+python3.8 -m evaluations.run_real_label_scorecard \
+  --result-root data/sfm_autoresearch_001/evaluation/20251013 \
+  --output campaigns/sfm_stream_001/manifests/real-label-scorecard-20251013.json \
+  --date 20251013 --expected-factor-count 12 \
+  --factor-input data/sfm_autoresearch_001/acceptance/20251013/book_imbalance-arrow/20251013.arrow \
+  --label-input /home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251013.arrow \
+  --label-contract evaluations/label_contract.json \
+  --evaluator-source /home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py
+```
+
+Parquet 输入必须精确包含 20251013 的八个事件、单一日期、完整的四类指标和一致的因子集合；
+scorecard 会记录六个结果文件的 SHA-256，以及 factor/label/contract/evaluator 输入哈希。

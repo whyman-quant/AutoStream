@@ -67,3 +67,8 @@
   评价状态仍为 `data_missing`，`promotion_allowed=false`。
 - 可用原始行情挂载已确认：`/mnt/beegfs_npqssd`、`/mnt/beegfs_npq107`；
   尚未确认与该 HDF5 行顺序绑定的 label/交易日收益产物，因此不把原始文件存在误报为可回测。
+- 已确认并实际使用历史评价器的真实标签目录：
+  `/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926`。
+  `raw926=v_1D_v_demean`、`ease926=v_1D_v_neuted`，均按 `symbol,event` 连接。
+- 20251013 已完成 `raw926/ease926 × 000985/003800/000906` 六个单日评价，
+  每个组合 12 因子 × 8 事件；成绩单仍标记 `single_day_acceptance`，不能替代分段回测。

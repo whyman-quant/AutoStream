@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "label_family": "atan_day_myrisk_neuted_ease_926",
+  "source_directory": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926",
+  "file_pattern": "YYYYMMDD.arrow",
+  "join_keys": ["symbol", "event"],
+  "date_key": "date",
+  "raw926": {
+    "column": "v_1D_v_demean",
+    "definition_source": "factor_eval_toolkit/scripts/evaluate_factors.py LABEL_CONFIG.raw926",
+    "meaning": "one-day forward return after cross-sectional demean"
+  },
+  "ease926": {
+    "column": "v_1D_v_neuted",
+    "definition_source": "factor_eval_toolkit/scripts/evaluate_factors.py LABEL_CONFIG.ease926",
+    "meaning": "one-day forward return after neutralization"
+  },
+  "alignment_rules": {
+    "factor_event_set": [92600000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000],
+    "extra_label_events": "allowed but never evaluated unless present in factor output",
+    "duplicate_symbol_event": "reject",
+    "missing_label": "drop from metric denominator and record coverage",
+    "factor_label_date_mismatch": "reject",
+    "lookahead_policy": "labels are forward one-day returns; factor event must precede label horizon"
+  },
+  "promotion_policy": "label joins are necessary but insufficient; require training/validation/holdout and cost-adjusted gates"
+}
