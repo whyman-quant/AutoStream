@@ -8,14 +8,25 @@
   "parent_batch_ids": [],
   "parent_experience_ids": [],
   "hypothesis_id": "signed_trade_pressure",
-  "objective": "Prove the trade-stream vertical slice with one representative signed-flow candidate before expanding the family.",
-  "change_dimension": "representative_vertical_slice",
+  "objective": "Exercise the flow-pressure family across operator, event-window, normalization, decay, and observation-lag mechanisms while retaining the proven representative slice.",
+  "change_dimension": "operator_window_normalization_decay_lag_grid",
   "candidate_ids": [
-    "flow_pressure_signed_trade_flow_w16"
+    "flow_pressure_signed_trade_flow_w16",
+    "flow_pressure_signed_trade_flow_w32_lag0",
+    "flow_pressure_signed_trade_flow_w64_lag1",
+    "flow_pressure_signed_trade_flow_w128_lag2",
+    "flow_pressure_trade_flow_zscore_w16_lag0",
+    "flow_pressure_trade_flow_zscore_w32_lag0",
+    "flow_pressure_trade_flow_zscore_w64_lag1",
+    "flow_pressure_trade_flow_zscore_w128_lag2",
+    "flow_pressure_decayed_trade_flow_w16_lag0",
+    "flow_pressure_decayed_trade_flow_w32_lag0",
+    "flow_pressure_decayed_trade_flow_w64_lag1",
+    "flow_pressure_decayed_trade_flow_w128_lag2"
   ],
   "search_policy": {
     "method": "mechanism_grid",
-    "candidate_budget": 1
+    "candidate_budget": 12
   },
   "created_at": "2026-08-26",
   "source_commit": "0322592",

@@ -11,7 +11,8 @@ ROOT = Path(__file__).parents[2]
 CAMPAIGN = ROOT / "campaigns" / "sfm_stream_001"
 IDEA_PATH = CAMPAIGN / "ideas" / "flow_pressure.json"
 BATCH_PATH = CAMPAIGN / "batches" / "flow_pressure_seed_v1.json"
-CANDIDATE_PATH = CAMPAIGN / "candidates" / "flow_pressure" / "flow_pressure_signed_trade_flow_w16.json"
+CANDIDATE_DIR = CAMPAIGN / "candidates" / "flow_pressure"
+CANDIDATE_PATH = CANDIDATE_DIR / "flow_pressure_signed_trade_flow_w16.json"
 METADATA_PATH = ROOT / "base" / "hf-open5m-factor-demo" / "factors" / "flow_pressure" / "meta_config.h"
 RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-vertical-slice.json"
 SMOKE_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-smoke-20251014-000001.json"
@@ -33,8 +34,8 @@ class FlowPressureMigrationTests(unittest.TestCase):
         validate_document("candidate", candidate)
 
         self.assertEqual(idea["representative_candidate_id"], candidate["candidate_id"])
-        self.assertEqual(batch["candidate_ids"], [candidate["candidate_id"]])
-        self.assertEqual(batch["search_policy"]["candidate_budget"], 1)
+        self.assertIn(candidate["candidate_id"], batch["candidate_ids"])
+        self.assertEqual(batch["search_policy"]["candidate_budget"], len(batch["candidate_ids"]))
         self.assertEqual(candidate["operator_id"], "signed_trade_flow")
         self.assertEqual(candidate["source_streams"], ["trade"])
         self.assertEqual(candidate["parameters"], {
@@ -45,7 +46,7 @@ class FlowPressureMigrationTests(unittest.TestCase):
         self.assertEqual(candidate["canonical_hash"], candidate_hash(candidate))
         self.assertEqual(candidate_hash(candidate), candidate_hash(candidate))
         self.assertEqual(candidate["output"]["research_direction"], "raw_signed")
-        validate_idea_candidate_batch([CANDIDATE_PATH], BATCH_PATH, IDEA_PATH)
+        validate_idea_candidate_batch(sorted(CANDIDATE_DIR.glob("*.json")), BATCH_PATH, IDEA_PATH)
 
     def test_candidate_name_matches_cpp_metadata(self):
         candidate = load_json(CANDIDATE_PATH)

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1, "kind": "candidate", "candidate_id": "flow_pressure_trade_flow_zscore_w128_lag2",
+  "campaign_id": "sfm_stream_001", "family_id": "flow_pressure", "batch_id": "flow_pressure_seed_v1",
+  "generation": 0, "parent_candidate_ids": [], "hypothesis_id": "signed_trade_pressure", "operator_id": "trade_flow_zscore",
+  "formula": "sum(sign(bsflag) * trade_volume, last 128 valid trades, lag_events=2) / max(stddev(sign(bsflag) * trade_volume, last 128 valid trades, lag_events=2) * sqrt(128), 1e-12)",
+  "source_streams": ["trade"],
+  "parameters": {"window_events": 128, "normalization": "rolling_zscore", "dispersion": "signed_trade_volume", "include_cancels": false, "lag_events": 2},
+  "state": {"window_type": "event_count", "window_events": 128, "warmup_events": 1, "reset_policy": "trading_day"},
+  "availability": {"update_on": ["trade"], "output_at": "scheduled_snapshot", "lag_events": 2, "invalid_policy": "finite_or_zero"},
+  "output": {"factor_name": "flow_pressure_trade_flow_zscore_w128_lag2", "dtype": "float64", "research_direction": "raw_signed"},
+  "lineage": {"idea_path": "campaigns/sfm_stream_001/ideas/flow_pressure.json", "implementation_path": "base/hf-open5m-factor-demo/factors/flow_pressure/factor_entry.cpp", "source_commit": "0322592"},
+  "evidence_level": "L0", "canonical_hash": "sha256:eea3d244d46d73a4496cb1b9b12818d2b71ba81f52324acf4f77aa57513b6b35"
+}
