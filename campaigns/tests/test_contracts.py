@@ -187,6 +187,17 @@ class ContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "raw_signed"):
             validate_document("candidate", document)
 
+    def test_candidate_allows_family_specific_parameters(self):
+        document = candidate_document()
+        document["family_id"] = "flow_pressure"
+        document["operator_id"] = "signed_trade_flow"
+        document["parameters"] = {
+            "half_life_events": 64,
+            "normalization": "signed_total_volume",
+            "include_cancels": False,
+        }
+        validate_document("candidate", document)
+
     def test_batch_rejects_duplicate_candidate_ids(self):
         document = batch_document()
         document["candidate_ids"] = ["candidate_a", "candidate_a"]

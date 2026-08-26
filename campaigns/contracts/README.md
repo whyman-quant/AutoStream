@@ -28,6 +28,7 @@
 4. Pilot Portrait 必须是 `scope=pilot`、`evidence_level=L3`、`decision.status=observation_only`、`promotion_allowed=false`。
 5. Experience Record 必须分开记录事实、解释和动作。动作必须包含预期现象、否决条件和下一次使用的数据范围。
 6. JSON Schema 只校验单文件形状；候选数量、C++ 因子名、canonical hash、receipt hash 和跨文件集合关系必须由一致性测试验证。
+7. Candidate 的 `parameters` 是家族无关的标量参数表；每个家族需要哪些参数以及参数之间的约束，由该家族的 idea 和一致性测试冻结。
 
 ## 当前实例
 
