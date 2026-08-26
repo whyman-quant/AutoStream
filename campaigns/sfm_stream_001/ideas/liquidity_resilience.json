@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "idea_spec",
+  "idea_id": "spread_adjusted_depth_recovery",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "title": "Spread-adjusted depth recovery",
+  "source": {"type": "market_observation", "reference": "liquidity recovery after quote-book shock", "retrieved_at": "2026-08-26"},
+  "hypothesis": {"mechanism": "A quote book that quickly restores depth and spread after a liquidity shock is more resilient.", "expected_sign": "raw_signed", "falsifiable_condition": "The recovery ratio has no stable relation to subsequent returns or execution conditions on formal history."},
+  "inputs": {"streams": ["quote"], "fields": ["bp_array", "ap_array", "bv_array", "av_array"]},
+  "operators": [
+    {"operator_id": "spread_adjusted_depth_recovery", "description": "Current spread-adjusted L1 depth divided by rolling peak depth.", "representative": true},
+    {"operator_id": "multi_level_depth_recovery", "description": "Current spread-adjusted multi-level depth divided by rolling peak.", "representative": false},
+    {"operator_id": "shock_recovery_speed", "description": "Event-time recovery speed after a detected spread/depth shock.", "representative": false}
+  ],
+  "parameter_space": {"window_events": [16, 32, 64, 128], "depth_levels": [1, 5, 10], "spread_adjustment": ["relative_tick", "none"]},
+  "state": {"window_type": "event_count", "warmup_events": 1, "reset_policy": "trading_day"},
+  "availability": {"update_on": ["quote"], "output_at": "scheduled_snapshot", "lag_events": 0, "invalid_policy": "finite_or_zero"},
+  "implementation": {"language": "cpp", "target_path": "base/hf-open5m-factor-demo/factors/liquidity_resilience/factor_entry.cpp", "complexity": "O(1) amortized per quote"},
+  "representative_candidate_id": "liquidity_resilience_spread_adjusted_depth_recovery_w16"
+}
