@@ -1,11 +1,12 @@
 # AutoStream 研究数据契约
 
-这里冻结因子挖掘控制面的四类 JSON 契约。当前版本均为 `schema_version: 1`，使用 JSON Schema Draft 7。
+这里冻结因子挖掘控制面的四类核心 JSON 契约，以及位于它们上游的 Idea Spec 契约。当前版本均为 `schema_version: 1`，使用 JSON Schema Draft 7。
 
-## 四类产物
+## 核心产物与上游输入
 
 | 契约 | 一句话含义 | 主要回答 |
 |---|---|---|
+| Idea Spec | 进入候选生成前的研究机制定义 | 信息从哪里来、为什么可能有效、需要什么数据、如何证伪 |
 | Candidate | 一个可独立计算的因子定义 | 它为什么存在、公式是什么、用什么数据、状态与可用性语义是什么 |
 | Batch | 一轮有共同研究目的的候选集合 | 这一轮改变什么、由什么经验触发、预算和候选边界是什么 |
 | Factor Portrait | 一个候选在固定数据集上的完整有符号画像 | 数据是否可靠、不同标签和股票池表现怎样、能否做阶段判断 |
@@ -13,6 +14,7 @@
 
 对应文件：
 
+- `idea_spec.schema.json`
 - `candidate.schema.json`
 - `batch.schema.json`
 - `factor_portrait.schema.json`

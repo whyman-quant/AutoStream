@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "flow_pressure",
+  "candidate_id": "flow_pressure_signed_trade_flow_w16",
+  "candidate_hash": "sha256:80f896ffb55ae0f8795038702c16eb4fd35329b2d7a7ace684a94940c982a849",
+  "source_commit": "0322592",
+  "evidence_level": "L2",
+  "cpp_target": "flow_pressure_factor_entry_test",
+  "test_commands": [
+    "python3 -m unittest -v campaigns.tests.test_contracts campaigns.tests.test_flow_pressure_migration",
+    "cmake --build base/hf-open5m-factor-demo/build-flow-pressure --target flow_pressure_factor_entry_test book_imbalance_factor_entry_test -j2",
+    "ctest --test-dir base/hf-open5m-factor-demo/build-flow-pressure -R (flow_pressure_factor_entry|book_imbalance_factor_entry) --output-on-failure"
+  ],
+  "synthetic_semantic_tests_passed": true,
+  "prefix_causality_test_passed": true,
+  "deterministic_candidate_hash_passed": true,
+  "real_data_pilot_run": false,
+  "promotion_allowed": false,
+  "next_required_stage": "L3_real_data_vertical_slice"
+}

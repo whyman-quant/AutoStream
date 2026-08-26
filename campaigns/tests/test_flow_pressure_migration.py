@@ -13,6 +13,7 @@ IDEA_PATH = CAMPAIGN / "ideas" / "flow_pressure.json"
 BATCH_PATH = CAMPAIGN / "batches" / "flow_pressure_seed_v1.json"
 CANDIDATE_PATH = CAMPAIGN / "candidates" / "flow_pressure" / "flow_pressure_signed_trade_flow_w16.json"
 METADATA_PATH = ROOT / "base" / "hf-open5m-factor-demo" / "factors" / "flow_pressure" / "meta_config.h"
+RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-vertical-slice.json"
 
 
 def load_json(path):
@@ -50,6 +51,20 @@ class FlowPressureMigrationTests(unittest.TestCase):
         self.assertIsNotNone(names_block)
         names = re.findall(r'"([^"]+)"', names_block.group(1))
         self.assertEqual(names, [candidate["candidate_id"]])
+
+    def test_l2_receipt_does_not_claim_real_data_pilot(self):
+        candidate = load_json(CANDIDATE_PATH)
+        batch = load_json(BATCH_PATH)
+        receipt = load_json(RECEIPT_PATH)
+        self.assertEqual(candidate["evidence_level"], "L2")
+        self.assertEqual(candidate["lineage"]["source_commit"], "0322592")
+        self.assertEqual(batch["status"], "technical_complete")
+        self.assertEqual(receipt["evidence_level"], "L2")
+        self.assertEqual(receipt["candidate_hash"], candidate["canonical_hash"])
+        self.assertTrue(receipt["synthetic_semantic_tests_passed"])
+        self.assertTrue(receipt["prefix_causality_test_passed"])
+        self.assertFalse(receipt["real_data_pilot_run"])
+        self.assertFalse(receipt["promotion_allowed"])
 
 
 if __name__ == "__main__":

@@ -114,7 +114,7 @@ Run:
 python3 -m unittest -v campaigns.tests.test_contracts campaigns.tests.test_flow_pressure_migration
 
 cmake -S base/hf-open5m-factor-demo -B base/hf-open5m-factor-demo/build-flow-pressure \
-  -DBUILD_APP_LIVE=OFF -DBUILD_APP_FACTOR=OFF -DBUILD_APP_MODEL=OFF -DBUILD_TESTING=ON \
+  -DBUILD_APP_LIVE=OFF -DBUILD_APP_FACTOR=ON -DBUILD_APP_MODEL=OFF -DBUILD_TESTING=ON \
   -DCMAKE_CXX_STANDARD=17
 cmake --build base/hf-open5m-factor-demo/build-flow-pressure --target flow_pressure_factor_entry_test book_imbalance_factor_entry_test -j2
 ctest --test-dir base/hf-open5m-factor-demo/build-flow-pressure -R '(flow_pressure_factor_entry|book_imbalance_factor_entry)' --output-on-failure
