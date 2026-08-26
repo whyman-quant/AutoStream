@@ -1,0 +1,260 @@
+{
+  "artifacts": {
+    "factor_input": {
+      "path": "data/sfm_autoresearch_001/impact-efficiency-full-market/20251014/impact_efficiency/20251014.arrow",
+      "sha256": "ddc996cd9fc3b7ffa91cba81d039edd995c71133b45dcd5eec3e000b4d00c87e"
+    },
+    "label_contract": {
+      "path": "evaluations/label_contract.json",
+      "sha256": "2941f07d218daac4848e4563b6d7c9ccf1ebd4c954095906eb0fd6dbcc490640"
+    },
+    "label_input": {
+      "path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251014.arrow",
+      "sha256": "15aa09314e66cdf83fd5ad817558e99d001feee9b51fd729874a923b8a137a80"
+    }
+  },
+  "combination_count": 6,
+  "combinations": [
+    {
+      "factor_count": 1,
+      "factors": {
+        "impact_efficiency_signed_price_impact_w16": {
+          "event_count": 8,
+          "mean_ic": 0.009290996616118038,
+          "mean_long_short": 0.004063827935617799,
+          "mean_monotonicity": -0.17727272727272725,
+          "mean_rank_ic": 0.011762367679141185,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "raw926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "impact_efficiency_signed_price_impact_w16": {
+          "event_count": 8,
+          "mean_ic": -0.0033088172027744794,
+          "mean_long_short": 0.0031949348158084394,
+          "mean_monotonicity": 0.0015151515151515128,
+          "mean_rank_ic": -0.0014707868410340698,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "raw926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "impact_efficiency_signed_price_impact_w16": {
+          "event_count": 8,
+          "mean_ic": 0.009118241814289055,
+          "mean_long_short": 0.003671167259141667,
+          "mean_monotonicity": 0.04090909090909092,
+          "mean_rank_ic": 0.0028777307927577924,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "raw926",
+      "universe": "000906"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "impact_efficiency_signed_price_impact_w16": {
+          "event_count": 8,
+          "mean_ic": -0.004029321014380476,
+          "mean_long_short": 0.0003770477827264341,
+          "mean_monotonicity": 0.0,
+          "mean_rank_ic": -0.008959989035557812,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "ease926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "impact_efficiency_signed_price_impact_w16": {
+          "event_count": 8,
+          "mean_ic": -0.011903656993078434,
+          "mean_long_short": -0.00021738536948450653,
+          "mean_monotonicity": 0.1318181818181818,
+          "mean_rank_ic": -0.018042415544600062,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "ease926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "impact_efficiency_signed_price_impact_w16": {
+          "event_count": 8,
+          "mean_ic": -0.002861954524272519,
+          "mean_long_short": 5.720802027817882e-05,
+          "mean_monotonicity": 0.26212121212121214,
+          "mean_rank_ic": -0.01948027191815415,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "ease926",
+      "universe": "000906"
+    }
+  ],
+  "direction_policy": "no_direction_selection_from_acceptance_data",
+  "evaluation_scope": "single_day_acceptance",
+  "evaluator": {
+    "path": "/home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py",
+    "sha256": "3a36339a0b128408fe8012fdcec5b15aeb3b999e359f781eade517ce267f7f9a"
+  },
+  "factor_count": 1,
+  "input_format": "parquet",
+  "inputs": [
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16"
+      ],
+      "label": "raw926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/impact_efficiency_20251014/raw926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "88d2bfe8756278bd8f72314313246ed6d4f502cc7ee147e9479b10f6074cde51",
+      "universe": "000985"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16"
+      ],
+      "label": "raw926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/impact_efficiency_20251014/raw926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "99daf051f96ddac86e39c943d8c3d5759eecc0b502fe7e71431ffd5f99656ed8",
+      "universe": "003800"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16"
+      ],
+      "label": "raw926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/impact_efficiency_20251014/raw926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "9af59bffce7c6db1bdae88318a9896add635043353ef08b9e6d51c69e6e981f5",
+      "universe": "000906"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16"
+      ],
+      "label": "ease926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/impact_efficiency_20251014/ease926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "41dc662af27f98b1f0fd9d00aa010ee14e3b08ab797fbc61cf91c2da35727ad2",
+      "universe": "000985"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16"
+      ],
+      "label": "ease926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/impact_efficiency_20251014/ease926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "e61d7c3245bb2582aa0d1c42e4c267a692fc38ed4d2093602aa58cfa400d3779",
+      "universe": "003800"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16"
+      ],
+      "label": "ease926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/impact_efficiency_20251014/ease926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "ee77484f6be8ff68deb65f3e8261a55a56e152333a2451a9b8a58d2ed51ac464",
+      "universe": "000906"
+    }
+  ],
+  "labels": [
+    "raw926",
+    "ease926"
+  ],
+  "promotion_allowed": false,
+  "result_root": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/impact_efficiency_20251014",
+  "schema_version": 1,
+  "trading_dates": [
+    "20251014"
+  ],
+  "universes": [
+    "000985",
+    "003800",
+    "000906"
+  ]
+}
