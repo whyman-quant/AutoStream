@@ -1,0 +1,260 @@
+{
+  "artifacts": {
+    "factor_input": {
+      "path": "data/sfm_autoresearch_001/liquidity-resilience-full-market/20251014/liquidity_resilience/20251014.arrow",
+      "sha256": "f745d43ca3b5696747de5fe71de02d7513485a8ff317f713259741940a6d9783"
+    },
+    "label_contract": {
+      "path": "evaluations/label_contract.json",
+      "sha256": "2941f07d218daac4848e4563b6d7c9ccf1ebd4c954095906eb0fd6dbcc490640"
+    },
+    "label_input": {
+      "path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251014.arrow",
+      "sha256": "15aa09314e66cdf83fd5ad817558e99d001feee9b51fd729874a923b8a137a80"
+    }
+  },
+  "combination_count": 6,
+  "combinations": [
+    {
+      "factor_count": 1,
+      "factors": {
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16": {
+          "event_count": 8,
+          "mean_ic": 0.036160844216818346,
+          "mean_long_short": 0.006069115884145156,
+          "mean_monotonicity": -0.059090909090909055,
+          "mean_rank_ic": 0.04127435214462305,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "raw926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16": {
+          "event_count": 8,
+          "mean_ic": 0.06452237451068261,
+          "mean_long_short": 0.007956134867247442,
+          "mean_monotonicity": -0.2121212121212121,
+          "mean_rank_ic": 0.07562464653253345,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "raw926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16": {
+          "event_count": 8,
+          "mean_ic": 0.0723271948066586,
+          "mean_long_short": 0.008221492444981424,
+          "mean_monotonicity": -0.12121212121212119,
+          "mean_rank_ic": 0.08070819040284584,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "raw926",
+      "universe": "000906"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16": {
+          "event_count": 8,
+          "mean_ic": 0.0050845001433999,
+          "mean_long_short": 0.0007387734055688095,
+          "mean_monotonicity": 0.009090909090909066,
+          "mean_rank_ic": 0.01344832034068583,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "ease926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16": {
+          "event_count": 8,
+          "mean_ic": 0.024976089831727895,
+          "mean_long_short": 0.001978012640249515,
+          "mean_monotonicity": -0.17272727272727267,
+          "mean_rank_ic": 0.038211771344394845,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "ease926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16": {
+          "event_count": 8,
+          "mean_ic": 0.03448961170494897,
+          "mean_long_short": 0.0023198399804958514,
+          "mean_monotonicity": -0.056060606060606054,
+          "mean_rank_ic": 0.05796252965453735,
+          "rank_ic_count": 7
+        }
+      },
+      "label": "ease926",
+      "universe": "000906"
+    }
+  ],
+  "direction_policy": "no_direction_selection_from_acceptance_data",
+  "evaluation_scope": "single_day_acceptance",
+  "evaluator": {
+    "path": "/home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py",
+    "sha256": "3a36339a0b128408fe8012fdcec5b15aeb3b999e359f781eade517ce267f7f9a"
+  },
+  "factor_count": 1,
+  "input_format": "parquet",
+  "inputs": [
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16"
+      ],
+      "label": "raw926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_20251014/raw926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "94fa46e3748467bc20f75da3f657686cf6463fefea343e4fbbcd2006a56b9c2d",
+      "universe": "000985"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16"
+      ],
+      "label": "raw926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_20251014/raw926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "2c5c612f2264281119c925633b1f9ff5ef5272896c29a4fe64c29cb07deffa1d",
+      "universe": "003800"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16"
+      ],
+      "label": "raw926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_20251014/raw926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "a1c62a82b72eaf391c5733233615838fd19cb0f4f003534c3691279f6e332eb6",
+      "universe": "000906"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16"
+      ],
+      "label": "ease926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_20251014/ease926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "6806e5cc6a5346f195cbcb8484ba04988976f0125b055d9763ccab432a723ba1",
+      "universe": "000985"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16"
+      ],
+      "label": "ease926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_20251014/ease926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "6b7b99c48269358eb3c10cbde022cd28400aab3023a52314fe12a44f8ca8b428",
+      "universe": "003800"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16"
+      ],
+      "label": "ease926",
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_20251014/ease926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "f9843c283bf719b4a23c994d15faaab1dc79485976605dddeb2b6f73b662c98e",
+      "universe": "000906"
+    }
+  ],
+  "labels": [
+    "raw926",
+    "ease926"
+  ],
+  "promotion_allowed": false,
+  "result_root": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_20251014",
+  "schema_version": 1,
+  "trading_dates": [
+    "20251014"
+  ],
+  "universes": [
+    "000985",
+    "003800",
+    "000906"
+  ]
+}
