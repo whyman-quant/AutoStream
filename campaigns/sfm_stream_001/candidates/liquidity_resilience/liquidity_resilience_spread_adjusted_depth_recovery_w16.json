@@ -15,7 +15,7 @@
   "state": {"window_type": "event_count", "window_events": 16, "warmup_events": 1, "reset_policy": "trading_day"},
   "availability": {"update_on": ["quote"], "output_at": "scheduled_snapshot", "lag_events": 0, "invalid_policy": "finite_or_zero"},
   "output": {"factor_name": "liquidity_resilience_spread_adjusted_depth_recovery_w16", "dtype": "float64", "research_direction": "raw_signed"},
-  "lineage": {"idea_path": "campaigns/sfm_stream_001/ideas/liquidity_resilience.json", "implementation_path": "base/hf-open5m-factor-demo/factors/liquidity_resilience/factor_entry.cpp", "source_commit": "ac2075f"},
+  "lineage": {"idea_path": "campaigns/sfm_stream_001/ideas/liquidity_resilience.json", "implementation_path": "base/hf-open5m-factor-demo/factors/liquidity_resilience/factor_entry.cpp", "source_commit": "1839237"},
   "evidence_level": "L1",
   "canonical_hash": "sha256:dca5223ad9d97bee939a2552a8ea730506680f7b408ff57565360ce179d61d5c"
 }

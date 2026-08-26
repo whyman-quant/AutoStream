@@ -1,0 +1,11 @@
+{
+  "factors_config": {
+    "ev": "/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata",
+    "ev_code_file": "[DATE]/per1day/lab200005_codelist.h5",
+    "send_times": {"start": 93000, "end": 150000, "interval": 1800, "add": [92700]},
+    "factor_sets": [{"name": "liquidity_resilience", "enabled": true}],
+    "save_info": {"dir": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/liquidity-resilience-slice/[DATE]/liquidity_resilience", "save_stats": true, "save_times": [92700, 100000, 103000, 110000, 113000, 133000, 140000, 143000]},
+    "thread_num": 1
+  },
+  "skip_missed_time_triggers": false
+}
