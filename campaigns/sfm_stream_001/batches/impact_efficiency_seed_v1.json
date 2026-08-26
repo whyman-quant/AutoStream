@@ -13,6 +13,6 @@
   "candidate_ids": ["impact_efficiency_signed_price_impact_w16", "impact_efficiency_signed_price_impact_w32", "impact_efficiency_signed_price_impact_w64", "impact_efficiency_signed_price_impact_w128", "impact_efficiency_mid_price_response_w16", "impact_efficiency_mid_price_response_w32", "impact_efficiency_mid_price_response_w64", "impact_efficiency_mid_price_response_w128", "impact_efficiency_ofi_response_w16", "impact_efficiency_ofi_response_w32", "impact_efficiency_absorption_divergence_w16", "impact_efficiency_absorption_divergence_w32"],
   "search_policy": {"method": "mechanism_grid", "candidate_budget": 12},
   "created_at": "2026-08-26",
-  "source_commit": "aba369b",
-  "status": "generated"
+  "source_commit": "540ff0b",
+  "status": "technical_complete"
 }
