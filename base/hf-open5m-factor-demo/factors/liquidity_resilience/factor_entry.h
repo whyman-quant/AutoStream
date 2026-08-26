@@ -19,9 +19,9 @@ private:
     void DoOnAddOrder(const Stock_Order_Internal_Book_New& order) override;
     void DoOnUpdateFactors(int64_t timestamp) override;
 
-    static const size_t kWindowEvents = 16;
-    std::deque<double> liquidity_history_;
-    double current_liquidity_{0.0};
+    static const size_t kMaxHistoryEvents = 130;
+    std::deque<double> l1_liquidity_history_;
+    std::deque<double> l5_liquidity_history_;
     bool current_valid_{false};
 };
 
