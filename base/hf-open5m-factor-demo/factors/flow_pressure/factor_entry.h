@@ -21,10 +21,8 @@ private:
     void DoOnAddOrder(const Stock_Order_Internal_Book_New& order) override;
     void DoOnUpdateFactors(int64_t timestamp) override;
 
-    static const size_t kWindowEvents = 16;
+    static const size_t kMaxHistoryEvents = 130;
     std::deque<double> signed_volumes_;
-    double signed_sum_{0.0};
-    double absolute_sum_{0.0};
 };
 
 }  // namespace flow_pressure

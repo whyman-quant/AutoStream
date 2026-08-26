@@ -49,12 +49,12 @@ class FlowPressureMigrationTests(unittest.TestCase):
         validate_idea_candidate_batch(sorted(CANDIDATE_DIR.glob("*.json")), BATCH_PATH, IDEA_PATH)
 
     def test_candidate_name_matches_cpp_metadata(self):
-        candidate = load_json(CANDIDATE_PATH)
+        batch = load_json(BATCH_PATH)
         text = METADATA_PATH.read_text(encoding="utf-8")
         names_block = re.search(r"kFactorNames\s*=\s*\{(.*?)\};", text, re.S)
         self.assertIsNotNone(names_block)
         names = re.findall(r'"([^"]+)"', names_block.group(1))
-        self.assertEqual(names, [candidate["candidate_id"]])
+        self.assertEqual(names, batch["candidate_ids"])
 
     def test_l2_receipt_does_not_claim_real_data_pilot(self):
         candidate = load_json(CANDIDATE_PATH)

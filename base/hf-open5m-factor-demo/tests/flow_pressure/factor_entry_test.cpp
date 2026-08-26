@@ -23,10 +23,33 @@ double Value(factors::flow_pressure::FactorEntry& entry, int64_t timestamp = 100
     return entry.UpdateFactors(timestamp).at(0);
 }
 
+std::vector<double> Values(
+    factors::flow_pressure::FactorEntry& entry, int64_t timestamp = 100000000) {
+    return entry.UpdateFactors(timestamp);
+}
+
 }  // namespace
 
 int main() {
     factors::comm::FactorEntryConfig config;
+    const std::vector<std::string> expected_names = {
+        "flow_pressure_signed_trade_flow_w16",
+        "flow_pressure_signed_trade_flow_w32_lag0",
+        "flow_pressure_signed_trade_flow_w64_lag1",
+        "flow_pressure_signed_trade_flow_w128_lag2",
+        "flow_pressure_trade_flow_zscore_w16_lag0",
+        "flow_pressure_trade_flow_zscore_w32_lag0",
+        "flow_pressure_trade_flow_zscore_w64_lag1",
+        "flow_pressure_trade_flow_zscore_w128_lag2",
+        "flow_pressure_decayed_trade_flow_w16_lag0",
+        "flow_pressure_decayed_trade_flow_w32_lag0",
+        "flow_pressure_decayed_trade_flow_w64_lag1",
+        "flow_pressure_decayed_trade_flow_w128_lag2",
+    };
+    if (factors::flow_pressure::GetMetadata().factor_names != expected_names) {
+        std::cerr << "metadata must expose the frozen twelve-candidate order" << std::endl;
+        return 1;
+    }
 
     factors::flow_pressure::FactorEntry buy(
         "000001", factors::flow_pressure::GetMetadata(), config);
@@ -50,6 +73,21 @@ int main() {
     balanced.AddTrans(Trade('S', 50));
     if (!Near(Value(balanced), 0.0)) {
         std::cerr << "balanced flow must produce zero" << std::endl;
+        return 1;
+    }
+
+    factors::flow_pressure::FactorEntry lagged(
+        "000001", factors::flow_pressure::GetMetadata(), config);
+    lagged.AddTrans(Trade('B', 100));
+    lagged.AddTrans(Trade('S', 100));
+    const auto lagged_values = Values(lagged);
+    if (!Near(lagged_values.at(0), 0.0) || !Near(lagged_values.at(1), 0.0) ||
+        !Near(lagged_values.at(2), 1.0) || !Near(lagged_values.at(3), 0.0)) {
+        std::cerr << "lagged signed-flow variants do not honor their event lag" << std::endl;
+        return 1;
+    }
+    if (!(lagged_values.at(8) < 0.0) || !std::isfinite(lagged_values.at(4))) {
+        std::cerr << "decay and zscore variants are not finite or time-directed" << std::endl;
         return 1;
     }
 
