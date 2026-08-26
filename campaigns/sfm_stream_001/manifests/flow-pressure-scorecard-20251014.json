@@ -1,0 +1,260 @@
+{
+  "artifacts": {
+    "factor_input": {
+      "path": "data/sfm_autoresearch_001/vertical-slice-full-market/20251014/flow_pressure/20251014.arrow",
+      "sha256": "92f9cc5f1ee33cc7e20446271df378f6f0939d4dc103264d9ef329b3bb568fed"
+    },
+    "label_contract": {
+      "path": "evaluations/label_contract.json",
+      "sha256": "2941f07d218daac4848e4563b6d7c9ccf1ebd4c954095906eb0fd6dbcc490640"
+    },
+    "label_input": {
+      "path": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926/20251014.arrow",
+      "sha256": "15aa09314e66cdf83fd5ad817558e99d001feee9b51fd729874a923b8a137a80"
+    }
+  },
+  "combination_count": 6,
+  "combinations": [
+    {
+      "factor_count": 1,
+      "factors": {
+        "flow_pressure_signed_trade_flow_w16": {
+          "event_count": 8,
+          "mean_ic": 0.0009340548321740024,
+          "mean_long_short": -0.0007307534746293623,
+          "mean_monotonicity": 0.006060606060606058,
+          "mean_rank_ic": 0.001408589814983542,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "raw926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "flow_pressure_signed_trade_flow_w16": {
+          "event_count": 8,
+          "mean_ic": -0.00405691280899913,
+          "mean_long_short": -0.0018209363130678937,
+          "mean_monotonicity": 0.03484848484848484,
+          "mean_rank_ic": -0.006828896439010926,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "raw926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "flow_pressure_signed_trade_flow_w16": {
+          "event_count": 8,
+          "mean_ic": 0.011323563701460697,
+          "mean_long_short": -0.001230231510936481,
+          "mean_monotonicity": -0.0787878787878788,
+          "mean_rank_ic": 0.0045054313751373455,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "raw926",
+      "universe": "000906"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "flow_pressure_signed_trade_flow_w16": {
+          "event_count": 8,
+          "mean_ic": 0.0002803171243416346,
+          "mean_long_short": -0.00048050636659873386,
+          "mean_monotonicity": -0.04545454545454543,
+          "mean_rank_ic": 0.0013945366394981413,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "ease926",
+      "universe": "000985"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "flow_pressure_signed_trade_flow_w16": {
+          "event_count": 8,
+          "mean_ic": 0.003770853307387609,
+          "mean_long_short": -0.0005270803288637009,
+          "mean_monotonicity": -0.03484848484848485,
+          "mean_rank_ic": 0.004794665348978461,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "ease926",
+      "universe": "003800"
+    },
+    {
+      "factor_count": 1,
+      "factors": {
+        "flow_pressure_signed_trade_flow_w16": {
+          "event_count": 8,
+          "mean_ic": 0.014257090918093584,
+          "mean_long_short": 0.00010060398156365967,
+          "mean_monotonicity": -0.13636363636363635,
+          "mean_rank_ic": 0.00798814589592877,
+          "rank_ic_count": 8
+        }
+      },
+      "label": "ease926",
+      "universe": "000906"
+    }
+  ],
+  "direction_policy": "no_direction_selection_from_acceptance_data",
+  "evaluation_scope": "single_day_acceptance",
+  "evaluator": {
+    "path": "/home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py",
+    "sha256": "3a36339a0b128408fe8012fdcec5b15aeb3b999e359f781eade517ce267f7f9a"
+  },
+  "factor_count": 1,
+  "input_format": "parquet",
+  "inputs": [
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16"
+      ],
+      "label": "raw926",
+      "path": "data/sfm_autoresearch_001/evaluation/flow_pressure_20251014/raw926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "e3873472c3da7ed02ad6bff17203642aa64b4fb89ba9bccf38dd9cc35e15cf58",
+      "universe": "000985"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16"
+      ],
+      "label": "raw926",
+      "path": "data/sfm_autoresearch_001/evaluation/flow_pressure_20251014/raw926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "c4932c9f79cfc646002adc7f8ae8544b4c2b57110a85e5136c3627e054f2874a",
+      "universe": "003800"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16"
+      ],
+      "label": "raw926",
+      "path": "data/sfm_autoresearch_001/evaluation/flow_pressure_20251014/raw926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "3947144bdfedf608a73fca1b9d14ba9783227cd747dec065d08f6a2c17b3e0e9",
+      "universe": "000906"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16"
+      ],
+      "label": "ease926",
+      "path": "data/sfm_autoresearch_001/evaluation/flow_pressure_20251014/ease926/000985/res_full.parquet",
+      "row_count": 8,
+      "sha256": "6bc4eaad431f5374b209546a2006f2a5dbc7d4845ff7be231848302f3f54f52b",
+      "universe": "000985"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16"
+      ],
+      "label": "ease926",
+      "path": "data/sfm_autoresearch_001/evaluation/flow_pressure_20251014/ease926/003800/res_full.parquet",
+      "row_count": 8,
+      "sha256": "996b89f1178409808e912b493258394a6f539b58313cd2d2bc3e8b8aae2b0d1f",
+      "universe": "003800"
+    },
+    {
+      "date": "20251014",
+      "event_keys": [
+        92600000,
+        100000000,
+        103000000,
+        110000000,
+        113000000,
+        133000000,
+        140000000,
+        143000000
+      ],
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16"
+      ],
+      "label": "ease926",
+      "path": "data/sfm_autoresearch_001/evaluation/flow_pressure_20251014/ease926/000906/res_full.parquet",
+      "row_count": 8,
+      "sha256": "c4bb972dce2c77d5b38d7d854a402177bb68247f2a3605d4578b986b9e028f94",
+      "universe": "000906"
+    }
+  ],
+  "labels": [
+    "raw926",
+    "ease926"
+  ],
+  "promotion_allowed": false,
+  "result_root": "data/sfm_autoresearch_001/evaluation/flow_pressure_20251014",
+  "schema_version": 1,
+  "trading_dates": [
+    "20251014"
+  ],
+  "universes": [
+    "000985",
+    "003800",
+    "000906"
+  ]
+}

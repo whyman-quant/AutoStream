@@ -67,9 +67,10 @@ class LedgerTests(unittest.TestCase):
         path = Path(__file__).parents[1] / "sfm_stream_001" / "events.jsonl"
         events = validate_ledger(path)
         self.assertGreaterEqual(len(events), 1)
+        experiment_ids = {event["experiment_id"] for event in events}
         self.assertIn("observation_only", {event["status"] for event in events})
-        self.assertEqual(events[-1]["experiment_id"], "flow-pressure-l3-smoke-20251014-000001")
-        self.assertEqual(events[-1]["status"], "technical_pass")
+        self.assertIn("flow-pressure-l3-smoke-20251014-000001", experiment_ids)
+        self.assertIn("flow-pressure-l3-single-day-20251014", experiment_ids)
 
 
 if __name__ == "__main__":
