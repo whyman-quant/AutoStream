@@ -7,6 +7,58 @@ from campaigns.contracts import validate_document
 SHA256 = "sha256:" + "a" * 64
 
 
+def idea_spec_document():
+    return {
+        "schema_version": 1,
+        "kind": "idea_spec",
+        "idea_id": "signed_trade_pressure",
+        "campaign_id": "sfm_stream_001",
+        "family_id": "flow_pressure",
+        "title": "Signed trade pressure",
+        "source": {
+            "type": "market_observation",
+            "reference": "trade direction and volume",
+            "retrieved_at": "2026-08-26",
+        },
+        "hypothesis": {
+            "mechanism": "Persistent aggressive trade imbalance may reveal short-horizon demand pressure.",
+            "expected_sign": "raw_signed",
+            "falsifiable_condition": "The signal has no stable relation to the next evaluation return on formal history.",
+        },
+        "inputs": {
+            "streams": ["trade"],
+            "fields": ["trade_volume", "bsflag", "trade_type"],
+        },
+        "operators": [{
+            "operator_id": "signed_trade_flow",
+            "description": "Signed trade volume divided by absolute trade volume.",
+            "representative": True,
+        }],
+        "parameter_space": {
+            "window_events": [16, 32, 64, 128],
+            "normalization": ["signed_total_volume", "none"],
+            "include_cancels": [False],
+        },
+        "state": {
+            "window_type": "event_count",
+            "warmup_events": 1,
+            "reset_policy": "trading_day",
+        },
+        "availability": {
+            "update_on": ["trade"],
+            "output_at": "scheduled_snapshot",
+            "lag_events": 0,
+            "invalid_policy": "finite_or_zero",
+        },
+        "implementation": {
+            "language": "cpp",
+            "target_path": "base/hf-open5m-factor-demo/factors/flow_pressure/factor_entry.cpp",
+            "complexity": "O(1) amortized per trade",
+        },
+        "representative_candidate_id": "flow_pressure_signed_trade_flow_w16",
+    }
+
+
 def candidate_document():
     return {
         "schema_version": 1,
@@ -173,6 +225,7 @@ def experience_document():
 class ContractTests(unittest.TestCase):
     def test_accepts_valid_documents(self):
         for kind, document in (
+            ("idea_spec", idea_spec_document()),
             ("candidate", candidate_document()),
             ("batch", batch_document()),
             ("factor_portrait", portrait_document()),
@@ -223,6 +276,18 @@ class ContractTests(unittest.TestCase):
     def test_rejects_unknown_document_kind(self):
         with self.assertRaisesRegex(ValueError, "unknown contract kind"):
             validate_document("unknown", {})
+
+    def test_idea_spec_rejects_unsupported_input_field(self):
+        document = idea_spec_document()
+        document["inputs"]["fields"] = ["future_return"]
+        with self.assertRaisesRegex(ValueError, "future_return"):
+            validate_document("idea_spec", document)
+
+    def test_idea_spec_requires_falsifiable_condition(self):
+        document = idea_spec_document()
+        document["hypothesis"]["falsifiable_condition"] = ""
+        with self.assertRaises(ValueError):
+            validate_document("idea_spec", document)
 
 
 if __name__ == "__main__":

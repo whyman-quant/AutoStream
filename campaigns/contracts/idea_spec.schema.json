@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whyman-quant.github.io/AutoStream/contracts/idea-spec-v1.schema.json",
+  "title": "AutoStream Idea Spec v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "idea_id", "campaign_id", "family_id", "title", "source", "hypothesis", "inputs", "operators", "parameter_space", "state", "availability", "implementation", "representative_candidate_id"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "idea_spec"},
+    "idea_id": {"$ref": "#/definitions/id"},
+    "campaign_id": {"$ref": "#/definitions/id"},
+    "family_id": {"$ref": "#/definitions/id"},
+    "title": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "reference", "retrieved_at"],
+      "properties": {
+        "type": {"enum": ["paper", "article", "market_observation", "historical_experiment", "existing_code"]},
+        "reference": {"type": "string", "minLength": 1},
+        "retrieved_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}
+      }
+    },
+    "hypothesis": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mechanism", "expected_sign", "falsifiable_condition"],
+      "properties": {
+        "mechanism": {"type": "string", "minLength": 1},
+        "expected_sign": {"const": "raw_signed"},
+        "falsifiable_condition": {"type": "string", "minLength": 1}
+      }
+    },
+    "inputs": {
+      "type": "object", "additionalProperties": false,
+      "required": ["streams", "fields"],
+      "properties": {
+        "streams": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["quote", "trade", "order"]}},
+        "fields": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["trade_volume", "trade_price", "trade_type", "bsflag", "order_volume", "order_price", "order_type", "bp_array", "ap_array", "bv_array", "av_array", "last_px"]}}
+      }
+    },
+    "operators": {
+      "type": "array", "minItems": 1, "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["operator_id", "description", "representative"],
+        "properties": {
+          "operator_id": {"$ref": "#/definitions/id"},
+          "description": {"type": "string", "minLength": 1},
+          "representative": {"type": "boolean"}
+        }
+      }
+    },
+    "parameter_space": {
+      "type": "object", "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+      "additionalProperties": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": ["string", "number", "integer", "boolean", "null"]}}
+    },
+    "state": {
+      "type": "object", "additionalProperties": false,
+      "required": ["window_type", "warmup_events", "reset_policy"],
+      "properties": {"window_type": {"enum": ["event_count", "elapsed_time"]}, "warmup_events": {"type": "integer", "minimum": 0}, "reset_policy": {"const": "trading_day"}}
+    },
+    "availability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["update_on", "output_at", "lag_events", "invalid_policy"],
+      "properties": {"update_on": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["quote", "trade", "order"]}}, "output_at": {"const": "scheduled_snapshot"}, "lag_events": {"type": "integer", "minimum": 0}, "invalid_policy": {"enum": ["finite_or_zero", "unavailable"]}}
+    },
+    "implementation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["language", "target_path", "complexity"],
+      "properties": {"language": {"const": "cpp"}, "target_path": {"type": "string", "minLength": 1}, "complexity": {"type": "string", "minLength": 1}}
+    },
+    "representative_candidate_id": {"$ref": "#/definitions/id"}
+  },
+  "definitions": {"id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*$"}}
+}

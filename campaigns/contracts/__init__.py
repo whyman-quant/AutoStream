@@ -10,6 +10,7 @@ from jsonschema import Draft7Validator
 
 
 CONTRACT_FILES = {
+    "idea_spec": "idea_spec.schema.json",
     "candidate": "candidate.schema.json",
     "batch": "batch.schema.json",
     "factor_portrait": "factor_portrait.schema.json",
