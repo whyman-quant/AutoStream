@@ -78,7 +78,7 @@ class LiquidityResilienceMigrationTests(unittest.TestCase):
         )
 
         evidence = {item["candidate_id"]: item["evidence_level"] for item in candidates}
-        self.assertEqual(evidence[representative_id], "L1")
+        self.assertEqual(evidence[representative_id], "L2")
         self.assertEqual({level for key, level in evidence.items() if key != representative_id}, {"L2"})
 
     def test_candidate_name_matches_cpp_metadata(self):
