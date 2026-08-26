@@ -14,6 +14,7 @@ BATCH_PATH = CAMPAIGN / "batches" / "flow_pressure_seed_v1.json"
 CANDIDATE_PATH = CAMPAIGN / "candidates" / "flow_pressure" / "flow_pressure_signed_trade_flow_w16.json"
 METADATA_PATH = ROOT / "base" / "hf-open5m-factor-demo" / "factors" / "flow_pressure" / "meta_config.h"
 RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-vertical-slice.json"
+SMOKE_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-smoke-20251014-000001.json"
 
 
 def load_json(path):
@@ -64,6 +65,21 @@ class FlowPressureMigrationTests(unittest.TestCase):
         self.assertTrue(receipt["synthetic_semantic_tests_passed"])
         self.assertTrue(receipt["prefix_causality_test_passed"])
         self.assertFalse(receipt["real_data_pilot_run"])
+        self.assertFalse(receipt["promotion_allowed"])
+
+    def test_real_data_smoke_receipt_stays_below_l3_completion(self):
+        receipt = load_json(SMOKE_RECEIPT_PATH)
+        self.assertEqual(receipt["scope"], "single_stock_real_data_smoke")
+        self.assertEqual(receipt["trading_date"], "20251014")
+        self.assertEqual(receipt["stock"], "000001")
+        self.assertEqual(receipt["checkpoint_count"], 8)
+        self.assertEqual(receipt["factor_count"], 1)
+        self.assertEqual(receipt["arrow_rows"], 8)
+        self.assertTrue(receipt["all_values_finite"])
+        self.assertFalse(receipt["all_values_zero"])
+        self.assertFalse(receipt["constant_across_checkpoints"])
+        self.assertEqual(receipt["decision"], "continue_to_full_market_single_day")
+        self.assertFalse(receipt["l3_complete"])
         self.assertFalse(receipt["promotion_allowed"])
 
 
