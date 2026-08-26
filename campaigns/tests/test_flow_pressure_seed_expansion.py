@@ -62,13 +62,13 @@ class FlowPressureSeedExpansionTests(unittest.TestCase):
             3,
         )
 
-    def test_only_existing_representative_claims_l2_evidence(self):
+    def test_all_implemented_seeds_claim_l2_evidence(self):
         evidence = {item["candidate_id"]: item["evidence_level"] for item in self.candidates}
         self.assertEqual(evidence[REPRESENTATIVE_ID], "L2")
-        self.assertEqual(
-            {level for candidate_id, level in evidence.items() if candidate_id != REPRESENTATIVE_ID},
-            {"L0"},
-        )
+        self.assertEqual(set(evidence.values()), {"L2"})
+        for candidate in self.candidates:
+            if candidate["candidate_id"] != REPRESENTATIVE_ID:
+                self.assertEqual(candidate["lineage"]["source_commit"], "2ad6d1f")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "flow_pressure",
+  "batch_id": "flow_pressure_seed_v1",
+  "scope": "twelve_candidate_single_stock_l2_smoke",
+  "trading_date": "20251014",
+  "stock": "000001",
+  "factor_source_commit": "2ad6d1f",
+  "config_path": "base/hf-open5m-factor-demo/config_factor_sfm_stream_001_flow_pressure_grid_slice.json",
+  "config_sha256": "sha256:ba08e349e734c73ffd543257e57a98e4145e729b1475b92ffeef9effaf5ddfcf",
+  "hdf5_path": "data/sfm_autoresearch_001/flow-pressure-grid-slice/20251014/flow_pressure/factors.h5",
+  "hdf5_sha256": "sha256:5ee2d6c13c0c1d0dfeda77d0d9a64b162b8743c410ec2eb545f45bf10563602c",
+  "checkpoint_count": 8,
+  "factor_count": 12,
+  "all_values_finite": true,
+  "all_zero_columns": [],
+  "constant_across_checkpoints": [],
+  "synthetic_semantic_tests_passed": true,
+  "prefix_causality_test_passed": true,
+  "decision": "l2_implemented_continue_full_market_l3",
+  "promotion_allowed": false
+}
