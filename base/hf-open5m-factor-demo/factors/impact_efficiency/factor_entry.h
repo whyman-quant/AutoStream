@@ -6,8 +6,8 @@
 namespace factors { namespace impact_efficiency {
 class FactorEntry: public comm::FactorEntryBase {
 public: FactorEntry(const std::string& asset,const comm::FactorMetadata& metadata,const comm::FactorEntryConfig& config);
+ struct TradeState { double price; double signed_volume; };
 private: void DoOnAddQuote(const Stock_Internal_Book&) override; void DoOnAddTrans(const Stock_Transaction_Internal_Book_New&) override; void DoOnAddOrder(const Stock_Order_Internal_Book_New&) override; void DoOnUpdateFactors(int64_t) override;
-struct TradeState { double price; double signed_volume; };
-static const size_t kWindowEvents=16; std::deque<TradeState> trades_; double net_signed_volume_{0.0}; double absolute_volume_{0.0}; double current_value_{0.0}; bool current_valid_{false};
+static const size_t kMaxHistoryEvents=130; std::deque<TradeState> trades_;
 }; } }
 REGISTER_FACTOR_AUTO(impact_efficiency, FactorEntry)
