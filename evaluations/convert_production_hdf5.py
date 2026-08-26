@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Iterable, Optional, Sequence
 
@@ -13,6 +14,13 @@ EVALUATION_EVENT_BY_SOURCE_EVENT = {92700000: 92600000}
 
 def _decode(value: object) -> str:
     return value.decode().rstrip("\x00") if isinstance(value, bytes) else str(value)
+
+
+def _infer_date(input_path: Path) -> str:
+    for parent in input_path.parents:
+        if re.fullmatch(r"[0-9]{8}", parent.name):
+            return parent.name
+    return ""
 
 
 def convert_hdf5(
@@ -43,7 +51,7 @@ def convert_hdf5(
         dates = []
         event_values = []
         factor_values = []
-        date = input_path.parents[1].name if input_path.parent.name == "book_imbalance" else ""
+        date = _infer_date(input_path)
         for event in events:
             matrix = np.asarray(source[str(event)][:], dtype=np.float64)
             event_symbols = [_decode(value) for value in source["codelist_" + str(event)][:]]
