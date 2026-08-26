@@ -77,6 +77,7 @@ double Microprice(const Stock_Internal_Book& quote, int window, int variant, int
         const double micro = (ask * bid_size + bid * ask_size) / total;
         raw = (micro - 0.5 * (bid + ask)) / (ask - bid);
     }
+    else return 0.0;
     return FiniteOrZero(Combine(Prepare(raw, variant, lag), Normalizer(window, count), operation));
 }
 
@@ -91,7 +92,7 @@ double Spread(const Stock_Internal_Book& quote, int window, int variant, int lag
     if (std::isfinite(depth) && spread >= 0.0 && reference > 1e-12) {
         const double penalty = 1.0 + std::max(0.0, spread / reference - 1.0);
         raw = depth / penalty;
-    }
+    } else return 0.0;
     return FiniteOrZero(Combine(Prepare(raw, variant, lag), Normalizer(window, count), operation));
 }
 

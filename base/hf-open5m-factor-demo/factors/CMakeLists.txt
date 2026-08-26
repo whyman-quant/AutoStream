@@ -56,7 +56,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/_share)
 foreach(DIR ${FACTOR_DIRS})
     # 检查是否是目录且不是 _ 开头（如_comm、_template、_share等都会被过滤）
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${DIR} AND
-        NOT DIR MATCHES "^_.*")
+        NOT DIR MATCHES "^_.*" AND
+        NOT DIR STREQUAL "tests")
         message(STATUS "Found factor module: ${DIR}")
 
         # 添加子目录
