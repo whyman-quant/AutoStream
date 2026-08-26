@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "kind": "factor_portrait",
+  "portrait_id": "book_imbalance_microprice_displacement_w32_v0_lag1__pilot_20251009_20251031",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "book_imbalance",
+  "candidate_id": "book_imbalance_microprice_displacement_w32_v0_lag1",
+  "scope": "pilot",
+  "evidence_level": "L3",
+  "dataset": {
+    "dataset_id": "pilot_20251009_20251031",
+    "date_start": "20251009",
+    "date_end": "20251031",
+    "date_count": 17,
+    "events": [
+      92600000,
+      100000000,
+      103000000,
+      110000000,
+      113000000,
+      133000000,
+      140000000,
+      143000000
+    ],
+    "labels": [
+      "raw926",
+      "ease926"
+    ],
+    "universes": [
+      "000985",
+      "003800",
+      "000906"
+    ]
+  },
+  "lineage": {
+    "candidate_hash": "sha256:6e329c26c51f4fe63a2a3626289f9b640029bdd43913c621a9ee40994000b83f",
+    "source_commit": "b455935",
+    "evaluator_version": "factor_eval_toolkit@local",
+    "receipt_path": "campaigns/sfm_stream_001/manifests/multi-day-observation-20251009-20251031.json",
+    "receipt_sha256": "sha256:6f38f4876f92f4bf646ce946d88a10240de3707cb1d6bb712135a5a21c395c4f"
+  },
+  "data_quality": {
+    "all_required_values_finite": true,
+    "duplicate_key_count": 0,
+    "coverage_status": "complete"
+  },
+  "metric_slices": [
+    {
+      "label": "raw926",
+      "universe": "000985",
+      "observation_count": 136,
+      "metrics": {
+        "mean_rank_ic": -0.014460542935938235,
+        "rank_ic_positive_fraction": 0.33088235294117646,
+        "mean_ic": -0.009595136800519176,
+        "ic_positive_fraction": 0.35294117647058826,
+        "mean_long_short": -0.0007010874548587266,
+        "long_short_positive_fraction": 0.3382352941176471,
+        "mean_monotonicity": 0.17513368983957214
+      }
+    },
+    {
+      "label": "raw926",
+      "universe": "003800",
+      "observation_count": 136,
+      "metrics": {
+        "mean_rank_ic": -0.012824465938704383,
+        "rank_ic_positive_fraction": 0.34558823529411764,
+        "mean_ic": -0.00867918928785101,
+        "ic_positive_fraction": 0.3602941176470588,
+        "mean_long_short": -0.000818640371836659,
+        "long_short_positive_fraction": 0.34558823529411764,
+        "mean_monotonicity": 0.1229946524064171
+      }
+    },
+    {
+      "label": "raw926",
+      "universe": "000906",
+      "observation_count": 136,
+      "metrics": {
+        "mean_rank_ic": -0.012416753085433435,
+        "rank_ic_positive_fraction": 0.41911764705882354,
+        "mean_ic": -0.009740570626485926,
+        "ic_positive_fraction": 0.4264705882352941,
+        "mean_long_short": -0.0010829728855196363,
+        "long_short_positive_fraction": 0.4117647058823529,
+        "mean_monotonicity": 0.08217468805704095
+      }
+    },
+    {
+      "label": "ease926",
+      "universe": "000985",
+      "observation_count": 136,
+      "metrics": {
+        "mean_rank_ic": -0.010483877824872603,
+        "rank_ic_positive_fraction": 0.27205882352941174,
+        "mean_ic": -0.00666141828161596,
+        "ic_positive_fraction": 0.3382352941176471,
+        "mean_long_short": -0.00042531643425539945,
+        "long_short_positive_fraction": 0.375,
+        "mean_monotonicity": 0.13039215686274505
+      }
+    },
+    {
+      "label": "ease926",
+      "universe": "003800",
+      "observation_count": 136,
+      "metrics": {
+        "mean_rank_ic": -0.008893630188589241,
+        "rank_ic_positive_fraction": 0.33088235294117646,
+        "mean_ic": -0.005644080575467791,
+        "ic_positive_fraction": 0.36764705882352944,
+        "mean_long_short": -0.00048093536152457643,
+        "long_short_positive_fraction": 0.3602941176470588,
+        "mean_monotonicity": 0.09073083778966129
+      }
+    },
+    {
+      "label": "ease926",
+      "universe": "000906",
+      "observation_count": 136,
+      "metrics": {
+        "mean_rank_ic": -0.010545285302701213,
+        "rank_ic_positive_fraction": 0.375,
+        "mean_ic": -0.008219547004001992,
+        "ic_positive_fraction": 0.4264705882352941,
+        "mean_long_short": -0.0007488458262692536,
+        "long_short_positive_fraction": 0.4338235294117647,
+        "mean_monotonicity": 0.06434937611408202
+      }
+    }
+  ],
+  "direction": {
+    "policy": "raw_signed",
+    "frozen": false
+  },
+  "redundancy": {
+    "status": "not_measured_in_receipt",
+    "max_abs_spearman": null,
+    "peer_candidate_id": null
+  },
+  "decision": {
+    "status": "observation_only",
+    "promotion_allowed": false,
+    "reasons": [
+      "pilot_is_not_formal_history",
+      "signed_metrics_preserved_without_direction_selection"
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whyman-quant.github.io/AutoStream/contracts/experience-record-v1.schema.json",
+  "title": "AutoStream Experience Record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "experience_id", "campaign_id", "family_id", "source_portrait_ids", "fact", "interpretation", "action", "status", "generated_batch_ids"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "experience_record"},
+    "experience_id": {"$ref": "#/definitions/id"},
+    "campaign_id": {"$ref": "#/definitions/id"},
+    "family_id": {"$ref": "#/definitions/id"},
+    "source_portrait_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/definitions/id"}},
+    "fact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["statement", "evidence"],
+      "properties": {
+        "statement": {"type": "string", "minLength": 1},
+        "evidence": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/evidence"}}
+      }
+    },
+    "interpretation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["statement", "falsifiable_by"],
+      "properties": {
+        "statement": {"type": "string", "minLength": 1},
+        "falsifiable_by": {"type": "string", "minLength": 1}
+      }
+    },
+    "action": {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "changed_dimension", "target_family_id", "proposal", "falsifiable_test"],
+      "properties": {
+        "type": {"enum": ["generate_variants", "retain_control", "close_branch", "request_data"]},
+        "changed_dimension": {"type": "string", "minLength": 1},
+        "target_family_id": {"$ref": "#/definitions/id"},
+        "proposal": {"type": "string", "minLength": 1},
+        "falsifiable_test": {
+          "type": "object", "additionalProperties": false,
+          "required": ["expected_observation", "reject_condition", "dataset_scope"],
+          "properties": {
+            "expected_observation": {"type": "string", "minLength": 1},
+            "reject_condition": {"type": "string", "minLength": 1},
+            "dataset_scope": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "status": {"enum": ["proposed", "scheduled", "tested", "supported", "rejected", "closed"]},
+    "generated_batch_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/definitions/id"}}
+  },
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*$"},
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["portrait_id", "metric_path", "observed_value"],
+      "properties": {
+        "portrait_id": {"$ref": "#/definitions/id"},
+        "metric_path": {"type": "string", "minLength": 1},
+        "observed_value": {"type": ["number", "string", "boolean", "null"]}
+      }
+    }
+  }
+}

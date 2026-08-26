@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "candidate",
+  "candidate_id": "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "book_imbalance",
+  "batch_id": "book_imbalance_seed_v1",
+  "generation": 0,
+  "parent_candidate_ids": [],
+  "hypothesis_id": "standing_book_pressure_predicts_near_term_price_pressure",
+  "operator_id": "spread_conditioned_imbalance",
+  "formula": "combine(prepare(spread_conditioned_imbalance(latest_quote), variant=0, lag_scale=2), normalizer(window_parameter=64), operation=2:*)",
+  "source_streams": [
+    "quote"
+  ],
+  "parameters": {
+    "window_events": 64,
+    "variant": 0,
+    "lag_events": 2,
+    "operation": 2
+  },
+  "state": {
+    "window_type": "latest_event",
+    "window_events": null,
+    "warmup_events": 0,
+    "reset_policy": "trading_day"
+  },
+  "availability": {
+    "update_on": [
+      "quote"
+    ],
+    "output_at": "scheduled_snapshot",
+    "lag_events": 0,
+    "invalid_policy": "finite_or_zero"
+  },
+  "output": {
+    "factor_name": "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+    "dtype": "float64",
+    "research_direction": "raw_signed"
+  },
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_001/ideas/book_imbalance.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/book_imbalance/factor_entry.cpp",
+    "source_commit": "b455935"
+  },
+  "evidence_level": "L3",
+  "canonical_hash": "sha256:a1c35df42d342bc149985df5fc6d7a636759a3bed0c0b96d9e4fba7551e8d020"
+}

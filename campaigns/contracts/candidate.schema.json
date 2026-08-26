@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whyman-quant.github.io/AutoStream/contracts/candidate-v1.schema.json",
+  "title": "AutoStream Candidate v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "candidate_id", "campaign_id", "family_id", "batch_id", "generation", "parent_candidate_ids", "hypothesis_id", "operator_id", "formula", "source_streams", "parameters", "state", "availability", "output", "lineage", "evidence_level", "canonical_hash"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "candidate"},
+    "candidate_id": {"$ref": "#/definitions/id"},
+    "campaign_id": {"$ref": "#/definitions/id"},
+    "family_id": {"$ref": "#/definitions/id"},
+    "batch_id": {"$ref": "#/definitions/id"},
+    "generation": {"type": "integer", "minimum": 0},
+    "parent_candidate_ids": {"type": "array", "items": {"$ref": "#/definitions/id"}, "uniqueItems": true},
+    "hypothesis_id": {"$ref": "#/definitions/id"},
+    "operator_id": {"$ref": "#/definitions/id"},
+    "formula": {"type": "string", "minLength": 1},
+    "source_streams": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["quote", "trade", "order"]}},
+    "parameters": {
+      "type": "object", "additionalProperties": false,
+      "required": ["window_events", "variant", "lag_events", "operation"],
+      "properties": {
+        "window_events": {"type": "integer", "minimum": 1},
+        "variant": {"type": "integer", "minimum": 0},
+        "lag_events": {"type": "integer", "minimum": 0},
+        "operation": {"type": "integer", "minimum": 0, "maximum": 3}
+      }
+    },
+    "state": {
+      "type": "object", "additionalProperties": false,
+      "required": ["window_type", "window_events", "warmup_events", "reset_policy"],
+      "properties": {
+        "window_type": {"enum": ["event_count", "elapsed_time", "latest_event"]},
+        "window_events": {"type": ["integer", "null"], "minimum": 1},
+        "warmup_events": {"type": "integer", "minimum": 0},
+        "reset_policy": {"const": "trading_day"}
+      }
+    },
+    "availability": {
+      "type": "object", "additionalProperties": false,
+      "required": ["update_on", "output_at", "lag_events", "invalid_policy"],
+      "properties": {
+        "update_on": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["quote", "trade", "order"]}},
+        "output_at": {"const": "scheduled_snapshot"},
+        "lag_events": {"type": "integer", "minimum": 0},
+        "invalid_policy": {"enum": ["finite_or_zero", "unavailable"]}
+      }
+    },
+    "output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["factor_name", "dtype", "research_direction"],
+      "properties": {
+        "factor_name": {"$ref": "#/definitions/id"},
+        "dtype": {"const": "float64"},
+        "research_direction": {"enum": ["raw_signed"]}
+      }
+    },
+    "lineage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["idea_path", "implementation_path", "source_commit"],
+      "properties": {
+        "idea_path": {"type": "string", "minLength": 1},
+        "implementation_path": {"type": "string", "minLength": 1},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"}
+      }
+    },
+    "evidence_level": {"enum": ["L0", "L1", "L2", "L3", "L4", "L5", "L6"]},
+    "canonical_hash": {"$ref": "#/definitions/hash"}
+  },
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*$"},
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whyman-quant.github.io/AutoStream/contracts/factor-portrait-v1.schema.json",
+  "title": "AutoStream Factor Portrait v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "portrait_id", "campaign_id", "family_id", "candidate_id", "scope", "evidence_level", "dataset", "lineage", "data_quality", "metric_slices", "direction", "redundancy", "decision"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "factor_portrait"},
+    "portrait_id": {"$ref": "#/definitions/id"},
+    "campaign_id": {"$ref": "#/definitions/id"},
+    "family_id": {"$ref": "#/definitions/id"},
+    "candidate_id": {"$ref": "#/definitions/id"},
+    "scope": {"enum": ["pilot", "formal_history", "validation", "holdout"]},
+    "evidence_level": {"enum": ["L3", "L4", "L5", "L6"]},
+    "dataset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dataset_id", "date_start", "date_end", "date_count", "events", "labels", "universes"],
+      "properties": {
+        "dataset_id": {"$ref": "#/definitions/id"},
+        "date_start": {"$ref": "#/definitions/date"},
+        "date_end": {"$ref": "#/definitions/date"},
+        "date_count": {"type": "integer", "minimum": 1},
+        "events": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer"}},
+        "labels": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "universes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "lineage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_hash", "source_commit", "evaluator_version", "receipt_path", "receipt_sha256"],
+      "properties": {
+        "candidate_hash": {"$ref": "#/definitions/hash"},
+        "source_commit": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+        "evaluator_version": {"type": "string", "minLength": 1},
+        "receipt_path": {"type": "string", "minLength": 1},
+        "receipt_sha256": {"$ref": "#/definitions/hash"}
+      }
+    },
+    "data_quality": {
+      "type": "object", "additionalProperties": false,
+      "required": ["all_required_values_finite", "duplicate_key_count", "coverage_status"],
+      "properties": {
+        "all_required_values_finite": {"type": "boolean"},
+        "duplicate_key_count": {"type": "integer", "minimum": 0},
+        "coverage_status": {"enum": ["complete", "partial", "failed"]}
+      }
+    },
+    "metric_slices": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/metric_slice"}},
+    "direction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["policy", "frozen"],
+      "properties": {"policy": {"const": "raw_signed"}, "frozen": {"type": "boolean"}}
+    },
+    "redundancy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "max_abs_spearman", "peer_candidate_id"],
+      "properties": {
+        "status": {"enum": ["not_measured_in_receipt", "measured"]},
+        "max_abs_spearman": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "peer_candidate_id": {"type": ["string", "null"]}
+      }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "promotion_allowed", "reasons"],
+      "properties": {
+        "status": {"enum": ["observation_only", "continue_research", "candidate_pool", "rejected", "promoted"]},
+        "promotion_allowed": {"type": "boolean"},
+        "reasons": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  },
+  "allOf": [{
+    "if": {"properties": {"scope": {"const": "pilot"}}, "required": ["scope"]},
+    "then": {
+      "properties": {
+        "evidence_level": {"const": "L3"},
+        "direction": {"properties": {"frozen": {"const": false}}},
+        "decision": {"properties": {"status": {"const": "observation_only"}, "promotion_allowed": {"const": false}}}
+      }
+    }
+  }],
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*$"},
+    "date": {"type": "string", "pattern": "^[0-9]{8}$"},
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "nullable_metric": {"type": ["number", "null"]},
+    "fraction": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "metric_slice": {
+      "type": "object", "additionalProperties": false,
+      "required": ["label", "universe", "observation_count", "metrics"],
+      "properties": {
+        "label": {"type": "string", "minLength": 1},
+        "universe": {"type": "string", "minLength": 1},
+        "observation_count": {"type": "integer", "minimum": 1},
+        "metrics": {
+          "type": "object", "additionalProperties": false,
+          "required": ["mean_rank_ic", "rank_ic_positive_fraction", "mean_ic", "ic_positive_fraction", "mean_long_short", "long_short_positive_fraction", "mean_monotonicity"],
+          "properties": {
+            "mean_rank_ic": {"$ref": "#/definitions/nullable_metric"},
+            "rank_ic_positive_fraction": {"$ref": "#/definitions/fraction"},
+            "mean_ic": {"$ref": "#/definitions/nullable_metric"},
+            "ic_positive_fraction": {"$ref": "#/definitions/fraction"},
+            "mean_long_short": {"$ref": "#/definitions/nullable_metric"},
+            "long_short_positive_fraction": {"$ref": "#/definitions/fraction"},
+            "mean_monotonicity": {"$ref": "#/definitions/nullable_metric"}
+          }
+        }
+      }
+    }
+  }
+}

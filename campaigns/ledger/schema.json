@@ -1,6 +1,8 @@
 {
   "schema_version": 1,
   "required": ["experiment_id", "campaign_id", "family_id", "candidate_id", "status", "source_commit", "config_hash", "data_snapshot", "evaluator_version"],
-  "statuses": ["generated", "compiled", "technical_pass", "technical_reject", "pilot_pass", "pilot_reject", "backtest_pass", "backtest_reject", "holdout_pass", "promoted", "crash", "timeout", "data_missing", "lookahead_reject", "duplicate_reject"],
+  "statuses": ["generated", "compiled", "technical_pass", "technical_reject", "pilot_pass", "pilot_reject", "observation_only", "formal_observation", "backtest_pass", "backtest_reject", "holdout_pass", "promoted", "crash", "timeout", "data_missing", "lookahead_reject", "duplicate_reject"],
+  "promotion_statuses": ["promoted"],
+  "promotion_policy": "promotion_allowed may be true only when status is promoted",
   "reject_reasons": ["constant_column", "post_warmup_coverage_below_threshold", "missing_builder_binding", "future_information", "duplicate_candidate", "data_missing", "resource_failure"]
 }
