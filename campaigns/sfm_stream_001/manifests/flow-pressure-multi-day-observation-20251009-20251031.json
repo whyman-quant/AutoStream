@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "date_count": 17,
+  "dates": [
+    "20251009",
+    "20251010",
+    "20251013",
+    "20251014",
+    "20251015",
+    "20251016",
+    "20251017",
+    "20251020",
+    "20251021",
+    "20251022",
+    "20251023",
+    "20251024",
+    "20251027",
+    "20251028",
+    "20251029",
+    "20251030",
+    "20251031"
+  ],
+  "event_count": 8,
+  "labels": [
+    "raw926",
+    "ease926"
+  ],
+  "universes": [
+    "000985",
+    "003800",
+    "000906"
+  ],
+  "factor_count": 1,
+  "combinations": {
+    "raw926:000985": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0015842750373661807,
+        "rank_ic_positive_fraction": 0.5147058823529411,
+        "mean_ic": 0.0009648659411316712,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": 0.00010387127347068469,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.028609625668449202
+      }
+    },
+    "raw926:003800": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -7.443958406110338e-05,
+        "rank_ic_positive_fraction": 0.5147058823529411,
+        "mean_ic": 0.0010401926234497238,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.00012304011602722511,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.03770053475935827
+      }
+    },
+    "raw926:000906": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00010914869452075198,
+        "rank_ic_positive_fraction": 0.45588235294117646,
+        "mean_ic": 0.0038522146750574852,
+        "ic_positive_fraction": 0.4852941176470588,
+        "mean_long_short": 0.00033264147855238853,
+        "long_short_positive_fraction": 0.49264705882352944,
+        "mean_monotonicity": -0.017647058823529398
+      }
+    },
+    "ease926:000985": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.001657131667154109,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0007173865802594879,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 7.969472419056571e-05,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": -0.01675579322638147
+      }
+    },
+    "ease926:003800": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0006191856430944429,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0010472738953046638,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00014372506767968362,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.019964349376114073
+      }
+    },
+    "ease926:000906": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0015365391345993486,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.00206468361160025,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.00020050280937214846,
+        "long_short_positive_fraction": 0.5,
+        "mean_monotonicity": -0.016131907308377897
+      }
+    }
+  },
+  "promotion_allowed": false,
+  "decision": "observation_only"
+}

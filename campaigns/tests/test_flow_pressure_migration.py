@@ -16,6 +16,7 @@ METADATA_PATH = ROOT / "base" / "hf-open5m-factor-demo" / "factors" / "flow_pres
 RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-vertical-slice.json"
 SMOKE_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-smoke-20251014-000001.json"
 FULL_DAY_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-single-day-20251014.json"
+PILOT_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-pilot-20251009-20251031.json"
 
 
 def load_json(path):
@@ -98,6 +99,19 @@ class FlowPressureMigrationTests(unittest.TestCase):
         self.assertTrue(receipt["strict_arrow_passed"])
         self.assertTrue(receipt["scorecard_passed"])
         self.assertFalse(receipt["l3_complete"])
+        self.assertFalse(receipt["promotion_allowed"])
+
+    def test_full_pilot_receipt_requires_seventeen_days_and_observation_only(self):
+        receipt = load_json(PILOT_RECEIPT_PATH)
+        self.assertEqual(receipt["scope"], "seventeen_day_real_data_pilot")
+        self.assertEqual(receipt["date_count"], 17)
+        self.assertEqual(receipt["checkpoint_count"], 8)
+        self.assertEqual(receipt["factor_count"], 1)
+        self.assertEqual(receipt["evaluation_combination_count"], 6)
+        self.assertTrue(receipt["all_dates_produced"])
+        self.assertTrue(receipt["all_arrow_strict_checks_passed"])
+        self.assertTrue(receipt["all_evaluations_completed"])
+        self.assertEqual(receipt["decision"], "observation_only")
         self.assertFalse(receipt["promotion_allowed"])
 
 
