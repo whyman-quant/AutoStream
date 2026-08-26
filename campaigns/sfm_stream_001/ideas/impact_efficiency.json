@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "idea_spec",
+  "idea_id": "signed_price_impact_efficiency",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "impact_efficiency",
+  "title": "Signed price impact efficiency",
+  "source": {"type": "market_observation", "reference": "price response per unit of signed trade flow", "retrieved_at": "2026-08-26"},
+  "hypothesis": {"mechanism": "When a small signed trade imbalance moves price, the market is less able to absorb that flow.", "expected_sign": "raw_signed", "falsifiable_condition": "Signed price response has no stable relation to subsequent returns or liquidity states on formal history."},
+  "inputs": {"streams": ["trade"], "fields": ["trade_price", "trade_volume", "bsflag", "trade_type"]},
+  "operators": [
+    {"operator_id": "signed_price_impact_efficiency", "description": "Price change scaled by signed-flow direction and absolute volume.", "representative": true},
+    {"operator_id": "ofi_price_response", "description": "Price response normalized by order-flow imbalance.", "representative": false},
+    {"operator_id": "absorption_divergence", "description": "Detects large signed flow with weak price response.", "representative": false}
+  ],
+  "parameter_space": {"window_events": [16, 32, 64, 128], "normalization": ["absolute_volume", "mid_price"], "include_cancels": [false]},
+  "state": {"window_type": "event_count", "warmup_events": 2, "reset_policy": "trading_day"},
+  "availability": {"update_on": ["trade"], "output_at": "scheduled_snapshot", "lag_events": 0, "invalid_policy": "finite_or_zero"},
+  "implementation": {"language": "cpp", "target_path": "base/hf-open5m-factor-demo/factors/impact_efficiency/factor_entry.cpp", "complexity": "O(1) amortized per trade"},
+  "representative_candidate_id": "impact_efficiency_signed_price_impact_w16"
+}

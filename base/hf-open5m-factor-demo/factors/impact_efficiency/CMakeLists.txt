@@ -1,0 +1,8 @@
+set(MODULE_USE_PROJECT_CXX_STANDARD OFF)
+set(MODULE_CXX_STANDARD 17)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../FactorModuleTemplate.cmake)
+if(BUILD_TESTING)
+ add_executable(impact_efficiency_factor_entry_test ${CMAKE_SOURCE_DIR}/tests/impact_efficiency/factor_entry_test.cpp)
+ target_link_libraries(impact_efficiency_factor_entry_test PRIVATE factors_impact_efficiency)
+ add_test(NAME impact_efficiency_factor_entry COMMAND impact_efficiency_factor_entry_test)
+endif()
