@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "batch_id": "liquidity_resilience_seed_v1",
+  "scope": "twelve_candidate_single_stock_l2_smoke",
+  "trading_date": "20251014",
+  "stock": "000001",
+  "factor_source_commit": "b8f67a5",
+  "config_path": "base/hf-open5m-factor-demo/config_factor_sfm_stream_001_liquidity_resilience_grid_slice.json",
+  "config_sha256": "sha256:ba2fc8503cb760cfdc7810ca269e99de52301f36e9076ae183b14888e775f4d8",
+  "hdf5_path": "data/sfm_autoresearch_001/liquidity-resilience-grid-slice/20251014/liquidity_resilience/factors.h5",
+  "hdf5_sha256": "sha256:d938b9169f9dab80bc71f5e9ef177b5900e7eaf3f3e617489613a8bbd7501cae",
+  "checkpoint_count": 8,
+  "factor_count": 12,
+  "all_values_finite": true,
+  "all_zero_columns": [],
+  "constant_across_checkpoints": [],
+  "synthetic_semantic_tests_passed": true,
+  "prefix_causality_test_passed": true,
+  "decision": "l2_implemented_continue_full_market_l3",
+  "promotion_allowed": false
+}

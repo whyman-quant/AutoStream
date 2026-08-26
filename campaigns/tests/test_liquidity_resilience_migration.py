@@ -79,14 +79,14 @@ class LiquidityResilienceMigrationTests(unittest.TestCase):
 
         evidence = {item["candidate_id"]: item["evidence_level"] for item in candidates}
         self.assertEqual(evidence[representative_id], "L1")
-        self.assertEqual({level for key, level in evidence.items() if key != representative_id}, {"L0"})
+        self.assertEqual({level for key, level in evidence.items() if key != representative_id}, {"L2"})
 
     def test_candidate_name_matches_cpp_metadata(self):
         candidate = load_json(CANDIDATE_PATH)
         text = METADATA_PATH.read_text(encoding="utf-8")
         block = re.search(r"kFactorNames\s*=\s*\{(.*?)\};", text, re.S)
         self.assertIsNotNone(block)
-        self.assertEqual(re.findall(r'"([^"]+)"', block.group(1)), [candidate["candidate_id"]])
+        self.assertEqual(re.findall(r'"([^"]+)"', block.group(1)), load_json(BATCH_PATH)["candidate_ids"])
 
 if __name__ == "__main__":
     unittest.main()
