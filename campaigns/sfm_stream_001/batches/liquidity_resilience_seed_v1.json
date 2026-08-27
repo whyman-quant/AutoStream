@@ -14,5 +14,5 @@
   "search_policy": {"method": "mechanism_grid", "candidate_budget": 12},
   "created_at": "2026-08-26",
   "source_commit": "b8f67a5",
-  "status": "technical_complete"
+  "status": "pilot_complete"
 }

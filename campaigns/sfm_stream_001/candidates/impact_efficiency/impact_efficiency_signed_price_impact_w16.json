@@ -16,6 +16,6 @@
   "availability": {"update_on": ["trade"], "output_at": "scheduled_snapshot", "lag_events": 0, "invalid_policy": "finite_or_zero"},
   "output": {"factor_name": "impact_efficiency_signed_price_impact_w16", "dtype": "float64", "research_direction": "raw_signed"},
   "lineage": {"idea_path": "campaigns/sfm_stream_001/ideas/impact_efficiency.json", "implementation_path": "base/hf-open5m-factor-demo/factors/impact_efficiency/factor_entry.cpp", "source_commit": "aba369b"},
-  "evidence_level": "L2",
+  "evidence_level": "L3",
   "canonical_hash": "sha256:17f11751874e9841a39fa51851215f6f057bd3319f9a98b3e163932859dee212"
 }
