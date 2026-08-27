@@ -14,6 +14,7 @@ BATCH_PATH = CAMPAIGN / "batches" / "flow_pressure_seed_v1.json"
 CANDIDATE_DIR = CAMPAIGN / "candidates" / "flow_pressure"
 CANDIDATE_PATH = CANDIDATE_DIR / "flow_pressure_signed_trade_flow_w16.json"
 METADATA_PATH = ROOT / "base" / "hf-open5m-factor-demo" / "factors" / "flow_pressure" / "meta_config.h"
+GRID_PILOT_CONFIG_PATH = ROOT / "base" / "hf-open5m-factor-demo" / "config_factor_sfm_stream_001_flow_pressure_grid_pilot_v1.json"
 RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-vertical-slice.json"
 SMOKE_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-smoke-20251014-000001.json"
 FULL_DAY_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-single-day-20251014.json"
@@ -55,6 +56,20 @@ class FlowPressureMigrationTests(unittest.TestCase):
         self.assertIsNotNone(names_block)
         names = re.findall(r'"([^"]+)"', names_block.group(1))
         self.assertEqual(names, batch["candidate_ids"])
+
+    def test_grid_pilot_config_is_isolated_and_runs_the_whole_family(self):
+        config = load_json(GRID_PILOT_CONFIG_PATH)
+        factor_config = config["factors_config"]
+        self.assertEqual(factor_config["factor_sets"], [{"name": "flow_pressure", "enabled": True}])
+        self.assertEqual(factor_config["thread_num"], 8)
+        self.assertEqual(
+            factor_config["save_info"]["dir"],
+            "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/flow-pressure-grid-pilot-v1/[DATE]/flow_pressure",
+        )
+        self.assertEqual(
+            factor_config["save_info"]["save_times"],
+            [92700, 100000, 103000, 110000, 113000, 133000, 140000, 143000],
+        )
 
     def test_l2_receipt_does_not_claim_real_data_pilot(self):
         candidate = load_json(CANDIDATE_PATH)
