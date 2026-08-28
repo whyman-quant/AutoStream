@@ -62,10 +62,10 @@ class FlowPressureSeedExpansionTests(unittest.TestCase):
             3,
         )
 
-    def test_all_implemented_seeds_claim_l2_evidence(self):
+    def test_all_implemented_seeds_claim_l3_evidence_after_grid_pilot(self):
         evidence = {item["candidate_id"]: item["evidence_level"] for item in self.candidates}
-        self.assertEqual(evidence[REPRESENTATIVE_ID], "L2")
-        self.assertEqual(set(evidence.values()), {"L2"})
+        self.assertEqual(evidence[REPRESENTATIVE_ID], "L3")
+        self.assertEqual(set(evidence.values()), {"L3"})
         for candidate in self.candidates:
             if candidate["candidate_id"] != REPRESENTATIVE_ID:
                 self.assertEqual(candidate["lineage"]["source_commit"], "2ad6d1f")

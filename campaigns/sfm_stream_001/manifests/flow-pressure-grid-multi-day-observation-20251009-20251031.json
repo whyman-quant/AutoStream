@@ -1,0 +1,770 @@
+{
+  "schema_version": 1,
+  "date_count": 17,
+  "dates": [
+    "20251009",
+    "20251010",
+    "20251013",
+    "20251014",
+    "20251015",
+    "20251016",
+    "20251017",
+    "20251020",
+    "20251021",
+    "20251022",
+    "20251023",
+    "20251024",
+    "20251027",
+    "20251028",
+    "20251029",
+    "20251030",
+    "20251031"
+  ],
+  "event_count": 8,
+  "labels": [
+    "raw926",
+    "ease926"
+  ],
+  "universes": [
+    "000985",
+    "003800",
+    "000906"
+  ],
+  "factor_count": 12,
+  "combinations": {
+    "raw926:000985": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0015842750373661807,
+        "rank_ic_positive_fraction": 0.5147058823529411,
+        "mean_ic": 0.0009648659411316702,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": 0.00010387127347068469,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.028609625668449202
+      },
+      "flow_pressure_signed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0027939852490096264,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0016297271161356524,
+        "ic_positive_fraction": 0.5147058823529411,
+        "mean_long_short": -1.9280930285143775e-05,
+        "long_short_positive_fraction": 0.47058823529411764,
+        "mean_monotonicity": -0.030392156862745115
+      },
+      "flow_pressure_signed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.006750761797738913,
+        "rank_ic_positive_fraction": 0.5588235294117647,
+        "mean_ic": 0.004258868739733519,
+        "ic_positive_fraction": 0.5514705882352942,
+        "mean_long_short": 0.0002797867385145191,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.04714795008912654
+      },
+      "flow_pressure_signed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.011223074961331712,
+        "rank_ic_positive_fraction": 0.6029411764705882,
+        "mean_ic": 0.007310316379094277,
+        "ic_positive_fraction": 0.5588235294117647,
+        "mean_long_short": 0.00042808065729714256,
+        "long_short_positive_fraction": 0.5441176470588235,
+        "mean_monotonicity": -0.08939393939393935
+      },
+      "flow_pressure_trade_flow_zscore_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0009886192474601375,
+        "rank_ic_positive_fraction": 0.5147058823529411,
+        "mean_ic": 0.0006173140345453358,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": 7.514299220755907e-05,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.03244206773618537
+      },
+      "flow_pressure_trade_flow_zscore_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.002563224518518541,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.001320333188641223,
+        "ic_positive_fraction": 0.5147058823529411,
+        "mean_long_short": 0.0002302716777107935,
+        "long_short_positive_fraction": 0.5735294117647058,
+        "mean_monotonicity": -0.043850267379679155
+      },
+      "flow_pressure_trade_flow_zscore_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.006633726417268396,
+        "rank_ic_positive_fraction": 0.5735294117647058,
+        "mean_ic": 0.004554072749877042,
+        "ic_positive_fraction": 0.5588235294117647,
+        "mean_long_short": 0.0004813370084273309,
+        "long_short_positive_fraction": 0.5514705882352942,
+        "mean_monotonicity": -0.0501782531194296
+      },
+      "flow_pressure_trade_flow_zscore_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.011206916022907656,
+        "rank_ic_positive_fraction": 0.5735294117647058,
+        "mean_ic": 0.0075919384536089415,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.0007872956558335913,
+        "long_short_positive_fraction": 0.5735294117647058,
+        "mean_monotonicity": -0.08137254901960787
+      },
+      "flow_pressure_decayed_trade_flow_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.002084397432250704,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.0010493713875383572,
+        "ic_positive_fraction": 0.5147058823529411,
+        "mean_long_short": 9.774190990887817e-05,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": -0.03012477718360071
+      },
+      "flow_pressure_decayed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0023727120308863173,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0012741880332177106,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": -2.1028983327769324e-05,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.04233511586452765
+      },
+      "flow_pressure_decayed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.004318245270785967,
+        "rank_ic_positive_fraction": 0.5220588235294118,
+        "mean_ic": 0.002466310574710318,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.0002173912687205754,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": -0.02317290552584671
+      },
+      "flow_pressure_decayed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.00815412866845494,
+        "rank_ic_positive_fraction": 0.5588235294117647,
+        "mean_ic": 0.004915283235050631,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": 0.00032986092106188785,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.04750445632798572
+      }
+    },
+    "raw926:003800": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -7.443958406110338e-05,
+        "rank_ic_positive_fraction": 0.5147058823529411,
+        "mean_ic": 0.00104019262344972,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.00012304011602722511,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.03770053475935827
+      },
+      "flow_pressure_signed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0010019432597254646,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0017798584605760025,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 3.923783955731224e-05,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.023351158645276284
+      },
+      "flow_pressure_signed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.00483611030591196,
+        "rank_ic_positive_fraction": 0.5367647058823529,
+        "mean_ic": 0.0037685434093475524,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.00029027825800458475,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.04500891265597147
+      },
+      "flow_pressure_signed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.008226007755532188,
+        "rank_ic_positive_fraction": 0.5661764705882353,
+        "mean_ic": 0.0063070156877868475,
+        "ic_positive_fraction": 0.5735294117647058,
+        "mean_long_short": 0.0004914228050441924,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.057843137254901936
+      },
+      "flow_pressure_trade_flow_zscore_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.000518923388490831,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.0011513911070350357,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00028037559107392984,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.007843137254901959
+      },
+      "flow_pressure_trade_flow_zscore_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0011989284788879217,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.002282920744327627,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.0002680238104609109,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.02843137254901959
+      },
+      "flow_pressure_trade_flow_zscore_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.005203441248566798,
+        "rank_ic_positive_fraction": 0.5294117647058824,
+        "mean_ic": 0.00466049102271014,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.0006115637810289922,
+        "long_short_positive_fraction": 0.5735294117647058,
+        "mean_monotonicity": -0.029679144385026744
+      },
+      "flow_pressure_trade_flow_zscore_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.008571212771778533,
+        "rank_ic_positive_fraction": 0.5661764705882353,
+        "mean_ic": 0.006361953537600166,
+        "ic_positive_fraction": 0.5661764705882353,
+        "mean_long_short": 0.0008153737193597564,
+        "long_short_positive_fraction": 0.5882352941176471,
+        "mean_monotonicity": -0.06283422459893047
+      },
+      "flow_pressure_decayed_trade_flow_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0005364519998891496,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0009719791068100929,
+        "ic_positive_fraction": 0.5147058823529411,
+        "mean_long_short": 0.00014082516218737144,
+        "long_short_positive_fraction": 0.5514705882352942,
+        "mean_monotonicity": -0.030570409982174685
+      },
+      "flow_pressure_decayed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0004675196058765742,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.0012767285776774393,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": 1.4142476126070366e-05,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": -0.022638146167557948
+      },
+      "flow_pressure_decayed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0023307577525021436,
+        "rank_ic_positive_fraction": 0.5220588235294118,
+        "mean_ic": 0.0022905898976628863,
+        "ic_positive_fraction": 0.5514705882352942,
+        "mean_long_short": 0.0002043363846995443,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": -0.04527629233511585
+      },
+      "flow_pressure_decayed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.005620668306225953,
+        "rank_ic_positive_fraction": 0.5147058823529411,
+        "mean_ic": 0.004356151365047558,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.0002938394129640063,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": -0.050445632798573954
+      }
+    },
+    "raw926:000906": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00010914869452075198,
+        "rank_ic_positive_fraction": 0.45588235294117646,
+        "mean_ic": 0.003852214675057487,
+        "ic_positive_fraction": 0.4852941176470588,
+        "mean_long_short": 0.00033264147855238853,
+        "long_short_positive_fraction": 0.49264705882352944,
+        "mean_monotonicity": -0.017647058823529398
+      },
+      "flow_pressure_signed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00023739178989010633,
+        "rank_ic_positive_fraction": 0.4411764705882353,
+        "mean_ic": 0.004052928439922453,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00040945988904648344,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.029857397504456352
+      },
+      "flow_pressure_signed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0027607858237458705,
+        "rank_ic_positive_fraction": 0.5294117647058824,
+        "mean_ic": 0.005157714734057744,
+        "ic_positive_fraction": 0.5147058823529411,
+        "mean_long_short": 0.0007044973037495124,
+        "long_short_positive_fraction": 0.5,
+        "mean_monotonicity": -0.04358288770053476
+      },
+      "flow_pressure_signed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0057517943495801254,
+        "rank_ic_positive_fraction": 0.5588235294117647,
+        "mean_ic": 0.007814573696345146,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.0006414317095265706,
+        "long_short_positive_fraction": 0.5514705882352942,
+        "mean_monotonicity": -0.04866310160427808
+      },
+      "flow_pressure_trade_flow_zscore_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0004188739603643041,
+        "rank_ic_positive_fraction": 0.4485294117647059,
+        "mean_ic": 0.0038579328332106378,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 0.00041564153845980866,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": -0.021657754010695168
+      },
+      "flow_pressure_trade_flow_zscore_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.00021032940589057886,
+        "rank_ic_positive_fraction": 0.45588235294117646,
+        "mean_ic": 0.005755175330610284,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 0.0005579453247164042,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.026559714795008908
+      },
+      "flow_pressure_trade_flow_zscore_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0033774908786681347,
+        "rank_ic_positive_fraction": 0.5294117647058824,
+        "mean_ic": 0.00606036650507697,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.0008517558646902669,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": -0.04598930481283422
+      },
+      "flow_pressure_trade_flow_zscore_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.005570647446107262,
+        "rank_ic_positive_fraction": 0.5441176470588235,
+        "mean_ic": 0.008522872096156977,
+        "ic_positive_fraction": 0.5735294117647058,
+        "mean_long_short": 0.0013460595577507051,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.04625668449197861
+      },
+      "flow_pressure_decayed_trade_flow_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0005114973652259621,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.003254114968783303,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 0.0004197548395334925,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": -0.023083778966131896
+      },
+      "flow_pressure_decayed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.00014211851518158443,
+        "rank_ic_positive_fraction": 0.4632352941176471,
+        "mean_ic": 0.004042301415118714,
+        "ic_positive_fraction": 0.5147058823529411,
+        "mean_long_short": 0.00022567912400809937,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.00971479500891265
+      },
+      "flow_pressure_decayed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0010592629358367148,
+        "rank_ic_positive_fraction": 0.4632352941176471,
+        "mean_ic": 0.004673777239591123,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 0.00045570427347775924,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": -0.040106951871657755
+      },
+      "flow_pressure_decayed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0028586010023519135,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.006134956673349266,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.0006074992806110428,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.030213903743315517
+      }
+    },
+    "ease926:000985": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.001657131667154109,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0007173865802594872,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 7.969472419056571e-05,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": -0.01675579322638147
+      },
+      "flow_pressure_signed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.002197772299780649,
+        "rank_ic_positive_fraction": 0.4852941176470588,
+        "mean_ic": 0.0008433306227718484,
+        "ic_positive_fraction": 0.4852941176470588,
+        "mean_long_short": 4.783488297955291e-05,
+        "long_short_positive_fraction": 0.5,
+        "mean_monotonicity": -0.0025846702317290555
+      },
+      "flow_pressure_signed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0037413521356762115,
+        "rank_ic_positive_fraction": 0.4852941176470588,
+        "mean_ic": 0.0019997862885626954,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 0.00016668267929069688,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": -0.030570409982174678
+      },
+      "flow_pressure_signed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.006502709598850568,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0035454869893586276,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.00013670826802029723,
+        "long_short_positive_fraction": 0.5441176470588235,
+        "mean_monotonicity": -0.06782531194295902
+      },
+      "flow_pressure_trade_flow_zscore_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.001144109474881611,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.0006147095543798624,
+        "ic_positive_fraction": 0.4852941176470588,
+        "mean_long_short": 7.058484238453283e-05,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.03101604278074866
+      },
+      "flow_pressure_trade_flow_zscore_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0020936157554948655,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0007723981019655879,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.000196649484408813,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.01586452762923352
+      },
+      "flow_pressure_trade_flow_zscore_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.003974610219733471,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0023633208089679798,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 0.00029201757033734494,
+        "long_short_positive_fraction": 0.5441176470588235,
+        "mean_monotonicity": -0.03030303030303032
+      },
+      "flow_pressure_trade_flow_zscore_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.007081225064173568,
+        "rank_ic_positive_fraction": 0.5220588235294118,
+        "mean_ic": 0.00413756647154786,
+        "ic_positive_fraction": 0.5588235294117647,
+        "mean_long_short": 0.0004704850246099774,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.05855614973262032
+      },
+      "flow_pressure_decayed_trade_flow_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0025791540797864125,
+        "rank_ic_positive_fraction": 0.5367647058823529,
+        "mean_ic": 0.0011054216571614764,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 0.0001160142692855981,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.03841354723707663
+      },
+      "flow_pressure_decayed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0023856954110944247,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.0009377142567669194,
+        "ic_positive_fraction": 0.4852941176470588,
+        "mean_long_short": -4.1402711143284337e-05,
+        "long_short_positive_fraction": 0.47794117647058826,
+        "mean_monotonicity": -0.020677361853832444
+      },
+      "flow_pressure_decayed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0031423160292614553,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.001328395648092869,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.000166900968001113,
+        "long_short_positive_fraction": 0.47794117647058826,
+        "mean_monotonicity": 0.005793226381461662
+      },
+      "flow_pressure_decayed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0049170618148897316,
+        "rank_ic_positive_fraction": 0.5367647058823529,
+        "mean_ic": 0.0022670468728074856,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 0.00016418671328276342,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.030392156862745115
+      }
+    },
+    "ease926:003800": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0006191856430944429,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0010472738953046653,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00014372506767968362,
+        "long_short_positive_fraction": 0.5147058823529411,
+        "mean_monotonicity": -0.019964349376114073
+      },
+      "flow_pressure_signed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0010878231549560917,
+        "rank_ic_positive_fraction": 0.4852941176470588,
+        "mean_ic": 0.0011750982196407221,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 0.00010384959767558604,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": 0.0038324420677361814
+      },
+      "flow_pressure_signed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.003199687458347721,
+        "rank_ic_positive_fraction": 0.4852941176470588,
+        "mean_ic": 0.0019140137095614582,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00023647037174363687,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.02896613190730838
+      },
+      "flow_pressure_signed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.004646009841278167,
+        "rank_ic_positive_fraction": 0.5367647058823529,
+        "mean_ic": 0.002831165954436622,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.00022813901571373484,
+        "long_short_positive_fraction": 0.5514705882352942,
+        "mean_monotonicity": -0.046613190730837785
+      },
+      "flow_pressure_trade_flow_zscore_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0001825542192839563,
+        "rank_ic_positive_fraction": 0.45588235294117646,
+        "mean_ic": 0.0009355960590107286,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.000291010716930689,
+        "long_short_positive_fraction": 0.5588235294117647,
+        "mean_monotonicity": -0.01827094474153297
+      },
+      "flow_pressure_trade_flow_zscore_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0012125540043722528,
+        "rank_ic_positive_fraction": 0.5,
+        "mean_ic": 0.0013874418722634424,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.000244179064267384,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": -0.005614973262032082
+      },
+      "flow_pressure_trade_flow_zscore_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.00371112177193163,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.002764694943925862,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 0.00045132502777292164,
+        "long_short_positive_fraction": 0.5441176470588235,
+        "mean_monotonicity": -0.027807486631016034
+      },
+      "flow_pressure_trade_flow_zscore_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.005535968694808869,
+        "rank_ic_positive_fraction": 0.5294117647058824,
+        "mean_ic": 0.0030762275978002272,
+        "ic_positive_fraction": 0.5588235294117647,
+        "mean_long_short": 0.0004786950923169747,
+        "long_short_positive_fraction": 0.5955882352941176,
+        "mean_monotonicity": -0.05490196078431372
+      },
+      "flow_pressure_decayed_trade_flow_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0015936412360978544,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0012829248703678734,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 0.0001704454918711818,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.0480392156862745
+      },
+      "flow_pressure_decayed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0012458646094619876,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0012343727440107166,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 5.9989072887038335e-05,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.011764705882352941
+      },
+      "flow_pressure_decayed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0020934374489097345,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0014391437754295337,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00015350740388125387,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.02103386809269163
+      },
+      "flow_pressure_decayed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.003396619358802239,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.001997686338926562,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00012972649442478427,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.026916221033868086
+      }
+    },
+    "ease926:000906": {
+      "flow_pressure_signed_trade_flow_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0015365391345993486,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.0020646836116002504,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.00020050280937214846,
+        "long_short_positive_fraction": 0.5,
+        "mean_monotonicity": -0.016131907308377897
+      },
+      "flow_pressure_signed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0012762863050729276,
+        "rank_ic_positive_fraction": 0.4485294117647059,
+        "mean_ic": 0.002221069919204165,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.0003263702454741516,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": -0.020499108734402843
+      },
+      "flow_pressure_signed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0004384003411494375,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.0019294145801099939,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.00046841042256136507,
+        "long_short_positive_fraction": 0.5367647058823529,
+        "mean_monotonicity": -0.02121212121212121
+      },
+      "flow_pressure_signed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0007032846710744826,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.0033089944680468387,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": 0.0004352730198165472,
+        "long_short_positive_fraction": 0.5441176470588235,
+        "mean_monotonicity": -0.027629233511586443
+      },
+      "flow_pressure_trade_flow_zscore_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0021449399583330035,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.001518718572607453,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.0002670197148508739,
+        "long_short_positive_fraction": 0.5735294117647058,
+        "mean_monotonicity": -0.02272727272727273
+      },
+      "flow_pressure_trade_flow_zscore_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0018591616783320206,
+        "rank_ic_positive_fraction": 0.4632352941176471,
+        "mean_ic": 0.002321651010928594,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.0002840938729596657,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": 0.0016934046345811016
+      },
+      "flow_pressure_trade_flow_zscore_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0007051779630579407,
+        "rank_ic_positive_fraction": 0.47058823529411764,
+        "mean_ic": 0.0020163094110621383,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 0.000500936483724772,
+        "long_short_positive_fraction": 0.5441176470588235,
+        "mean_monotonicity": -0.015864527629233512
+      },
+      "flow_pressure_trade_flow_zscore_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.00044369792751169516,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.0032732369092441506,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.0007904427241432817,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.01898395721925133
+      },
+      "flow_pressure_decayed_trade_flow_w16_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00097096814175427,
+        "rank_ic_positive_fraction": 0.4852941176470588,
+        "mean_ic": 0.0019613349414262897,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00025121878770418545,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.007843137254901959
+      },
+      "flow_pressure_decayed_trade_flow_w32_lag0": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0008781215639983139,
+        "rank_ic_positive_fraction": 0.4485294117647059,
+        "mean_ic": 0.0023610853566891628,
+        "ic_positive_fraction": 0.5367647058823529,
+        "mean_long_short": 0.00012987512081184132,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": -0.014081996434937611
+      },
+      "flow_pressure_decayed_trade_flow_w64_lag1": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0007068678395655654,
+        "rank_ic_positive_fraction": 0.4632352941176471,
+        "mean_ic": 0.002510655127793217,
+        "ic_positive_fraction": 0.49264705882352944,
+        "mean_long_short": 0.00040939613290411856,
+        "long_short_positive_fraction": 0.5220588235294118,
+        "mean_monotonicity": -0.01497326203208556
+      },
+      "flow_pressure_decayed_trade_flow_w128_lag2": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0005935672968916715,
+        "rank_ic_positive_fraction": 0.47058823529411764,
+        "mean_ic": 0.002772154223358518,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 0.0004344004842831929,
+        "long_short_positive_fraction": 0.5588235294117647,
+        "mean_monotonicity": -0.020320855614973245
+      }
+    }
+  },
+  "promotion_allowed": false,
+  "decision": "observation_only"
+}

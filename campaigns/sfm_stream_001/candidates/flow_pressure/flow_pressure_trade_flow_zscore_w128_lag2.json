@@ -9,5 +9,5 @@
   "availability": {"update_on": ["trade"], "output_at": "scheduled_snapshot", "lag_events": 2, "invalid_policy": "finite_or_zero"},
   "output": {"factor_name": "flow_pressure_trade_flow_zscore_w128_lag2", "dtype": "float64", "research_direction": "raw_signed"},
   "lineage": {"idea_path": "campaigns/sfm_stream_001/ideas/flow_pressure.json", "implementation_path": "base/hf-open5m-factor-demo/factors/flow_pressure/factor_entry.cpp", "source_commit": "2ad6d1f"},
-  "evidence_level": "L2", "canonical_hash": "sha256:eea3d244d46d73a4496cb1b9b12818d2b71ba81f52324acf4f77aa57513b6b35"
+  "evidence_level": "L3", "canonical_hash": "sha256:eea3d244d46d73a4496cb1b9b12818d2b71ba81f52324acf4f77aa57513b6b35"
 }

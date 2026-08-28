@@ -19,6 +19,7 @@ RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-vertical-slice.json"
 SMOKE_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-smoke-20251014-000001.json"
 FULL_DAY_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-single-day-20251014.json"
 PILOT_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-l3-pilot-20251009-20251031.json"
+GRID_PILOT_RECEIPT_PATH = CAMPAIGN / "manifests" / "flow-pressure-grid-l3-pilot-20251009-20251031.json"
 
 
 def load_json(path):
@@ -71,18 +72,33 @@ class FlowPressureMigrationTests(unittest.TestCase):
             [92700, 100000, 103000, 110000, 113000, 133000, 140000, 143000],
         )
 
-    def test_l2_receipt_does_not_claim_real_data_pilot(self):
+    def test_legacy_l2_receipt_is_preserved_separately_from_grid_pilot(self):
         candidate = load_json(CANDIDATE_PATH)
         batch = load_json(BATCH_PATH)
         receipt = load_json(RECEIPT_PATH)
-        self.assertEqual(candidate["evidence_level"], "L2")
+        self.assertEqual(candidate["evidence_level"], "L3")
         self.assertEqual(candidate["lineage"]["source_commit"], "0322592")
-        self.assertEqual(batch["status"], "technical_complete")
+        self.assertEqual(batch["status"], "pilot_complete")
         self.assertEqual(receipt["evidence_level"], "L2")
         self.assertEqual(receipt["candidate_hash"], candidate["canonical_hash"])
         self.assertTrue(receipt["synthetic_semantic_tests_passed"])
         self.assertTrue(receipt["prefix_causality_test_passed"])
         self.assertFalse(receipt["real_data_pilot_run"])
+        self.assertFalse(receipt["promotion_allowed"])
+
+    def test_grid_pilot_receipt_records_twelve_factor_observation_only_scope(self):
+        receipt = load_json(GRID_PILOT_RECEIPT_PATH)
+        self.assertEqual(receipt["scope"], "seventeen_day_twelve_factor_real_data_pilot")
+        self.assertEqual(receipt["date_count"], 17)
+        self.assertEqual(receipt["factor_count"], 12)
+        self.assertEqual(receipt["checkpoint_count"], 8)
+        self.assertEqual(receipt["evaluation_combination_count"], 6)
+        self.assertEqual(receipt["strict_checks"]["total_rows"], 676240)
+        self.assertTrue(receipt["strict_checks"]["all_factor_names_match_batch"])
+        self.assertTrue(receipt["strict_checks"]["all_values_finite"])
+        self.assertTrue(receipt["strict_checks"]["all_symbol_event_keys_unique"])
+        self.assertTrue(receipt["strict_checks"]["all_evaluation_rows_136"])
+        self.assertEqual(receipt["decision"], "observation_only")
         self.assertFalse(receipt["promotion_allowed"])
 
     def test_real_data_smoke_receipt_stays_below_l3_completion(self):
