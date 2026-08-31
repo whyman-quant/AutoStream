@@ -102,6 +102,11 @@ class L4ReleaseTests(unittest.TestCase):
             self.assertEqual(len(plan["jobs"]), 6)
             self.assertFalse(plan["slurm_submission_performed"])
             self.assertEqual(plan["jobs"][-1]["depends_on"], plan["jobs"][-2]["job_name"])
+            command = plan["jobs"][0]["command"]
+            for required in ("--binary-sha256", "--config-sha256", "--date-list-sha256",
+                             "--runner-root", "--runner-provenance-json"):
+                self.assertIn(required, command)
+            self.assertNotIn("2025", json.dumps(plan))
 
 
 if __name__ == "__main__":
