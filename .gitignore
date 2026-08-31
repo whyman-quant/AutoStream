@@ -38,6 +38,7 @@ research/**
 
 ## Migration scratch
 .migration/
+.worktrees/
 
 ## Nested repository metadata is migration source, not top-level content
 base/hf-open5m-factor-demo/.git/
