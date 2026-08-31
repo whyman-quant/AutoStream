@@ -51,14 +51,31 @@ class FormalHistoryDatasetTests(unittest.TestCase):
         self.assertEqual(v2["date_count"], 969)
         self.assertEqual(v2["date_start"], "20210104")
         self.assertEqual(v2["date_end"], "20241231")
-        self.assertEqual(v2["splits"]["training"]["date_count"], 485)
-        self.assertEqual(v2["splits"]["observation"]["date_count"], 484)
-        self.assertEqual(v2["splits"]["holdout"]["date_count"], 228)
+        splits = v2["splits"]
+        self.assertEqual(splits["training"]["date_start"], "20210104")
+        self.assertEqual(splits["training"]["date_end"], "20221230")
+        self.assertEqual(splits["observation"]["date_start"], "20230103")
+        self.assertEqual(splits["observation"]["date_end"], "20241231")
+        self.assertEqual(splits["holdout"]["date_start"], "20250102")
+        self.assertEqual(splits["holdout"]["date_end"], "20251210")
+        self.assertEqual(splits["training"]["date_count"], 485)
+        self.assertEqual(splits["observation"]["date_count"], 484)
+        self.assertEqual(splits["holdout"]["date_count"], 228)
         self.assertLess(set(production_dates) | set(holdout_dates), set(v1_dates))
         self.assertEqual(set(production_dates) & set(holdout_dates), set())
-        training = {d for d in production_dates if "20210104" <= d <= "20221230"}
-        observation = {d for d in production_dates if "20230103" <= d <= "20241231"}
-        self.assertEqual((len(training), len(observation)), (485, 484))
+        training = {
+            d for d in production_dates
+            if splits["training"]["date_start"] <= d <= splits["training"]["date_end"]
+        }
+        observation = {
+            d for d in production_dates
+            if splits["observation"]["date_start"] <= d <= splits["observation"]["date_end"]
+        }
+        holdout_set = {
+            d for d in holdout_dates
+            if splits["holdout"]["date_start"] <= d <= splits["holdout"]["date_end"]
+        }
+        self.assertEqual((len(training), len(observation), len(holdout_set)), (485, 484, 228))
         self.assertEqual(training & observation, set())
         self.assertEqual(training | observation, set(production_dates))
         self.assertEqual(v2["date_list_sha256"].removeprefix("sha256:"), hashlib.sha256(production.encode()).hexdigest())
