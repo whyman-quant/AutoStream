@@ -5,6 +5,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -30,6 +33,13 @@ DEFAULT_SOURCE_EVENTS = (
     133000000,
     140000000,
     143000000,
+)
+FROZEN_PREFLIGHT_DATES = (
+    "20210104",
+    "20220301",
+    "20221230",
+    "20230103",
+    "20241231",
 )
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CAMPAIGN_ROOT = REPOSITORY_ROOT / "campaigns" / "sfm_stream_001"
@@ -162,6 +172,8 @@ def compose_date_summary(
     arrow_validation,
     *,
     expected_events,
+    hdf5_sha256=None,
+    arrow_sha256=None,
 ):
     """Compose a date receipt from completed strict validation evidence."""
     event_count = len(expected_events)
@@ -187,9 +199,30 @@ def compose_date_summary(
         "factor_names": list(inspection["factor_names"]),
         "all_values_finite": True,
         "unique_symbol_event": True,
-        "hdf5_sha256": _sha256(hdf5_path),
-        "arrow_sha256": _sha256(arrow_path),
+        "hdf5_sha256": hdf5_sha256 or _sha256(hdf5_path),
+        "arrow_sha256": arrow_sha256 or _sha256(arrow_path),
     }
+
+
+def _unique_sibling_path(path, suffix):
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix="." + target.name + ".",
+        suffix=suffix,
+        dir=str(target.parent),
+    )
+    os.close(descriptor)
+    return Path(temporary_name)
+
+
+def _restore_previous_arrow(arrow_path, backup_path):
+    if backup_path is not None:
+        os.replace(str(backup_path), str(arrow_path))
+        return None
+    if arrow_path.exists():
+        arrow_path.unlink()
+    return backup_path
 
 
 def preflight_dates(
@@ -226,6 +259,7 @@ def preflight_dates(
         hdf5_path = (
             Path(hdf5_root) / date / "all_families" / "factors.h5"
         )
+        hdf5_hash_before = _sha256(hdf5_path)
         _validate_exact_hdf5_event_keys(hdf5_path, source_events)
         inspection = inspect_hdf5(
             hdf5_path, expected_events=source_events
@@ -233,33 +267,58 @@ def preflight_dates(
         if inspection["factor_names"] != factor_names:
             raise ValueError("factor names mismatch for {}".format(date))
         arrow_path = Path(arrow_root) / (date + ".arrow")
-        converted = convert_hdf5(
-            hdf5_path,
-            arrow_path,
-            expected_rows=inspection["stock_count"],
-            expected_events=source_events,
-            expected_factor_count=len(factor_names),
-        )
-        checked = validate_arrow(
-            arrow_path,
-            expected_stock_count=inspection["stock_count"],
-            expected_events=evaluation_events,
-            expected_factor_names=factor_names,
-        )
-        checked["all_values_finite"] = True
-        checked["unique_symbol_event"] = True
-        if converted["rows"] != checked["rows"]:
-            raise ValueError("converted and validated Arrow row counts differ")
-        summaries.append(
-            compose_date_summary(
+        staging_path = _unique_sibling_path(arrow_path, ".staging")
+        backup_path = None
+        try:
+            converted = convert_hdf5(
+                hdf5_path,
+                staging_path,
+                expected_rows=inspection["stock_count"],
+                expected_events=source_events,
+                expected_factor_count=len(factor_names),
+            )
+            checked = validate_arrow(
+                staging_path,
+                expected_stock_count=inspection["stock_count"],
+                expected_events=evaluation_events,
+                expected_factor_names=factor_names,
+            )
+            checked["all_values_finite"] = True
+            checked["unique_symbol_event"] = True
+            if converted["rows"] != checked["rows"]:
+                raise ValueError("converted and validated Arrow row counts differ")
+            staging_hash = _sha256(staging_path)
+            hdf5_hash_after = _sha256(hdf5_path)
+            if hdf5_hash_after != hdf5_hash_before:
+                raise ValueError("HDF5 input changed during preflight: {}".format(date))
+            summary = compose_date_summary(
                 date,
                 hdf5_path,
                 arrow_path,
                 inspection,
                 checked,
                 expected_events=evaluation_events,
+                hdf5_sha256=hdf5_hash_before,
+                arrow_sha256=staging_hash,
             )
-        )
+            if arrow_path.exists():
+                backup_path = _unique_sibling_path(arrow_path, ".backup")
+                shutil.copyfile(str(arrow_path), str(backup_path))
+            os.replace(str(staging_path), str(arrow_path))
+            try:
+                final_hash = _sha256(arrow_path)
+            except Exception:
+                backup_path = _restore_previous_arrow(arrow_path, backup_path)
+                raise
+            if final_hash != staging_hash:
+                backup_path = _restore_previous_arrow(arrow_path, backup_path)
+                raise ValueError("published Arrow hash mismatch: {}".format(date))
+            summaries.append(summary)
+        finally:
+            if staging_path.exists():
+                staging_path.unlink()
+            if backup_path is not None and backup_path.exists():
+                backup_path.unlink()
     return {
         "dates": summaries,
         "aggregate": {
@@ -267,21 +326,104 @@ def preflight_dates(
             "total_rows": sum(summary["rows"] for summary in summaries),
             "factor_count": len(factor_names),
             "event_count": len(evaluation_events),
-            "decision": "continue_to_bulk_l4",
+            "decision": "validated_only",
         },
     }
+
+
+def _resolve_recorded_path(recorded_path, campaign_root):
+    recorded = Path(recorded_path)
+    if recorded.is_absolute():
+        return recorded.resolve()
+    candidates = (
+        REPOSITORY_ROOT / recorded,
+        Path(campaign_root) / recorded,
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate.resolve()
+    return candidates[0].resolve()
+
+
+def _load_frozen_contract(campaign_root, production_date_list_path=None):
+    campaign_root = Path(campaign_root)
+    campaign = json.loads(
+        (campaign_root / "campaign.json").read_text(encoding="utf-8")
+    )
+    manifest_path = (
+        campaign_root / campaign["formal_history_dataset_manifest"]
+    ).resolve()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    active_dataset_id = campaign.get("formal_history_dataset_id")
+    if (
+        active_dataset_id != "sfm_stream_001_formal_history_v2"
+        or manifest.get("dataset_id") != active_dataset_id
+    ):
+        raise ValueError("active formal-history dataset must be frozen v2")
+    manifest_events = manifest.get("events", {}).get("source_snapshots")
+    if manifest_events != list(DEFAULT_SOURCE_EVENTS):
+        raise ValueError("active v2 source events do not match frozen contract")
+    recorded_date_list = _resolve_recorded_path(
+        manifest["production_date_list_path"], campaign_root
+    )
+    if production_date_list_path is not None:
+        provided = Path(production_date_list_path).resolve()
+        if provided != recorded_date_list:
+            raise ValueError(
+                "provided path is not the manifest production date list"
+            )
+    actual_hash = _sha256(recorded_date_list)
+    if actual_hash != manifest.get("production_date_list_sha256"):
+        raise ValueError("production date list hash does not match active v2 manifest")
+    factor_names = load_expected_factor_names(campaign_root=campaign_root)
+    return recorded_date_list, factor_names
+
+
+def run_frozen_preflight(
+    dates,
+    hdf5_root,
+    arrow_root,
+    campaign_root=DEFAULT_CAMPAIGN_ROOT,
+    production_date_list_path=None,
+):
+    requested_dates = [str(date) for date in dates]
+    if requested_dates != list(FROZEN_PREFLIGHT_DATES):
+        raise ValueError(
+            "dates must equal the exact frozen preflight sequence: {}".format(
+                list(FROZEN_PREFLIGHT_DATES)
+            )
+        )
+    recorded_date_list, factor_names = _load_frozen_contract(
+        campaign_root, production_date_list_path
+    )
+    if len(factor_names) != 48:
+        raise ValueError("frozen production requires exactly 48 factor names")
+    result = preflight_dates(
+        requested_dates,
+        hdf5_root,
+        arrow_root,
+        campaign_root,
+        recorded_date_list,
+        expected_source_events=DEFAULT_SOURCE_EVENTS,
+        expected_factor_names=factor_names,
+    )
+    result["aggregate"]["decision"] = "continue_to_bulk_l4"
+    return result
 
 
 def _write_json_atomic(path, payload):
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = output_path.with_name("." + output_path.name + ".tmp")
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix="." + output_path.name + ".",
+        suffix=".tmp",
+        dir=str(output_path.parent),
+    )
+    temporary = Path(temporary_name)
     try:
-        temporary.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        temporary.replace(output_path)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            output.write(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+        os.replace(str(temporary), str(output_path))
     finally:
         if temporary.exists():
             temporary.unlink()
@@ -295,11 +437,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument(
         "--campaign-root", type=Path, default=DEFAULT_CAMPAIGN_ROOT
     )
-    parser.add_argument("--production-date-list", type=Path, required=True)
+    parser.add_argument("--production-date-list", type=Path)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     dates = args.dates.split(",")
-    result = preflight_dates(
+    result = run_frozen_preflight(
         dates,
         args.hdf5_root,
         args.arrow_root,
@@ -314,9 +456,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 __all__ = [
     "DEFAULT_SOURCE_EVENTS",
+    "FROZEN_PREFLIGHT_DATES",
     "compose_date_summary",
     "load_expected_factor_names",
     "preflight_dates",
+    "run_frozen_preflight",
     "validate_requested_dates",
 ]
 

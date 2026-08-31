@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import io
 import json
 import subprocess
@@ -6,16 +7,21 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import h5py
 import numpy as np
 
+from evaluations import l4_preflight
 from evaluations.l4_preflight import (
     DEFAULT_SOURCE_EVENTS,
+    FROZEN_PREFLIGHT_DATES,
+    _write_json_atomic,
     compose_date_summary,
     load_expected_factor_names,
     main,
     preflight_dates,
+    run_frozen_preflight,
     validate_requested_dates,
 )
 
@@ -70,6 +76,59 @@ def _write_batches(campaign_root, names):
         (batches / (family + "_seed_v1.json")).write_text(
             json.dumps({"candidate_ids": family_names}), encoding="utf-8"
         )
+
+
+def _sha256_bytes(value):
+    return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
+def _write_frozen_fixture(root):
+    campaign_root = root / "campaign"
+    manifests = campaign_root / "manifests"
+    manifests.mkdir(parents=True)
+    factor_names = ["factor_{:02d}".format(index) for index in range(48)]
+    _write_batches(campaign_root, factor_names)
+    dates = list(FROZEN_PREFLIGHT_DATES)
+    production_bytes = ("\n".join(dates) + "\n").encode("utf-8")
+    production_path = manifests / "formal-history-production-dates-v2.txt"
+    production_path.write_bytes(production_bytes)
+    manifest_path = manifests / "formal-history-dataset-v2.json"
+    manifest_path.write_text(
+        json.dumps({
+            "dataset_id": "sfm_stream_001_formal_history_v2",
+            "production_date_list_path": (
+                "manifests/formal-history-production-dates-v2.txt"
+            ),
+            "production_date_list_sha256": _sha256_bytes(production_bytes),
+            "events": {"source_snapshots": list(DEFAULT_SOURCE_EVENTS)},
+        }),
+        encoding="utf-8",
+    )
+    (campaign_root / "campaign.json").write_text(
+        json.dumps({
+            "campaign_id": "sfm_stream_001",
+            "formal_history_dataset_manifest": (
+                "manifests/formal-history-dataset-v2.json"
+            ),
+            "formal_history_dataset_id": "sfm_stream_001_formal_history_v2",
+        }),
+        encoding="utf-8",
+    )
+    for date in dates:
+        _write_hdf5(
+            root / "hdf5" / date / "all_families" / "factors.h5",
+            factor_names=factor_names,
+            events=DEFAULT_SOURCE_EVENTS,
+        )
+    return {
+        "campaign_root": campaign_root,
+        "dates": dates,
+        "factor_names": factor_names,
+        "production_path": production_path,
+        "manifest_path": manifest_path,
+        "hdf5_root": root / "hdf5",
+        "arrow_root": root / "arrow",
+    }
 
 
 class L4PreflightTests(unittest.TestCase):
@@ -159,7 +218,7 @@ class L4PreflightTests(unittest.TestCase):
                 "total_rows": 8,
                 "factor_count": 4,
                 "event_count": 4,
-                "decision": "continue_to_bulk_l4",
+                "decision": "validated_only",
             })
             self.assertTrue((root / "arrow" / (date + ".arrow")).is_file())
 
@@ -258,20 +317,151 @@ class L4PreflightTests(unittest.TestCase):
                         expected_factor_names=FACTOR_NAMES,
                     )
 
+    def test_frozen_preflight_requires_exact_five_dates_and_releases(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = _write_frozen_fixture(Path(directory))
+
+            result = run_frozen_preflight(
+                fixture["dates"],
+                fixture["hdf5_root"],
+                fixture["arrow_root"],
+                fixture["campaign_root"],
+                fixture["production_path"],
+            )
+
+            self.assertEqual(
+                result["aggregate"]["decision"], "continue_to_bulk_l4"
+            )
+            self.assertEqual(result["aggregate"]["date_count"], 5)
+            self.assertEqual(result["aggregate"]["factor_count"], 48)
+            self.assertEqual(result["aggregate"]["event_count"], 8)
+
+    def test_frozen_preflight_rejects_missing_extra_or_reordered_dates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = _write_frozen_fixture(Path(directory))
+            invalid_requests = (
+                fixture["dates"][:-1],
+                fixture["dates"] + ["20210105"],
+                list(reversed(fixture["dates"])),
+            )
+            for requested in invalid_requests:
+                with self.subTest(requested=requested):
+                    with self.assertRaisesRegex(ValueError, "exact frozen preflight"):
+                        run_frozen_preflight(
+                            requested,
+                            fixture["hdf5_root"],
+                            fixture["arrow_root"],
+                            fixture["campaign_root"],
+                            fixture["production_path"],
+                        )
+
+    def test_frozen_preflight_rejects_wrong_date_list_path_or_hash(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = _write_frozen_fixture(Path(directory))
+            other_path = Path(directory) / "other-dates.txt"
+            other_path.write_text(
+                "\n".join(fixture["dates"]) + "\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "manifest production date list"):
+                run_frozen_preflight(
+                    fixture["dates"], fixture["hdf5_root"],
+                    fixture["arrow_root"], fixture["campaign_root"], other_path,
+                )
+
+            fixture["production_path"].write_text("20210104\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "production date list hash"):
+                run_frozen_preflight(
+                    fixture["dates"], fixture["hdf5_root"],
+                    fixture["arrow_root"], fixture["campaign_root"],
+                    fixture["production_path"],
+                )
+
+    def test_staging_validation_failure_preserves_existing_final(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            date = "20210104"
+            hdf5_path = root / "hdf5" / date / "all_families" / "factors.h5"
+            _write_hdf5(hdf5_path)
+            dates_path = root / "dates.txt"
+            dates_path.write_text(date + "\n", encoding="utf-8")
+            final_path = root / "arrow" / (date + ".arrow")
+            final_path.parent.mkdir(parents=True)
+            final_path.write_bytes(b"old-final")
+
+            with mock.patch(
+                "evaluations.l4_preflight.validate_arrow",
+                side_effect=ValueError("staging validation failed"),
+            ):
+                with self.assertRaisesRegex(ValueError, "staging validation failed"):
+                    preflight_dates(
+                        [date], root / "hdf5", root / "arrow", root / "campaign",
+                        dates_path, expected_source_events=SOURCE_EVENTS,
+                        expected_factor_names=FACTOR_NAMES,
+                    )
+
+            self.assertEqual(final_path.read_bytes(), b"old-final")
+            self.assertEqual(list(final_path.parent.glob(".*.staging")), [])
+
+    def test_hdf5_hash_change_rejects_before_publish(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            date = "20210104"
+            hdf5_path = root / "hdf5" / date / "all_families" / "factors.h5"
+            _write_hdf5(hdf5_path)
+            dates_path = root / "dates.txt"
+            dates_path.write_text(date + "\n", encoding="utf-8")
+            final_path = root / "arrow" / (date + ".arrow")
+            final_path.parent.mkdir(parents=True)
+            final_path.write_bytes(b"old-final")
+            real_sha256 = l4_preflight._sha256
+            hdf5_hash_calls = [0]
+
+            def changing_sha256(path):
+                if Path(path) == hdf5_path:
+                    hdf5_hash_calls[0] += 1
+                    if hdf5_hash_calls[0] == 2:
+                        return "sha256:" + ("0" * 64)
+                return real_sha256(path)
+
+            with mock.patch(
+                "evaluations.l4_preflight._sha256", side_effect=changing_sha256
+            ):
+                with self.assertRaisesRegex(ValueError, "HDF5 input changed"):
+                    preflight_dates(
+                        [date], root / "hdf5", root / "arrow", root / "campaign",
+                        dates_path, expected_source_events=SOURCE_EVENTS,
+                        expected_factor_names=FACTOR_NAMES,
+                    )
+
+            self.assertEqual(final_path.read_bytes(), b"old-final")
+            self.assertEqual(list(final_path.parent.glob(".*.staging")), [])
+
+    def test_receipt_write_failure_preserves_old_file_and_cleans_unique_temps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output_path = Path(directory) / "receipt.json"
+            output_path.write_text("old-receipt\n", encoding="utf-8")
+            temporary_paths = []
+
+            def failing_replace(source, destination):
+                temporary_paths.append(Path(source))
+                raise OSError("replace failed")
+
+            with mock.patch(
+                "evaluations.l4_preflight.os.replace",
+                side_effect=failing_replace,
+            ):
+                for value in (1, 2):
+                    with self.assertRaisesRegex(OSError, "replace failed"):
+                        _write_json_atomic(output_path, {"value": value})
+
+            self.assertEqual(output_path.read_text(encoding="utf-8"), "old-receipt\n")
+            self.assertEqual(len(set(temporary_paths)), 2)
+            self.assertEqual(list(output_path.parent.glob(".receipt.json.*.tmp")), [])
+
     def test_cli_prints_json_and_atomically_writes_matching_output(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            dates = ("20210104", "20210105")
-            factor_names = ["factor_{:02d}".format(index) for index in range(48)]
-            _write_batches(root / "campaign", factor_names)
-            for date in dates:
-                _write_hdf5(
-                    root / "hdf5" / date / "all_families" / "factors.h5",
-                    factor_names=factor_names,
-                    events=DEFAULT_SOURCE_EVENTS,
-                )
-            dates_path = root / "dates.txt"
-            dates_path.write_text("\n".join(dates) + "\n", encoding="utf-8")
+            fixture = _write_frozen_fixture(root)
             output_path = root / "receipt.json"
             output_path.write_text("stale\n", encoding="utf-8")
 
@@ -281,15 +471,15 @@ class L4PreflightTests(unittest.TestCase):
                     "-m",
                     "evaluations.l4_preflight",
                     "--dates",
-                    ",".join(dates),
+                    ",".join(fixture["dates"]),
                     "--hdf5-root",
-                    str(root / "hdf5"),
+                    str(fixture["hdf5_root"]),
                     "--arrow-root",
-                    str(root / "arrow"),
+                    str(fixture["arrow_root"]),
                     "--campaign-root",
-                    str(root / "campaign"),
+                    str(fixture["campaign_root"]),
                     "--production-date-list",
-                    str(dates_path),
+                    str(fixture["production_path"]),
                     "--output",
                     str(output_path),
                 ],
@@ -301,7 +491,12 @@ class L4PreflightTests(unittest.TestCase):
             stdout_payload = json.loads(completed.stdout)
             output_payload = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(output_payload, stdout_payload)
-            self.assertEqual(stdout_payload["aggregate"]["date_count"], 2)
+            self.assertEqual(stdout_payload["aggregate"]["date_count"], 5)
+            self.assertEqual(stdout_payload["aggregate"]["factor_count"], 48)
+            self.assertEqual(stdout_payload["aggregate"]["event_count"], 8)
+            self.assertEqual(
+                stdout_payload["aggregate"]["decision"], "continue_to_bulk_l4"
+            )
             self.assertFalse(
                 output_path.with_name("." + output_path.name + ".tmp").exists()
             )
