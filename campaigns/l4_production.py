@@ -343,8 +343,9 @@ def _validate_submission_workdir(path, runner_root):
         raise ValueError("submission_workdir must be writable and searchable")
     if _is_within(workdir, runner_root):
         raise ValueError("submission_workdir must be outside the frozen runner release")
-    if "/mnt/" not in str(workdir):
-        raise ValueError("submission_workdir must satisfy mybatch's /mnt/ cwd rule")
+    persistent_root = Path("/mnt").resolve()
+    if workdir == persistent_root or not _is_within(workdir, persistent_root):
+        raise ValueError("submission_workdir must resolve beneath /mnt")
     descriptor, probe_name = tempfile.mkstemp(
         prefix=".l4-submit-probe.", dir=str(workdir)
     )
@@ -665,7 +666,7 @@ def _chunk_run_command(plan, chunk):
     return shlex.join(arguments)
 
 
-def recover_job_id(job_name, submitted_at):
+def recover_job_id(job_name, submitted_at, now_fn=None):
     """Recover one job id by exact unique Slurm job name."""
     try:
         submitted = datetime.fromisoformat(str(submitted_at))
@@ -674,10 +675,16 @@ def recover_job_id(job_name, submitted_at):
     if submitted.tzinfo is None:
         submitted = submitted.replace(tzinfo=timezone.utc)
     submitted_utc = submitted.astimezone(timezone.utc)
+    recovered_at = (
+        datetime.now(timezone.utc) if now_fn is None else now_fn()
+    )
+    if recovered_at.tzinfo is None:
+        recovered_at = recovered_at.replace(tzinfo=timezone.utc)
+    recovered_utc = recovered_at.astimezone(timezone.utc)
     start = (submitted_utc - timedelta(hours=1)).strftime(
         "%Y-%m-%dT%H:%M:%S"
     )
-    end = (submitted_utc + timedelta(hours=1)).strftime(
+    end = max(recovered_utc, submitted_utc).strftime(
         "%Y-%m-%dT%H:%M:%S"
     )
     commands = (

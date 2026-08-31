@@ -14,8 +14,9 @@ from campaigns import l4_production
 
 
 PERSISTENT_TEST_TEMP_BASE = Path("/var/tmp")
+REAL_MNT_TEST_BASE = Path("/mnt/beegfs_ssd_raid91/10513_fangwei")
 PERSISTENT_TEST_SUBMISSION_WORKDIR = (
-    PERSISTENT_TEST_TEMP_BASE / "mnt" / "l4-production-tests"
+    REAL_MNT_TEST_BASE / "l4-production-tests"
 )
 PERSISTENT_TEST_SUBMISSION_WORKDIR.mkdir(parents=True, exist_ok=True)
 tempfile.tempdir = str(PERSISTENT_TEST_TEMP_BASE)
@@ -331,6 +332,30 @@ class L4ProductionTests(unittest.TestCase):
             )
 
             self.assertEqual(plan["output_root"], str(configured_output.resolve()))
+
+    def test_submission_workdir_requires_resolved_path_beneath_real_mnt(self):
+        runner_root = Path("/var/tmp/frozen-l4-runner")
+        for fake_base in (Path("/tmp"), Path("/var/tmp")):
+            with self.subTest(fake_base=fake_base), tempfile.TemporaryDirectory(
+                dir=str(fake_base)
+            ) as directory:
+                fake_workdir = Path(directory) / "mnt" / "fake"
+                fake_workdir.mkdir(parents=True)
+                with self.assertRaisesRegex(ValueError, "beneath /mnt"):
+                    l4_production._validate_submission_workdir(
+                        fake_workdir, runner_root
+                    )
+
+        with tempfile.TemporaryDirectory(
+            dir=str(REAL_MNT_TEST_BASE)
+        ) as directory:
+            real_workdir = Path(directory).resolve()
+            self.assertEqual(
+                l4_production._validate_submission_workdir(
+                    real_workdir, runner_root
+                ),
+                real_workdir,
+            )
 
     def test_dry_run_cli_never_invokes_mybatch(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -1205,19 +1230,26 @@ class L4ProductionTests(unittest.TestCase):
                     "submission-chunk", "2026-08-31T12:00:00+00:00"
                 )
 
-    def test_recover_job_id_bounds_accounting_query_to_submission_window(self):
+    def test_recover_job_id_covers_long_queue_until_recovery_time(self):
         responses = [
             mock.Mock(returncode=0, stdout="", stderr=""),
-            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(
+                returncode=0,
+                stdout="7555|submission-chunk\n",
+                stderr="",
+            ),
         ]
+        recovery_time = dt.datetime(2026, 8, 31, 12, 0, tzinfo=dt.timezone.utc)
         with mock.patch(
             "campaigns.l4_production.subprocess.run", side_effect=responses
         ) as run:
             recovered = l4_production.recover_job_id(
-                "submission-chunk", "2020-01-02T12:00:00+00:00"
+                "submission-chunk",
+                "2020-01-02T12:00:00+00:00",
+                now_fn=lambda: recovery_time,
             )
 
-        self.assertIsNone(recovered)
+        self.assertEqual(recovered, "7555")
         accounting_command = run.call_args_list[1].args[0]
         self.assertEqual(
             accounting_command[accounting_command.index("-S") + 1],
@@ -1225,7 +1257,7 @@ class L4ProductionTests(unittest.TestCase):
         )
         self.assertEqual(
             accounting_command[accounting_command.index("-E") + 1],
-            "2020-01-02T13:00:00",
+            "2026-08-31T12:00:00",
         )
 
     def test_resume_rejects_tampered_submitted_job_record(self):
