@@ -11,9 +11,38 @@
   "event_count": 8,
   "binary_sha256": "sha256:ce48455249584bae7f8dce8a73558453b2ff88de4424301500002e84ff8bc1a4",
   "config_sha256": "sha256:1827e91a5cba618a964117fed8a844f7271523398a5af1bda09a9398a2602247",
-  "jobs": {"production": 5, "conversion_validation": 1, "slurm_submission_performed": false},
-  "strict_checks": {"status": "not_run", "holdout_read": false},
-  "decision": "pending",
+  "converter_sha256": "sha256:e4ef9d05d6cbddc80d47a7fdff43f3e9afe139dcc8b66bfbd174a41c593c39e4",
+  "evaluator_sha256": "sha256:1f8fd457865d7face5eb2f59d3b8a7a7e33f8b8c5404ce5d4226ce47a6407055",
+  "jobs": {
+    "production": [
+      {"job_id": "18495851", "date": "20210104", "status": "COMPLETED", "exit_code": "0:0", "elapsed": "00:02:26", "allocated_cpu": 12, "allocated_memory": "243G"},
+      {"job_id": "18495852", "date": "20220301", "status": "COMPLETED", "exit_code": "0:0", "elapsed": "00:03:00", "allocated_cpu": 12, "allocated_memory": "243G"},
+      {"job_id": "18495853", "date": "20221230", "status": "COMPLETED", "exit_code": "0:0", "elapsed": "00:02:27", "allocated_cpu": 12, "allocated_memory": "243G"},
+      {"job_id": "18495854", "date": "20230103", "status": "COMPLETED", "exit_code": "0:0", "elapsed": "00:02:46", "allocated_cpu": 12, "allocated_memory": "243G"},
+      {"job_id": "18495855", "date": "20241231", "status": "COMPLETED", "exit_code": "0:0", "elapsed": "00:04:04", "allocated_cpu": 12, "allocated_memory": "243G"}
+    ],
+    "conversion_validation": {"job_id": "18495856", "status": "COMPLETED", "exit_code": "0:0", "elapsed": "00:00:06", "allocated_cpu": 12, "allocated_memory": "243G"},
+    "slurm_submission_performed": true
+  },
+  "strict_checks": {
+    "status": "passed",
+    "holdout_read": false,
+    "date_count": 5,
+    "factor_count": 48,
+    "event_count": 8,
+    "total_rows": 182104,
+    "all_values_finite": true,
+    "unique_symbol_event": true,
+    "factor_names_match_batch": true,
+    "dates": {
+      "20210104": {"stock_count": 3881, "rows": 31048, "hdf5_sha256": "sha256:e511daf44cb5cbc45faca31e23f9ec1e5f67e8e7297ecc3a3685574e5791f9dd", "arrow_sha256": "sha256:5b88cb0b8794245b417aa006f7d21146f259f39d1700f4204b8b2ea649d84788"},
+      "20220301": {"stock_count": 4414, "rows": 35312, "hdf5_sha256": "sha256:01c9aa5641ee55ed4cc50dd6da856f04162e8bf0e9de9af72287a9e439dd3740", "arrow_sha256": "sha256:6f03515b7b802d297d4ce3d581b81eb0ffd6b78b674ae7f24dd417239a62763a"},
+      "20221230": {"stock_count": 4746, "rows": 37968, "hdf5_sha256": "sha256:54d6e38cbc3f550473682734b0f27fb534cbefdc111f102aa7630a18349fe10f", "arrow_sha256": "sha256:f29c79ad6cb1e912369f7381a55ce3d6447bc50515577bfcae904c2c0797a884"},
+      "20230103": {"stock_count": 4747, "rows": 37976, "hdf5_sha256": "sha256:5867c7c56a34e3c7e263d2037946ce7f1f438e356c7411bf086ee3ca7bedce53", "arrow_sha256": "sha256:d289a135a7f24049aaf23bc87c05a383f37e96dd7969aa38473bb270d8db0122"},
+      "20241231": {"stock_count": 4975, "rows": 39800, "hdf5_sha256": "sha256:a951e11a339a6ef7b5fdf01581e8f9f6d7b61c45f90390d89d627fe597eebdcf", "arrow_sha256": "sha256:01276cff93ede987dedae4626a0127868cc6769fe97ca4fffca17e54d1ad06af"}
+    }
+  },
+  "decision": "continue_to_bulk_l4",
   "promotion_allowed": false,
-  "note": "Plan and immutable release prepared locally; no mybatch/Slurm submission was performed."
+  "note": "Five-date preflight completed successfully with strict HDF5/Arrow validation. Holdout data was not read. This receipt authorizes bulk L4 production planning only; no factor promotion is allowed."
 }
