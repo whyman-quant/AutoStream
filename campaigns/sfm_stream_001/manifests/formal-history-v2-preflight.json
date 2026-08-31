@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "dataset_id": "sfm_stream_001_formal_history_v2",
+  "release_id": "formal-history-v2-07aaa4e2408163a01a82429cd4c7d4d2208898bb",
+  "release_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-releases/formal-history-v2-07aaa4e2408163a01a82429cd4c7d4d2208898bb",
+  "submission_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v2-07aaa4e2408163a01a82429cd4c7d4d2208898bb",
+  "plan_path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v2-preflight-plan.json",
+  "plan_sha256": "sha256:f058871dc4ec286f2b3a34659b5fc9a6c1847bf5fbe57a2dfd599e01d0ce4e6d",
+  "dates": ["20210104", "20220301", "20221230", "20230103", "20241231"],
+  "factor_count": 48,
+  "event_count": 8,
+  "binary_sha256": "sha256:6cd743eecb9a995e744ba2ee6cdd8947f6175ff308bf47cb1187c626864db7c9",
+  "config_sha256": "sha256:1827e91a5cba618a964117fed8a844f7271523398a5af1bda09a9398a2602247",
+  "jobs": {"production": 5, "conversion_validation": 1, "slurm_submission_performed": false},
+  "strict_checks": {"status": "not_run", "holdout_read": false},
+  "decision": "pending",
+  "promotion_allowed": false,
+  "note": "Plan and immutable release prepared locally; no mybatch/Slurm submission was performed."
+}
