@@ -104,6 +104,56 @@ def _sha256(path):
     return "sha256:" + digest.hexdigest()
 
 
+def _validate_exact_hdf5_event_keys(path, expected_events):
+    import h5py
+
+    expected = {str(event) for event in expected_events}
+    with h5py.File(str(path), "r") as source:
+        event_keys = {key for key in source.keys() if key.isdigit()}
+        codelist_keys = {
+            key[len("codelist_") :]
+            for key in source.keys()
+            if key.startswith("codelist_")
+            and key[len("codelist_") :].isdigit()
+        }
+        non_dataset_events = sorted(
+            key
+            for key in event_keys
+            if not isinstance(source[key], h5py.Dataset)
+        )
+        non_dataset_codelists = sorted(
+            "codelist_" + key
+            for key in codelist_keys
+            if not isinstance(source["codelist_" + key], h5py.Dataset)
+        )
+    if non_dataset_events:
+        raise ValueError(
+            "event keys must be datasets: {}".format(non_dataset_events)
+        )
+    if non_dataset_codelists:
+        raise ValueError(
+            "codelist keys must be datasets: {}".format(non_dataset_codelists)
+        )
+    missing_events = sorted(expected - event_keys)
+    unexpected_events = sorted(event_keys - expected)
+    missing_codelists = sorted(expected - codelist_keys)
+    unexpected_codelists = sorted(codelist_keys - expected)
+    if missing_events:
+        raise ValueError("missing event datasets: {}".format(missing_events))
+    if unexpected_events:
+        raise ValueError(
+            "unexpected event datasets: {}".format(unexpected_events)
+        )
+    if missing_codelists:
+        raise ValueError(
+            "missing codelist datasets: {}".format(missing_codelists)
+        )
+    if unexpected_codelists:
+        raise ValueError(
+            "unexpected codelist datasets: {}".format(unexpected_codelists)
+        )
+
+
 def compose_date_summary(
     date,
     hdf5_path,
@@ -176,6 +226,7 @@ def preflight_dates(
         hdf5_path = (
             Path(hdf5_root) / date / "all_families" / "factors.h5"
         )
+        _validate_exact_hdf5_event_keys(hdf5_path, source_events)
         inspection = inspect_hdf5(
             hdf5_path, expected_events=source_events
         )
