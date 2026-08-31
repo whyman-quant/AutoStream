@@ -119,6 +119,12 @@ def freeze_release(repo_root, *, commit, binary, config, release_base=RELEASE_BA
         relative = "campaigns/sfm_stream_001/batches/{}_seed_v1.json".format(family)
         copied = target / relative
         files[relative] = {"path": str(copied), "sha256": sha256(copied)}
+    for relative in (
+        "campaigns/sfm_stream_001/manifests/formal-history-dataset-v2.json",
+        "campaigns/sfm_stream_001/manifests/formal-history-production-dates-v2.txt",
+    ):
+        copied = target / relative
+        files[relative] = {"path": str(copied), "sha256": sha256(copied)}
     metadata = {
         "schema_version": 1,
         "release_id": "formal-history-v2-" + str(commit),
