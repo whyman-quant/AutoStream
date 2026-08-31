@@ -50,7 +50,7 @@ class L4ReleaseTests(unittest.TestCase):
             config.write_text("{}")
             release = freeze_release(root, commit="abc123", binary=binary, config=config, release_base=root / "releases")
             self.assertTrue(Path(release["release_root"]).is_dir())
-            self.assertEqual((Path(release["binary"]).stat().st_mode & 0o222), 0)
+            self.assertEqual((Path(release["binary"]["path"]).stat().st_mode & 0o222), 0)
             self.assertTrue((Path(release["release_root"]) / "release.json").is_file())
 
     def test_preflight_plan_is_exact_five_dates_and_never_submits(self):
