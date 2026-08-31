@@ -2,12 +2,23 @@ import datetime as dt
 import fcntl
 import hashlib
 import json
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from campaigns import l4_production
+
+
+PERSISTENT_TEST_TEMP_BASE = Path("/var/tmp")
+PERSISTENT_TEST_SUBMISSION_WORKDIR = (
+    PERSISTENT_TEST_TEMP_BASE / "mnt" / "l4-production-tests"
+)
+PERSISTENT_TEST_SUBMISSION_WORKDIR.mkdir(parents=True, exist_ok=True)
+tempfile.tempdir = str(PERSISTENT_TEST_TEMP_BASE)
 
 
 def _sha256(path):
@@ -90,6 +101,7 @@ def _write_inputs(root, output_root):
         encoding="utf-8",
     )
     for relative in (
+        "l4_runner_bootstrap.py",
         "campaigns/__init__.py",
         "campaigns/l4_production.py",
         "evaluations/__init__.py",
@@ -100,7 +112,9 @@ def _write_inputs(root, output_root):
         runner_file = root / relative
         runner_file.parent.mkdir(parents=True, exist_ok=True)
         runner_file.write_text("# frozen {}\n".format(relative), encoding="utf-8")
-    (root / "slurm").symlink_to(tempfile.gettempdir(), target_is_directory=True)
+    (root / "slurm").symlink_to(
+        PERSISTENT_TEST_SUBMISSION_WORKDIR, target_is_directory=True
+    )
     return binary.resolve(), config.resolve()
 
 
@@ -289,6 +303,15 @@ class L4ProductionTests(unittest.TestCase):
                     output_root,
                     root.resolve(),
                     inside_runner,
+                )
+            with self.assertRaises(ValueError):
+                l4_production.build_plan(
+                    campaign_root,
+                    binary,
+                    config,
+                    output_root,
+                    root.resolve(),
+                    Path("/tmp"),
                 )
 
     def test_build_plan_accepts_configured_output_through_equivalent_symlink(self):
@@ -665,13 +688,14 @@ class L4ProductionTests(unittest.TestCase):
             )
 
             self.assertEqual(plan["runner_root"], str(root))
-            self.assertEqual(len(plan["runner_provenance"]), 10)
+            self.assertEqual(len(plan["runner_provenance"]), 11)
             self.assertEqual(plan["submission_resources"]["mybatch_input_memory_gb"], 256)
             self.assertEqual(plan["submission_resources"]["effective_slurm_memory_gb"], 243)
             self.assertEqual(plan["submission_workdir"], str((root / "slurm").resolve()))
             command = l4_production._chunk_run_command(plan, plan["chunks"][0])
-            self.assertIn("/usr/bin/env", command)
-            self.assertIn("PYTHONPATH=" + str(root), command)
+            self.assertNotIn("PYTHONPATH=", command)
+            self.assertIn(" -I ", command)
+            self.assertIn(str(root / "l4_runner_bootstrap.py"), command)
             self.assertIn("/usr/local/python3.8.10/bin/python3", command)
 
     def test_build_plan_rejects_feature_worktree_runner_root(self):
@@ -712,6 +736,23 @@ class L4ProductionTests(unittest.TestCase):
             self.assertEqual(
                 digest, "sha256:" + hashlib.sha256(original).hexdigest()
             )
+
+    def test_plan_output_is_atomically_published_and_rejects_symlinks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "plan.json"
+            with mock.patch(
+                "campaigns.l4_production.os.replace",
+                wraps=os.replace,
+            ) as replace:
+                l4_production.write_plan_once(path, {"value": 1})
+            self.assertEqual(replace.call_count, 1)
+            self.assertEqual(Path(replace.call_args.args[1]), path)
+
+            path.unlink()
+            path.symlink_to(root / "elsewhere.json")
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                l4_production.write_plan_once(path, {"value": 1})
 
     def test_holdout_contract_rejects_2026_even_with_matching_hash(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -766,7 +807,7 @@ class L4ProductionTests(unittest.TestCase):
                 "campaigns.l4_production.subprocess.run", side_effect=remaining
             ) as run:
                 receipt = l4_production.submit_plan(
-                    plan, plan_path, recover_job_id=lambda name: None
+                    plan, plan_path, recover_job_id=lambda name, submitted_at: None
                 )
             self.assertEqual(receipt["status"], "submitted")
             self.assertEqual(run.call_count, 192)
@@ -788,22 +829,31 @@ class L4ProductionTests(unittest.TestCase):
             l4_production.write_plan_once(plan_path, plan)
             receipt_path = l4_production.submission_receipt_path(plan_path)
             submission_id = "abc123"
-            job_name = submission_id + "-" + plan["chunks"][0]["chunk_id"]
+            chunk = plan["chunks"][0]
+            job_name = submission_id + "-" + chunk["chunk_id"]
+            run_command, command = l4_production._submission_command(
+                plan, chunk, job_name, None
+            )
             l4_production._write_json_atomic(receipt_path, {
                 "schema_version": 2,
                 "status": "submitting",
                 "submission_id": submission_id,
+                "submitted_at": "2026-08-31T12:00:00+00:00",
                 "plan_path": str(plan_path),
                 "plan_sha256": _sha256(plan_path),
                 "plan_provenance": l4_production.plan_provenance(plan),
                 "next_chunk_id": plan["chunks"][0]["chunk_id"],
                 "jobs": [{
-                    "chunk_id": plan["chunks"][0]["chunk_id"],
+                    "chunk_id": chunk["chunk_id"],
                     "lane": 0,
+                    "dates": list(chunk["dates"]),
                     "job_name": job_name,
                     "status": "submitting",
                     "depends_on_chunk_id": None,
                     "depends_on_job_id": None,
+                    "command": command,
+                    "run_command": run_command,
+                    "resources": l4_production._job_resources(),
                 }],
             })
             responses = [
@@ -816,7 +866,7 @@ class L4ProductionTests(unittest.TestCase):
                 receipt = l4_production.submit_plan(
                     plan,
                     plan_path,
-                    recover_job_id=lambda name: "7555" if name == job_name else None,
+                    recover_job_id=lambda name, submitted_at: "7555" if name == job_name else None,
                 )
             self.assertEqual(run.call_count, 193)
             self.assertEqual(receipt["jobs"][0]["job_id"], "7555")
@@ -1037,6 +1087,189 @@ class L4ProductionTests(unittest.TestCase):
             self.assertEqual(pre_submit["jobs"][0]["status"], "submitting")
             self.assertNotIn("job_id", pre_submit["jobs"][0])
             self.assertIn("submission_id", pre_submit)
+
+    def test_bootstrap_prevents_cwd_campaign_shadowing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            release = root / "release"
+            malicious = root / "malicious"
+            (release / "campaigns").mkdir(parents=True)
+            (malicious / "campaigns").mkdir(parents=True)
+            bootstrap_source = l4_production.REPOSITORY_ROOT / "l4_runner_bootstrap.py"
+            self.assertTrue(bootstrap_source.is_file())
+            (release / "l4_runner_bootstrap.py").write_bytes(
+                bootstrap_source.read_bytes()
+            )
+            (release / "campaigns/__init__.py").write_text("", encoding="utf-8")
+            (release / "campaigns/l4_production.py").write_text(
+                "import os\nfrom pathlib import Path\n"
+                "def main():\n"
+                "    Path(os.environ['TRUSTED_MARKER']).write_text('trusted')\n"
+                "    return 0\n",
+                encoding="utf-8",
+            )
+            (malicious / "campaigns/__init__.py").write_text(
+                "from pathlib import Path\n"
+                "Path(__import__('os').environ['MALICIOUS_MARKER']).write_text('bad')\n",
+                encoding="utf-8",
+            )
+            malicious_pythonpath = root / "pythonpath"
+            malicious_pythonpath.mkdir()
+            (malicious_pythonpath / "json.py").write_text(
+                "from pathlib import Path\n"
+                "Path(__import__('os').environ['PYTHONPATH_MARKER']).write_text('bad')\n",
+                encoding="utf-8",
+            )
+            trusted_marker = root / "trusted"
+            malicious_marker = root / "malicious-hit"
+            pythonpath_marker = root / "pythonpath-hit"
+            environment = dict(os.environ)
+            environment.update({
+                "TRUSTED_MARKER": str(trusted_marker),
+                "MALICIOUS_MARKER": str(malicious_marker),
+                "PYTHONPATH_MARKER": str(pythonpath_marker),
+                "PYTHONPATH": str(malicious_pythonpath),
+            })
+
+            completed = subprocess.run(
+                [sys.executable, str(release / "l4_runner_bootstrap.py")],
+                cwd=str(malicious),
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertTrue(trusted_marker.is_file())
+            self.assertFalse(malicious_marker.exists())
+            self.assertFalse(pythonpath_marker.exists())
+
+    def test_runner_rejects_git_ancestor_and_symlinked_provenance(self):
+        with tempfile.TemporaryDirectory(
+            dir=str(l4_production.REPOSITORY_ROOT)
+        ) as directory:
+            nested = Path(directory)
+            with self.assertRaisesRegex(ValueError, "git checkout"):
+                l4_production._validate_runner_root(nested, nested)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            campaign_root = root / "campaign"
+            output_root = root / "outputs"
+            _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            target = root / "campaigns/l4_production.py"
+            target.unlink()
+            target.symlink_to(root / "evaluations/l4_preflight.py")
+
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                l4_production.build_plan(
+                    campaign_root, binary, config, output_root, root
+                )
+
+    def test_recover_job_id_fails_closed_on_scheduler_query_error(self):
+        for accounting_stdout in ("", "7555|submission-chunk\n"):
+            with self.subTest(accounting_stdout=accounting_stdout):
+                responses = [
+                    mock.Mock(returncode=1, stdout="", stderr="squeue down"),
+                    mock.Mock(
+                        returncode=0, stdout=accounting_stdout, stderr=""
+                    ),
+                ]
+                with mock.patch(
+                    "campaigns.l4_production.subprocess.run", side_effect=responses
+                ):
+                    with self.assertRaises(RuntimeError):
+                        l4_production.recover_job_id(
+                            "submission-chunk", "2026-08-31T12:00:00+00:00"
+                        )
+
+    def test_recover_job_id_rejects_conflicting_scheduler_matches(self):
+        responses = [
+            mock.Mock(
+                returncode=0,
+                stdout="7555|submission-chunk\n",
+                stderr="",
+            ),
+            mock.Mock(
+                returncode=0,
+                stdout="7666|submission-chunk\n",
+                stderr="",
+            ),
+        ]
+        with mock.patch(
+            "campaigns.l4_production.subprocess.run", side_effect=responses
+        ):
+            with self.assertRaises(RuntimeError):
+                l4_production.recover_job_id(
+                    "submission-chunk", "2026-08-31T12:00:00+00:00"
+                )
+
+    def test_recover_job_id_bounds_accounting_query_to_submission_window(self):
+        responses = [
+            mock.Mock(returncode=0, stdout="", stderr=""),
+            mock.Mock(returncode=0, stdout="", stderr=""),
+        ]
+        with mock.patch(
+            "campaigns.l4_production.subprocess.run", side_effect=responses
+        ) as run:
+            recovered = l4_production.recover_job_id(
+                "submission-chunk", "2020-01-02T12:00:00+00:00"
+            )
+
+        self.assertIsNone(recovered)
+        accounting_command = run.call_args_list[1].args[0]
+        self.assertEqual(
+            accounting_command[accounting_command.index("-S") + 1],
+            "2020-01-02T11:00:00",
+        )
+        self.assertEqual(
+            accounting_command[accounting_command.index("-E") + 1],
+            "2020-01-02T13:00:00",
+        )
+
+    def test_resume_rejects_tampered_submitted_job_record(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            campaign_root = root / "campaign"
+            output_root = root / "outputs"
+            _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            plan = l4_production.build_plan(
+                campaign_root, binary, config, output_root, root
+            )
+            plan_path = root / "plan.json"
+            l4_production.write_plan_once(plan_path, plan)
+            with mock.patch(
+                "campaigns.l4_production.subprocess.run",
+                side_effect=[
+                    mock.Mock(returncode=0, stdout="Jobid:7000\n", stderr=""),
+                    mock.Mock(returncode=1, stdout="", stderr="fail"),
+                ],
+            ):
+                with self.assertRaises(RuntimeError):
+                    l4_production.submit_plan(plan, plan_path)
+            receipt_path = l4_production.submission_receipt_path(plan_path)
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            receipt["jobs"][0]["lane"] = 99
+            l4_production._write_json_atomic(receipt_path, receipt)
+
+            with mock.patch("campaigns.l4_production.subprocess.run") as run:
+                with self.assertRaises(ValueError):
+                    l4_production.submit_plan(
+                        plan, plan_path, recover_job_id=lambda name, submitted_at: None
+                    )
+            run.assert_not_called()
+
+    def test_atomic_publication_fsyncs_parent_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with mock.patch(
+                "campaigns.l4_production._fsync_directory"
+            ) as fsync_directory:
+                l4_production.write_plan_once(root / "plan.json", {"a": 1})
+                l4_production._write_json_atomic(root / "receipt.json", {"b": 2})
+            self.assertEqual(fsync_directory.call_count, 2)
 
 
 if __name__ == "__main__":

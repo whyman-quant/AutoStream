@@ -13,6 +13,7 @@ import shlex
 import subprocess
 import tempfile
 from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -34,6 +35,7 @@ EFFECTIVE_SLURM_MEMORY_GB = 243
 SLURM_RESOURCES = ("-c12", "-m256G", "-p", "cpu_wgh", "-t2:00:00")
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 RUNNER_RELATIVE_FILES = (
+    "l4_runner_bootstrap.py",
     "campaigns/__init__.py",
     "campaigns/l4_production.py",
     "evaluations/__init__.py",
@@ -277,11 +279,37 @@ def _is_within(path, parent):
         return False
 
 
+def _has_git_ancestor(path):
+    candidate = Path(path).resolve()
+    return any((ancestor / ".git").exists() for ancestor in (candidate, *candidate.parents))
+
+
+def _require_provenance_file(path, runner_root, description):
+    root = Path(runner_root).resolve()
+    candidate = Path(path)
+    try:
+        relative = candidate.relative_to(root)
+    except ValueError as error:
+        raise ValueError("{} must be inside runner_root".format(description)) from error
+    current = root
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError("{} must not use symlink paths".format(description))
+    resolved = candidate.resolve()
+    if not _is_within(resolved, root) or not resolved.is_file():
+        raise ValueError("{} must be a regular file inside runner_root".format(description))
+    return resolved
+
+
 def _validate_runner_root(runner_root, campaign_root):
-    root = _require_absolute_directory_path(runner_root, "runner_root")
+    raw_root = Path(runner_root)
+    if raw_root.is_symlink():
+        raise ValueError("runner_root must not be a symlink")
+    root = _require_absolute_directory_path(raw_root, "runner_root")
     if not root.is_dir():
         raise ValueError("runner_root must be an existing directory")
-    if (root / ".git").exists():
+    if _has_git_ancestor(root):
         raise ValueError("runner_root must be a frozen release, not a git checkout")
     campaign = Path(campaign_root).resolve()
     if not _is_within(campaign, root):
@@ -315,6 +343,20 @@ def _validate_submission_workdir(path, runner_root):
         raise ValueError("submission_workdir must be writable and searchable")
     if _is_within(workdir, runner_root):
         raise ValueError("submission_workdir must be outside the frozen runner release")
+    if "/mnt/" not in str(workdir):
+        raise ValueError("submission_workdir must satisfy mybatch's /mnt/ cwd rule")
+    descriptor, probe_name = tempfile.mkstemp(
+        prefix=".l4-submit-probe.", dir=str(workdir)
+    )
+    probe = Path(probe_name)
+    try:
+        os.write(descriptor, b"l4")
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+        if probe.exists():
+            probe.unlink()
+        _fsync_directory(workdir)
     return workdir
 
 
@@ -341,7 +383,9 @@ def collect_runner_provenance(runner_root, campaign_root):
     campaign = Path(campaign_root).resolve()
     entries = []
     for relative in RUNNER_RELATIVE_FILES:
-        path = _require_absolute_file(root / relative, "runner file")
+        path = _require_provenance_file(
+            root / relative, root, "runner file"
+        )
         entries.append({
             "kind": "runner",
             "name": relative,
@@ -349,8 +393,9 @@ def collect_runner_provenance(runner_root, campaign_root):
             "sha256": _sha256(path),
         })
     for family in FAMILIES:
-        path = _require_absolute_file(
+        path = _require_provenance_file(
             campaign / "batches" / (family + "_seed_v1.json"),
+            root,
             "Batch JSON",
         )
         entries.append({
@@ -490,6 +535,7 @@ def _write_json_atomic(path, payload):
             output.flush()
             os.fsync(output.fileno())
         os.replace(str(temporary), str(target))
+        _fsync_directory(target.parent)
     finally:
         if temporary.exists():
             temporary.unlink()
@@ -499,32 +545,42 @@ def _json_bytes(payload):
     return (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
+def _fsync_directory(path):
+    descriptor = os.open(str(path), os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def write_plan_once(path, plan):
     """Atomically create a plan, or reuse only byte-identical contents."""
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     desired = _json_bytes(plan)
-    if target.exists():
-        if target.read_bytes() != desired:
-            raise ValueError("existing plan bytes differ; refusing overwrite")
-        return
-    descriptor, temporary_name = tempfile.mkstemp(
-        prefix="." + target.name + ".", suffix=".tmp", dir=str(target.parent)
-    )
-    temporary = Path(temporary_name)
-    try:
-        with os.fdopen(descriptor, "wb") as output:
-            output.write(desired)
-            output.flush()
-            os.fsync(output.fileno())
-        try:
-            os.link(str(temporary), str(target))
-        except FileExistsError:
+    lock_path = target.with_name(target.name + ".lock")
+    with lock_path.open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        if target.is_symlink():
+            raise ValueError("plan output must not be a symlink")
+        if target.exists():
             if target.read_bytes() != desired:
                 raise ValueError("existing plan bytes differ; refusing overwrite")
-    finally:
-        if temporary.exists():
-            temporary.unlink()
+            return
+        descriptor, temporary_name = tempfile.mkstemp(
+            prefix="." + target.name + ".", suffix=".tmp", dir=str(target.parent)
+        )
+        temporary = Path(temporary_name)
+        try:
+            with os.fdopen(descriptor, "wb") as output:
+                output.write(desired)
+                output.flush()
+                os.fsync(output.fileno())
+            os.replace(str(temporary), str(target))
+            _fsync_directory(target.parent)
+        finally:
+            if temporary.exists():
+                temporary.unlink()
 
 
 def read_plan_once(path):
@@ -581,11 +637,9 @@ def plan_provenance(plan):
 
 def _chunk_run_command(plan, chunk):
     arguments = [
-        "/usr/bin/env",
-        "PYTHONPATH=" + plan["runner_root"],
         PYTHON38,
-        "-m",
-        "campaigns.l4_production",
+        "-I",
+        str(Path(plan["runner_root"]) / "l4_runner_bootstrap.py"),
         "run-chunk",
         "--dates",
         ",".join(chunk["dates"]),
@@ -611,27 +665,53 @@ def _chunk_run_command(plan, chunk):
     return shlex.join(arguments)
 
 
-def recover_job_id(job_name):
+def recover_job_id(job_name, submitted_at):
     """Recover one job id by exact unique Slurm job name."""
-    found = set()
+    try:
+        submitted = datetime.fromisoformat(str(submitted_at))
+    except ValueError as error:
+        raise ValueError("receipt submitted_at is not ISO-8601") from error
+    if submitted.tzinfo is None:
+        submitted = submitted.replace(tzinfo=timezone.utc)
+    submitted_utc = submitted.astimezone(timezone.utc)
+    start = (submitted_utc - timedelta(hours=1)).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
+    end = (submitted_utc + timedelta(hours=1)).strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
     commands = (
         ["squeue", "-h", "-n", job_name, "-o", "%i|%j"],
-        ["sacct", "-n", "-X", "--name", job_name, "--format=JobIDRaw,JobName", "--parsable2"],
+        [
+            "sacct", "-n", "-X", "--name", job_name,
+            "-S", start, "-E", end,
+            "--format=JobIDRaw,JobName", "--parsable2",
+        ],
     )
+    failures = []
+    matches = set()
     for command in commands:
         try:
             completed = subprocess.run(command, capture_output=True, text=True)
-        except FileNotFoundError:
+        except (FileNotFoundError, OSError) as error:
+            failures.append("{}: {}".format(command[0], error))
             continue
         if completed.returncode != 0:
+            failures.append(
+                "{} exited {}: {}".format(
+                    command[0], completed.returncode, completed.stderr.strip()
+                )
+            )
             continue
         for line in completed.stdout.splitlines():
             fields = [field.strip() for field in line.split("|")]
             if len(fields) >= 2 and fields[1] == job_name and fields[0].isdigit():
-                found.add(fields[0])
-    if len(found) > 1:
-        raise RuntimeError("multiple jobs match exact name {}".format(job_name))
-    return next(iter(found)) if found else None
+                matches.add(fields[0])
+        if len(matches) > 1:
+            raise RuntimeError("multiple jobs match exact name {}".format(job_name))
+    if failures:
+        raise RuntimeError("job recovery query failed: {}".format("; ".join(failures)))
+    return next(iter(matches)) if matches else None
 
 
 def _next_chunk_id(plan, jobs_by_chunk):
@@ -653,6 +733,75 @@ def _submission_command(plan, chunk, job_name, dependency_job):
         command.extend(["-d", "afterok:" + dependency_job])
     command.extend(["-s", run_command])
     return run_command, command
+
+
+def _job_resources():
+    return {
+        "cpus": 12,
+        "memory": "243G",
+        "mybatch_input_memory_gb": MYBATCH_INPUT_MEMORY_GB,
+        "effective_slurm_memory_gb": EFFECTIVE_SLURM_MEMORY_GB,
+        "partition": "cpu_wgh",
+        "time": "2:00:00",
+    }
+
+
+def _validate_receipt_jobs(plan, receipt):
+    submission_id = receipt.get("submission_id")
+    if not isinstance(submission_id, str) or re.fullmatch(r"[0-9a-f]+", submission_id) is None:
+        raise ValueError("submission receipt has invalid submission_id")
+    try:
+        datetime.fromisoformat(str(receipt["submitted_at"]))
+    except (KeyError, ValueError) as error:
+        raise ValueError("submission receipt has invalid submitted_at") from error
+    jobs = receipt.get("jobs")
+    if not isinstance(jobs, list) or len(jobs) > len(plan["chunks"]):
+        raise ValueError("submission receipt jobs must be a plan prefix")
+    jobs_by_chunk = {}
+    for index, record in enumerate(jobs):
+        if not isinstance(record, dict):
+            raise ValueError("submission receipt job must be an object")
+        chunk = plan["chunks"][index]
+        chunk_id = chunk["chunk_id"]
+        if record.get("chunk_id") != chunk_id or chunk_id in jobs_by_chunk:
+            raise ValueError("submission receipt job order/chunk mismatch")
+        dependency_chunk = chunk["depends_on_chunk_id"]
+        dependency_job = None
+        if dependency_chunk is not None:
+            dependency_record = jobs_by_chunk.get(dependency_chunk)
+            if dependency_record is None or dependency_record.get("status") != "submitted":
+                raise ValueError("submission receipt dependency is not submitted")
+            dependency_job = dependency_record["job_id"]
+        expected_name = _submission_job_name(submission_id, chunk_id)
+        run_command, command = _submission_command(
+            plan, chunk, expected_name, dependency_job
+        )
+        expected = {
+            "lane": chunk["lane"],
+            "dates": list(chunk["dates"]),
+            "job_name": expected_name,
+            "depends_on_chunk_id": dependency_chunk,
+            "depends_on_job_id": dependency_job,
+            "command": command,
+            "run_command": run_command,
+            "resources": _job_resources(),
+        }
+        for key, value in expected.items():
+            if record.get(key) != value:
+                raise ValueError("submission receipt job {} mismatch".format(key))
+        status = record.get("status")
+        if status == "submitted":
+            if not str(record.get("job_id", "")).isdigit():
+                raise ValueError("submitted receipt job_id must be numeric")
+        elif status == "submitting":
+            if "job_id" in record:
+                raise ValueError("submitting receipt job must not have job_id")
+            if index != len(jobs) - 1:
+                raise ValueError("only the final receipt job may be submitting")
+        else:
+            raise ValueError("submission receipt job has invalid status")
+        jobs_by_chunk[chunk_id] = record
+    return jobs_by_chunk
 
 
 def submit_plan(
@@ -720,6 +869,7 @@ def submit_plan(
                 "schema_version": 2,
                 "status": "submitting",
                 "submission_id": secrets.token_hex(12),
+                "submitted_at": datetime.now(timezone.utc).isoformat(),
                 "plan_path": str(plan_file.resolve()),
                 "plan_sha256": plan_hash,
                 "plan_provenance": plan_provenance(plan),
@@ -728,12 +878,7 @@ def submit_plan(
             }
             _write_json_atomic(output_receipt, receipt)
 
-        jobs_by_chunk = {}
-        for job in receipt.get("jobs", []):
-            chunk_id = job.get("chunk_id")
-            if chunk_id in jobs_by_chunk:
-                raise ValueError("submission receipt contains duplicate chunks")
-            jobs_by_chunk[chunk_id] = job
+        jobs_by_chunk = _validate_receipt_jobs(plan, receipt)
         receipt["status"] = "submitting"
         receipt.pop("error", None)
         receipt["next_chunk_id"] = _next_chunk_id(plan, jobs_by_chunk)
@@ -767,14 +912,7 @@ def submit_plan(
                 record.update({
                     "command": command,
                     "run_command": run_command,
-                    "resources": {
-                        "cpus": 12,
-                        "memory": "243G",
-                        "mybatch_input_memory_gb": MYBATCH_INPUT_MEMORY_GB,
-                        "effective_slurm_memory_gb": EFFECTIVE_SLURM_MEMORY_GB,
-                        "partition": "cpu_wgh",
-                        "time": "2:00:00",
-                    },
+                    "resources": _job_resources(),
                 })
                 receipt["jobs"].append(record)
                 jobs_by_chunk[chunk_id] = record
@@ -787,15 +925,10 @@ def submit_plan(
                 )
                 record["command"] = command
                 record["run_command"] = run_command
-                record["resources"] = {
-                    "cpus": 12,
-                    "memory": "243G",
-                    "mybatch_input_memory_gb": MYBATCH_INPUT_MEMORY_GB,
-                    "effective_slurm_memory_gb": EFFECTIVE_SLURM_MEMORY_GB,
-                    "partition": "cpu_wgh",
-                    "time": "2:00:00",
-                }
-                recovered = recover(record["job_name"])
+                record["resources"] = _job_resources()
+                recovered = recover(
+                    record["job_name"], receipt["submitted_at"]
+                )
                 if recovered is not None:
                     if not str(recovered).isdigit():
                         raise RuntimeError("recovered job id is not numeric")
