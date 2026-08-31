@@ -80,6 +80,22 @@ class FormalHistoryDatasetTests(unittest.TestCase):
         self.assertEqual(training | observation, set(production_dates))
         self.assertEqual(v2["date_list_sha256"].removeprefix("sha256:"), hashlib.sha256(production.encode()).hexdigest())
         self.assertEqual(v2["holdout_date_list_sha256"].removeprefix("sha256:"), hashlib.sha256(holdout.encode()).hexdigest())
+        self.assertEqual(v2["production_date_range"], [splits["training"]["date_start"], splits["observation"]["date_end"]])
+        self.assertEqual(v2["holdout_date_range"], [splits["holdout"]["date_start"], splits["holdout"]["date_end"]])
+        self.assertEqual(v2["production_date_range"], [production_dates[0], production_dates[-1]])
+        self.assertEqual(v2["holdout_date_range"], [holdout_dates[0], holdout_dates[-1]])
+
+    def test_v2_market_coverage_matches_frozen_recent_history(self):
+        v2 = load_v2_manifest()
+        coverage = v2["market_state_coverage"]
+        self.assertEqual(coverage["buckets"], ["2021", "2022", "2023", "2024", "2025"])
+        self.assertEqual(coverage["structural_eras"], {
+            "post_shock_liquidity": ["2021"],
+            "tightening": ["2022"],
+            "post_tightening": ["2023", "2024", "2025"],
+        })
+        self.assertIn("v2 frozen range", coverage["coverage_rule"])
+        self.assertIn("these structural eras", coverage["coverage_rule"])
 
     def test_v2_preserves_frozen_contract_and_campaign_pointer(self):
         v1 = load_manifest()
@@ -98,7 +114,10 @@ class FormalHistoryDatasetTests(unittest.TestCase):
         self.assertEqual(v2["stop_conditions"], v1["stop_conditions"])
         self.assertFalse(v2["formal_production_started"])
         self.assertFalse(v2["promotion_allowed"])
+        self.assertEqual(v2["splits"]["training"]["holdout_access"], "sealed")
+        self.assertEqual(v2["splits"]["observation"]["holdout_access"], "sealed")
         self.assertEqual(v2["splits"]["holdout"]["holdout_access"], "sealed_until_l6")
+        self.assertEqual(v2["leakage_policy"]["holdout_may_read"], [])
 
     def test_manifest_freezes_exact_intersection_and_hash(self):
         manifest = load_manifest()

@@ -85,10 +85,6 @@
   "market_state_coverage": {
     "classifier": "calendar_year_plus_quarter_bucket",
     "buckets": [
-      "2017",
-      "2018",
-      "2019",
-      "2020",
       "2021",
       "2022",
       "2023",
@@ -96,14 +92,6 @@
       "2025"
     ],
     "structural_eras": {
-      "pre_covid": [
-        "2017",
-        "2018",
-        "2019"
-      ],
-      "covid_shock_recovery": [
-        "2020"
-      ],
       "post_shock_liquidity": [
         "2021"
       ],
@@ -119,7 +107,7 @@
     "minimum_training_days_per_bucket": 200,
     "minimum_observation_days_per_bucket": 40,
     "minimum_holdout_days": 200,
-    "coverage_rule": "the full frozen history must include every structural era; each split records its available year/quarter buckets and may not silently omit a bucket",
+    "coverage_rule": "the v2 frozen range must cover these structural eras; each split records its available year/quarter buckets and may not silently omit a bucket",
     "event_coverage_rule": "all eight scheduled events are required; missing events are a data failure, not a factor failure",
     "regime_labels": "descriptive calendar/structural buckets only; they are coverage strata, not economic claims, and no return-derived regime label may be used for L4 selection"
   },
