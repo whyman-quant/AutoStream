@@ -22,6 +22,7 @@ from evaluations.l4_preflight import (
     main,
     preflight_dates,
     run_frozen_preflight,
+    validate_hdf5_only,
     validate_requested_dates,
 )
 
@@ -132,6 +133,35 @@ def _write_frozen_fixture(root):
 
 
 class L4PreflightTests(unittest.TestCase):
+    def test_validate_hdf5_only_enforces_exact_frozen_events_and_names(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = _write_frozen_fixture(root)
+            path = fixture["hdf5_root"] / fixture["dates"][0] / "all_families" / "factors.h5"
+
+            result = validate_hdf5_only(path, fixture["campaign_root"])
+
+            self.assertEqual(result["event_count"], 8)
+            self.assertEqual(result["factor_count"], 48)
+            self.assertEqual(result["factor_names"], fixture["factor_names"])
+            self.assertTrue(result["all_values_finite"])
+            self.assertTrue(result["unique_symbols_per_event"])
+
+    def test_validate_hdf5_only_rejects_value_rows_not_matching_symbols(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = _write_frozen_fixture(root)
+            path = fixture["hdf5_root"] / fixture["dates"][0] / "all_families" / "factors.h5"
+            with h5py.File(str(path), "a") as output:
+                del output[str(DEFAULT_SOURCE_EVENTS[0])]
+                output.create_dataset(
+                    str(DEFAULT_SOURCE_EVENTS[0]),
+                    data=np.ones((1, len(fixture["factor_names"]))),
+                )
+
+            with self.assertRaisesRegex(ValueError, "row count"):
+                validate_hdf5_only(path, fixture["campaign_root"])
+
     def test_load_expected_factor_names_uses_frozen_family_order(self):
         with tempfile.TemporaryDirectory() as directory:
             campaign_root = Path(directory)

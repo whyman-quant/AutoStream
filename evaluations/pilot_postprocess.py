@@ -32,6 +32,8 @@ def inspect_hdf5(path: Path, *, expected_events: Sequence[int]) -> dict:
             symbols = [_decode(value) for value in source[code_key][:]]
             if values.ndim != 2 or values.shape[1] != len(factor_names):
                 raise ValueError("event {} shape mismatch".format(event))
+            if values.shape[0] != len(symbols):
+                raise ValueError("event {} value/symbol row count mismatch".format(event))
             if stock_count is None:
                 stock_count = len(symbols)
             if len(symbols) != stock_count:

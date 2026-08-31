@@ -164,6 +164,38 @@ def _validate_exact_hdf5_event_keys(path, expected_events):
         )
 
 
+def validate_hdf5_only(
+    path,
+    campaign_root,
+    *,
+    expected_events=DEFAULT_SOURCE_EVENTS,
+    expected_factor_names=None,
+):
+    """Strictly validate one frozen all-families HDF5 without Arrow or labels."""
+    source_events = [int(event) for event in expected_events]
+    if source_events != list(DEFAULT_SOURCE_EVENTS):
+        raise ValueError("HDF5-only production validation requires frozen events")
+    factor_names = (
+        load_expected_factor_names(campaign_root=campaign_root)
+        if expected_factor_names is None
+        else [str(name) for name in expected_factor_names]
+    )
+    if len(factor_names) != 48 or len(set(factor_names)) != 48:
+        raise ValueError("HDF5-only production validation requires 48 unique names")
+    hdf5_path = Path(path)
+    _validate_exact_hdf5_event_keys(hdf5_path, source_events)
+    inspection = inspect_hdf5(hdf5_path, expected_events=source_events)
+    if inspection["factor_names"] != factor_names:
+        raise ValueError("factor names mismatch")
+    return {
+        **inspection,
+        "event_count": len(source_events),
+        "all_values_finite": True,
+        "unique_symbols_per_event": True,
+        "consistent_stock_count": True,
+    }
+
+
 def compose_date_summary(
     date,
     hdf5_path,
@@ -461,6 +493,7 @@ __all__ = [
     "load_expected_factor_names",
     "preflight_dates",
     "run_frozen_preflight",
+    "validate_hdf5_only",
     "validate_requested_dates",
 ]
 
