@@ -321,7 +321,6 @@ def _validate_runner_root(runner_root, campaign_root):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         for key in (
             "production_date_list_path",
-            "holdout_date_list_path",
             "parent_date_list_path",
         ):
             required_contract_files.append(

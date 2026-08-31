@@ -53,6 +53,7 @@ class L4ReleaseTests(unittest.TestCase):
             self.assertTrue(Path(release["release_root"]).is_dir())
             self.assertEqual((Path(release["binary"]["path"]).stat().st_mode & 0o222), 0)
             self.assertTrue((Path(release["release_root"]) / "release.json").is_file())
+            self.assertFalse((Path(release["release_root"]) / "campaigns/sfm_stream_001/manifests/formal-history-holdout-dates-v2.txt").exists())
 
     def test_freeze_release_rejects_dirty_or_mislabeled_commit(self):
         with tempfile.TemporaryDirectory() as directory:

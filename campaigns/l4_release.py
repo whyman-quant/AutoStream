@@ -95,7 +95,18 @@ def freeze_release(repo_root, *, commit, binary, config, release_base=RELEASE_BA
     campaign_source = repo / "campaigns" / "sfm_stream_001"
     for relative in campaign_source.rglob("*"):
         if relative.is_file():
+            if relative.name == "formal-history-holdout-dates-v2.txt":
+                continue
             _copy_readonly(relative, target / relative.relative_to(repo))
+    # The production runner needs only the production/parent lists.  Remove
+    # the sealed holdout list from the release and its readable path metadata.
+    release_manifest = target / "campaigns/sfm_stream_001/manifests/formal-history-dataset-v2.json"
+    manifest_payload = json.loads(release_manifest.read_text(encoding="utf-8"))
+    manifest_payload.pop("holdout_date_list_path", None)
+    manifest_payload.pop("holdout_date_list_sha256", None)
+    release_manifest.chmod(0o644)
+    release_manifest.write_text(json.dumps(manifest_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    release_manifest.chmod(0o444)
     # The compiled binary/config and all provenance files must be regular files.
     files = {
         "binary": {"path": str(release_binary), "sha256": sha256(release_binary)},
@@ -120,7 +131,7 @@ def freeze_release(repo_root, *, commit, binary, config, release_base=RELEASE_BA
         "files": files,
         "immutable": True,
         "holdout_data_included": False,
-        "holdout_date_list_included": True,
+        "holdout_date_list_included": False,
     }
     _atomic_json(target / "release.json", metadata)
     # Freeze the entire tree only after all copies and metadata are complete.
