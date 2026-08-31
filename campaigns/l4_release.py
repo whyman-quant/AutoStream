@@ -218,6 +218,23 @@ def submit_preflight_plan(plan_path, *, receipt_path=None, submit=False,
     """
     plan_file = Path(plan_path).resolve()
     plan = json.loads(plan_file.read_text(encoding="utf-8"))
+    release_root = Path(plan.get("release_root", "")).resolve()
+    try:
+        release_meta = json.loads((release_root / "release.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        if plan.get("release_root"):
+            raise ValueError("release metadata is unavailable") from error
+        release_meta = {}
+    if release_meta.get("release_id") != plan.get("release_id"):
+        raise ValueError("plan release_id does not match release metadata")
+    for key in ("binary", "config"):
+        entry = release_meta.get(key, {})
+        try:
+            actual = sha256(entry.get("path", "")) if isinstance(entry, dict) else None
+        except (OSError, TypeError):
+            actual = None
+        if actual != (entry.get("sha256") if isinstance(entry, dict) else None):
+            raise ValueError("release {} hash mismatch".format(key))
     if plan.get("dates") != list(PREFLIGHT_DATES) or len(plan.get("jobs", [])) != 6:
         raise ValueError("preflight plan must contain exact five dates and six jobs")
     if plan.get("promotion_allowed") is not False or plan.get("slurm_submission_performed") is not False:
