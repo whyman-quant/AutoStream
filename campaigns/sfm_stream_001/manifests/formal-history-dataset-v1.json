@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "dataset_id": "sfm_stream_001_formal_history_v1",
+  "campaign_id": "sfm_stream_001",
+  "scope": "l4_formal_history",
+  "freeze_status": "frozen",
+  "frozen_at": "2026-08-31",
+  "date_policy": "intersection_of_source_and_label_calendars",
+  "date_start": "20170103",
+  "date_end": "20251210",
+  "date_count": 2171,
+  "date_list_path": "campaigns/sfm_stream_001/manifests/formal-history-dates-v1.txt",
+  "date_list_sha256": "sha256:65993c708385750cae864afe10626d4827c8913af59b23a147949c7b6f6b04dd",
+  "date_list_source": {
+    "market_root": "/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata",
+    "label_root": "/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926",
+    "market_first_available": "20161230",
+    "market_last_available": "20251210",
+    "label_first_available": "20170103",
+    "label_last_available": "20251231",
+    "intersection_rule": "date has both market directory and label arrow"
+  },
+  "splits": {
+    "training": {"date_start": "20170103", "date_end": "20221230", "date_count": 1459, "purpose": "L4画像、参数邻域和经验生成", "holdout_access": "sealed"},
+    "observation": {"date_start": "20230103", "date_end": "20241231", "date_count": 484, "purpose": "时间后移的稳定性观察，不用于候选参数搜索", "holdout_access": "sealed"},
+    "holdout": {"date_start": "20250102", "date_end": "20251210", "date_count": 228, "purpose": "最终留出审计，L4阶段不读取任何收益指标", "holdout_access": "sealed_until_l6"}
+  },
+  "events": {
+    "source_snapshots": [92700000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000],
+    "evaluation_events": [92600000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000],
+    "count": 8,
+    "opening_mapping": "source 09:27 snapshot evaluates as 09:26 event label"
+  },
+  "labels": {
+    "names": ["raw926", "ease926"],
+    "contract_path": "evaluations/label_contract.json",
+    "contract_sha256": "sha256:2941f07d218daac4848e4563b6d7c9ccf1ebd4c954095906eb0fd6dbcc490640",
+    "direction_policy": "raw_signed",
+    "demean_policy": "raw926 uses evaluator demean; ease926 uses evaluator neutralized label"
+  },
+  "universes": ["000985", "003800", "000906"],
+  "market_state_coverage": {
+    "classifier": "calendar_year_plus_quarter_bucket",
+    "buckets": ["2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"],
+    "structural_eras": {
+      "pre_covid": ["2017", "2018", "2019"],
+      "covid_shock_recovery": ["2020"],
+      "post_shock_liquidity": ["2021"],
+      "tightening": ["2022"],
+      "post_tightening": ["2023", "2024", "2025"]
+    },
+    "minimum_training_days_per_bucket": 200,
+    "minimum_observation_days_per_bucket": 40,
+    "minimum_holdout_days": 200,
+    "coverage_rule": "the full frozen history must include every structural era; each split records its available year/quarter buckets and may not silently omit a bucket",
+    "event_coverage_rule": "all eight scheduled events are required; missing events are a data failure, not a factor failure",
+    "regime_labels": "descriptive calendar/structural buckets only; they are coverage strata, not economic claims, and no return-derived regime label may be used for L4 selection"
+  },
+  "data_quality": {
+    "required_keys": ["symbol", "date", "event"],
+    "duplicate_key_policy": "reject duplicate (symbol,event) within date",
+    "finite_value_policy": "reject NaN and Inf; preserve signed zero/negative values",
+    "tradability_policy": "use evaluator's date-specific universe and non-limit tradability filter; record exclusions",
+    "missing_label_policy": "drop only missing label rows after join and report counts; never impute labels"
+  },
+  "evaluation": {
+    "evaluator_path": "/home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py",
+    "evaluator_commit": "8690c39333e30b3a868c33b2c307c0499f229770",
+    "metrics": ["RankIC", "IC", "D1-D10", "LS", "Monotonicity"],
+    "l4_outputs": ["daily_event_metrics", "mean_std_ir", "positive_fraction", "rolling_stability", "parameter_neighborhood", "peer_correlation", "state_bucket_breakdown", "anomaly_contribution"],
+    "direction": "do not flip or optimize sign during L4; retain raw_signed"
+  },
+  "leakage_policy": {
+    "training_may_read": ["training factor values", "training labels", "training metrics"],
+    "observation_may_read": ["observation factor values", "observation labels only for frozen-candidate observation"],
+    "holdout_may_read": [],
+    "forbidden": ["using observation/holdout metrics to choose L4 parameters", "using holdout to generate candidates", "changing split after seeing results", "changing factor direction on observation/holdout"]
+  },
+  "stop_conditions": {
+    "hard_stop": ["date list or input hash changes", "required event missing", "duplicate key", "non-finite factor value", "label/evaluator contract changes", "lookahead or timestamp mismatch", "unexplained job failure"],
+    "pause_for_review": ["state bucket below coverage minimum", "metric coverage below 95 percent in any split", "factor output missing for more than 1 percent of required rows", "peer correlation or parameter sensitivity indicates redundant search space"],
+    "l4_completion": "all 48 candidates have complete split/state portraits, lineage and anomaly records; next Batch is not generated until review signs the portrait set",
+    "promotion": "forbidden in L4; promotion_allowed=false"
+  },
+  "source_commit": "8c4112039c9499340f5ccb6051aec1434c8334f1",
+  "status": "frozen_for_l4_definition_only",
+  "formal_production_started": false,
+  "promotion_allowed": false
+}

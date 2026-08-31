@@ -21,7 +21,10 @@
   ],
   "labels": ["raw926", "ease926"],
   "universes": ["000985", "003800", "000906"],
-  "splits": ["training", "validation", "holdout"],
+  "splits": ["training", "observation", "holdout"],
+  "formal_history_dataset_manifest": "manifests/formal-history-dataset-v1.json",
+  "formal_history_dataset_id": "sfm_stream_001_formal_history_v1",
+  "formal_history_status": "frozen_definition_only",
   "coverage_policy": {
     "early_event_statuses": ["required", "diagnostic", "warmup_blocked"],
     "required_event_action": "block_promotion"
