@@ -1,5 +1,7 @@
 import json
-import re
+import subprocess
+import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -30,29 +32,85 @@ def load_batch_factor_names():
     return names
 
 
-def load_cpp_factor_names(family):
-    metadata_path = APP_ROOT / "factors" / family / "meta_config.h"
-    text = metadata_path.read_text(encoding="utf-8")
-    declaration = re.search(r"\bkFactorNames\s*=\s*\{", text)
-    if declaration is None:
-        raise AssertionError(f"kFactorNames initializer not found in {metadata_path}")
+def load_compiled_metadata():
+    probe_source = textwrap.dedent(
+        """
+        #include <iostream>
+        #include <string>
+        #include "factors/book_imbalance/meta_config.h"
+        #include "factors/flow_pressure/meta_config.h"
+        #include "factors/liquidity_resilience/meta_config.h"
+        #include "factors/impact_efficiency/meta_config.h"
 
-    opening_brace = text.find("{", declaration.start())
-    depth = 0
-    closing_brace = None
-    for index in range(opening_brace, len(text)):
-        if text[index] == "{":
-            depth += 1
-        elif text[index] == "}":
-            depth -= 1
-            if depth == 0:
-                closing_brace = index
-                break
-    if closing_brace is None:
-        raise AssertionError(f"unterminated kFactorNames initializer in {metadata_path}")
+        void Emit(const factors::comm::FactorMetadata& metadata) {
+          std::cout << "F\\t" << metadata.factor_set_name << "\\t"
+                    << metadata.factor_size << "\\t"
+                    << metadata.factor_names.size() << "\\n";
+          for (const std::string& name : metadata.factor_names) {
+            std::cout << "N\\t" << name.size() << "\\t" << name << "\\n";
+          }
+        }
 
-    initializer = text[opening_brace + 1:closing_brace]
-    return re.findall(r'"((?:\\.|[^"\\])*)"', initializer)
+        int main() {
+          Emit(factors::book_imbalance::GetMetadata());
+          Emit(factors::flow_pressure::GetMetadata());
+          Emit(factors::liquidity_resilience::GetMetadata());
+          Emit(factors::impact_efficiency::GetMetadata());
+          return 0;
+        }
+        """
+    )
+    with tempfile.TemporaryDirectory() as directory:
+        directory_path = Path(directory)
+        source_path = directory_path / "metadata_probe.cc"
+        binary_path = directory_path / "metadata_probe"
+        source_path.write_text(probe_source, encoding="utf-8")
+        subprocess.run(
+            [
+                "g++",
+                "-std=c++11",
+                "-I",
+                str(APP_ROOT),
+                str(source_path),
+                "-o",
+                str(binary_path),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        output = subprocess.run(
+            [str(binary_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+
+    metadata = {}
+    current = None
+    for line in output.splitlines():
+        record_type, first, second, *rest = line.split("\t", 3)
+        if record_type == "F":
+            current = first
+            metadata[current] = {
+                "factor_size": int(second),
+                "expected_name_count": int(rest[0]),
+                "factor_names": [],
+            }
+        elif record_type == "N":
+            if current is None:
+                raise AssertionError("factor name appeared before family metadata")
+            name = second
+            if len(name.encode("utf-8")) != int(first):
+                raise AssertionError(f"invalid length-prefixed factor name: {name}")
+            metadata[current]["factor_names"].append(name)
+        else:
+            raise AssertionError(f"unknown metadata probe record: {line}")
+
+    for family, values in metadata.items():
+        if values["expected_name_count"] != len(values["factor_names"]):
+            raise AssertionError(f"truncated metadata probe output for {family}")
+    return metadata
 
 
 class L4FormalHistoryConfigTests(unittest.TestCase):
@@ -74,10 +132,26 @@ class L4FormalHistoryConfigTests(unittest.TestCase):
         )
 
         configured_families = [item["name"] for item in factor_sets]
-        cpp_names = []
+        compiled_metadata = load_compiled_metadata()
+        compiled_names = []
+        total_factor_size = 0
         for family in configured_families:
-            cpp_names.extend(load_cpp_factor_names(family))
-        self.assertEqual(cpp_names, load_batch_factor_names())
+            batch_names = load_json(
+                CAMPAIGN / "batches" / f"{family}_seed_v1.json"
+            )["candidate_ids"]
+            family_metadata = compiled_metadata[family]
+            self.assertEqual(
+                family_metadata["factor_size"],
+                len(batch_names),
+            )
+            self.assertEqual(
+                family_metadata["factor_size"],
+                len(family_metadata["factor_names"]),
+            )
+            total_factor_size += family_metadata["factor_size"]
+            compiled_names.extend(family_metadata["factor_names"])
+        self.assertEqual(total_factor_size, 48)
+        self.assertEqual(compiled_names, load_batch_factor_names())
 
     def test_config_uses_the_frozen_market_inputs_and_pilot_send_times(self):
         config = self.load_config()
@@ -90,6 +164,10 @@ class L4FormalHistoryConfigTests(unittest.TestCase):
         self.assertEqual(
             factor_config["ev_code_file"],
             "[DATE]/per1day/lab200005_codelist.h5",
+        )
+        self.assertEqual(
+            factor_config["send_times"],
+            {"start": 93000, "end": 150000, "interval": 1800, "add": [92700]},
         )
         self.assertEqual(factor_config["send_times"], pilot_factor_config["send_times"])
 
