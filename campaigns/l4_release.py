@@ -70,6 +70,12 @@ def _copy_readonly(source, target, executable=False):
 def freeze_release(repo_root, *, commit, binary, config, release_base=RELEASE_BASE):
     """Copy the audited runner and contracts to an external immutable release."""
     repo = Path(repo_root).resolve()
+    actual_commit = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+    if str(commit) != actual_commit:
+        raise ValueError("release commit must equal repository HEAD")
+    status = subprocess.check_output(["git", "-C", str(repo), "status", "--porcelain"], text=True)
+    if status.strip():
+        raise ValueError("repository must be clean before release freeze")
     target = Path(release_base).resolve() / ("formal-history-v2-" + str(commit))
     if target.exists():
         metadata = target / "release.json"
@@ -113,7 +119,8 @@ def freeze_release(repo_root, *, commit, binary, config, release_base=RELEASE_BA
         "config": {"path": str(release_config), "sha256": sha256(release_config)},
         "files": files,
         "immutable": True,
-        "holdout_included": False,
+        "holdout_data_included": False,
+        "holdout_date_list_included": True,
     }
     _atomic_json(target / "release.json", metadata)
     # Freeze the entire tree only after all copies and metadata are complete.

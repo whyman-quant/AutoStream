@@ -48,10 +48,20 @@ class L4ReleaseTests(unittest.TestCase):
             binary.write_bytes(b"bin")
             config = root / "config.json"
             config.write_text("{}")
-            release = freeze_release(root, commit="abc123", binary=binary, config=config, release_base=root / "releases")
+            with mock.patch("campaigns.l4_release.subprocess.check_output", side_effect=["abc123\n", ""]):
+                release = freeze_release(root, commit="abc123", binary=binary, config=config, release_base=root / "releases")
             self.assertTrue(Path(release["release_root"]).is_dir())
             self.assertEqual((Path(release["binary"]["path"]).stat().st_mode & 0o222), 0)
             self.assertTrue((Path(release["release_root"]) / "release.json").is_file())
+
+    def test_freeze_release_rejects_dirty_or_mislabeled_commit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "main"; binary.write_bytes(b"x")
+            config = root / "config"; config.write_text("{}")
+            with mock.patch("campaigns.l4_release.subprocess.check_output", return_value="other\n"):
+                with self.assertRaises(ValueError):
+                    freeze_release(root, commit="expected", binary=binary, config=config, release_base=root / "r")
 
     def test_preflight_plan_is_exact_five_dates_and_never_submits(self):
         with tempfile.TemporaryDirectory() as directory:
