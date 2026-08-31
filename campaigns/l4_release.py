@@ -8,6 +8,7 @@ commands only after reviewing the hashes and paths.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -203,14 +204,109 @@ def build_preflight_plan(release, *, submission_base=SUBMISSION_BASE, output_roo
     }
 
 
+def preflight_receipt_path(plan_path):
+    path = Path(plan_path)
+    return path.with_name(path.stem + "-submission.json")
+
+
+def submit_preflight_plan(plan_path, *, receipt_path=None, submit=False,
+                          mybatch_runner=None, recover_job_id=None):
+    """Validate and optionally submit the exact five-date preflight chain.
+
+    Dry-run is the default.  Submission is serialized by an advisory lock and
+    each job is persisted before and immediately after the external call.
+    """
+    plan_file = Path(plan_path).resolve()
+    plan = json.loads(plan_file.read_text(encoding="utf-8"))
+    if plan.get("dates") != list(PREFLIGHT_DATES) or len(plan.get("jobs", [])) != 6:
+        raise ValueError("preflight plan must contain exact five dates and six jobs")
+    if plan.get("promotion_allowed") is not False or plan.get("slurm_submission_performed") is not False:
+        raise ValueError("plan is not a pending, promotion-blocked preflight")
+    for index, job in enumerate(plan["jobs"]):
+        expected_dep = None if index == 0 else plan["jobs"][index - 1]["job_name"]
+        if job.get("depends_on") != expected_dep:
+            raise ValueError("preflight jobs must form one dependency chain")
+        if index < 5 and job.get("date") != PREFLIGHT_DATES[index]:
+            raise ValueError("preflight production date mismatch")
+    if not submit:
+        return {"status": "dry_run", "plan_path": str(plan_file), "jobs": plan["jobs"], "slurm_submission_performed": False}
+    receipt = Path(receipt_path or preflight_receipt_path(plan_file)).resolve()
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = receipt.with_name(receipt.name + ".lock")
+    with lock_path.open("a+") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        plan_sha = sha256(plan_file)
+        if receipt.exists():
+            state = json.loads(receipt.read_text(encoding="utf-8"))
+            if state.get("plan_sha256") != plan_sha:
+                raise ValueError("submission receipt belongs to a different plan")
+            if state.get("status") == "submitted":
+                raise ValueError("preflight plan already submitted")
+        else:
+            state = {"schema_version": 1, "status": "submitting", "plan_sha256": plan_sha,
+                     "plan_path": str(plan_file), "jobs": []}
+            _atomic_json(receipt, state)
+        recorded = {item["job_name"]: item for item in state["jobs"]}
+        runner = subprocess.run if mybatch_runner is None else mybatch_runner
+        for job in plan["jobs"]:
+            name = job["job_name"]
+            if name in recorded and recorded[name].get("status") == "submitted":
+                continue
+            dependency = None
+            if job.get("depends_on"):
+                dependency = recorded.get(job["depends_on"], {}).get("job_id")
+                if not dependency:
+                    raise ValueError("dependency job is not submitted: {}".format(job["depends_on"]))
+            entry = recorded.get(name, {"job_name": name, "status": "submitting"})
+            entry.update({"kind": job.get("kind"), "date": job.get("date"), "depends_on": job.get("depends_on")})
+            if entry not in state["jobs"]:
+                state["jobs"].append(entry)
+            recorded[name] = entry
+            _atomic_json(receipt, state)
+            command = ["mybatch", "-c12", "-m256G", "-p", "cpu_wgh", "-t2:00:00", "-J", name]
+            if dependency:
+                command.extend(["-d", "afterok:" + str(dependency)])
+            command.extend(["-s", " ".join(str(part) for part in job["command"])])
+            try:
+                completed = runner(command, capture_output=True, text=True, cwd=str(Path(plan["submission_root"])))
+                if completed.returncode != 0:
+                    raise RuntimeError(completed.stderr.strip())
+                output = completed.stdout.strip()
+                if not output.startswith("Jobid:") or not output[6:].isdigit():
+                    raise RuntimeError("invalid mybatch output: {}".format(output))
+                entry["job_id"] = output[6:]
+                entry["status"] = "submitted"
+                entry["command"] = command
+                _atomic_json(receipt, state)
+            except Exception as error:
+                state["status"] = "failed"
+                state["error"] = {"job_name": name, "message": str(error)}
+                _atomic_json(receipt, state)
+                raise
+        state["status"] = "submitted"
+        state["slurm_submission_performed"] = True
+        _atomic_json(receipt, state)
+        return state
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--repo-root", type=Path, required=True)
-    parser.add_argument("--commit", required=True)
-    parser.add_argument("--binary", type=Path, required=True)
-    parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--repo-root", type=Path)
+    parser.add_argument("--commit")
+    parser.add_argument("--binary", type=Path)
+    parser.add_argument("--config", type=Path)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--submit-plan", type=Path)
+    parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--submit", action="store_true")
     args = parser.parse_args(argv)
+    if args.submit_plan:
+        result = submit_preflight_plan(args.submit_plan, receipt_path=args.receipt, submit=args.submit)
+        print(json.dumps(result, ensure_ascii=False))
+        return 0
+    for required in (args.repo_root, args.commit, args.binary, args.config, args.output):
+        if required is None:
+            parser.error("freeze mode requires --repo-root/--commit/--binary/--config/--output")
     release = freeze_release(args.repo_root, commit=args.commit, binary=args.binary, config=args.config)
     config_payload = json.loads(Path(args.config).read_text(encoding="utf-8"))
     configured = config_payload["factors_config"]["save_info"]["dir"]
