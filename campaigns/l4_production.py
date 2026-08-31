@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
 import re
+import secrets
 import shlex
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional, Sequence
 
@@ -26,8 +29,18 @@ LANE_COUNT = 4
 DATE_COUNT = 969
 HOLDOUT_COUNT = 228
 PYTHON38 = "/usr/local/python3.8.10/bin/python3"
-SLURM_RESOURCES = ("-c12", "-m243G", "-p", "cpu_wgh", "-t2:00:00")
+MYBATCH_INPUT_MEMORY_GB = 256
+EFFECTIVE_SLURM_MEMORY_GB = 243
+SLURM_RESOURCES = ("-c12", "-m256G", "-p", "cpu_wgh", "-t2:00:00")
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+RUNNER_RELATIVE_FILES = (
+    "campaigns/__init__.py",
+    "campaigns/l4_production.py",
+    "evaluations/__init__.py",
+    "evaluations/l4_preflight.py",
+    "evaluations/pilot_postprocess.py",
+    "evaluations/convert_production_hdf5.py",
+)
 
 
 def _sha256(path):
@@ -41,14 +54,19 @@ def _sha256(path):
     return "sha256:" + digest.hexdigest()
 
 
+def _sha256_bytes(value):
+    return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
 def _resolve_recorded_path(recorded_path, campaign_root):
     recorded = Path(recorded_path)
     if recorded.is_absolute():
         return recorded.resolve()
-    candidates = (
-        REPOSITORY_ROOT / recorded,
-        Path(campaign_root) / recorded,
-    )
+    campaign = Path(campaign_root).resolve()
+    candidates = [campaign / recorded]
+    if campaign.parent.name == "campaigns":
+        candidates.append(campaign.parents[1] / recorded)
+    candidates.append(REPOSITORY_ROOT / recorded)
     for candidate in candidates:
         if candidate.exists():
             return candidate.resolve()
@@ -155,10 +173,31 @@ def load_active_v2_contract(campaign_root):
     holdout_manifest_count = (
         manifest.get("splits", {}).get("holdout", {}).get("date_count")
     )
+    holdout_start = manifest.get("splits", {}).get("holdout", {}).get("date_start")
+    holdout_end = manifest.get("splits", {}).get("holdout", {}).get("date_end")
     if len(holdout_dates) != HOLDOUT_COUNT or holdout_manifest_count != HOLDOUT_COUNT:
         raise ValueError("active v2 holdout list must contain 228 dates")
-    if any(date < "20250101" for date in holdout_dates):
-        raise ValueError("holdout list must contain only sealed 2025 dates")
+    if (holdout_start, holdout_end) != ("20250102", "20251210"):
+        raise ValueError("active v2 holdout boundaries must remain frozen")
+    if (
+        holdout_dates[0] != holdout_start
+        or holdout_dates[-1] != holdout_end
+        or any(not holdout_start <= date <= holdout_end for date in holdout_dates)
+    ):
+        raise ValueError("holdout list must equal the frozen 2025 range")
+    parent_recorded = manifest.get("parent_date_list_path")
+    parent_sha256 = manifest.get("parent_date_list_sha256")
+    if not isinstance(parent_recorded, str) or not isinstance(parent_sha256, str):
+        raise ValueError("active v2 must record the frozen parent date list")
+    parent_path = _resolve_recorded_path(parent_recorded, root)
+    parent_dates = _read_frozen_lines(
+        parent_path, parent_sha256, "parent date list"
+    )
+    expected_holdout = [
+        date for date in parent_dates if holdout_start <= date <= holdout_end
+    ]
+    if holdout_dates != expected_holdout:
+        raise ValueError("holdout list must equal the parent v1 frozen subset")
     if set(contract["production_dates"]) & set(holdout_dates):
         raise ValueError("production and holdout lists must not overlap")
     return {
@@ -230,6 +269,55 @@ def _require_absolute_directory_path(path, description):
     return candidate.resolve()
 
 
+def _is_within(path, parent):
+    try:
+        Path(path).resolve().relative_to(Path(parent).resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def _validate_runner_root(runner_root, campaign_root):
+    root = _require_absolute_directory_path(runner_root, "runner_root")
+    if not root.is_dir():
+        raise ValueError("runner_root must be an existing directory")
+    if (root / ".git").exists():
+        raise ValueError("runner_root must be a frozen release, not a git checkout")
+    campaign = Path(campaign_root).resolve()
+    if not _is_within(campaign, root):
+        raise ValueError("campaign_root must be contained in runner_root release")
+    campaign_json = campaign / "campaign.json"
+    manifest_path = campaign / "manifests" / "formal-history-dataset-v2.json"
+    required_contract_files = [campaign_json, manifest_path]
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for key in (
+            "production_date_list_path",
+            "holdout_date_list_path",
+            "parent_date_list_path",
+        ):
+            required_contract_files.append(
+                _resolve_recorded_path(manifest[key], campaign)
+            )
+    except (OSError, KeyError, json.JSONDecodeError) as error:
+        raise ValueError("runner release has an invalid v2 manifest") from error
+    for path in required_contract_files:
+        if not Path(path).is_file() or not _is_within(path, root):
+            raise ValueError("runner release is missing {}".format(path))
+    return root
+
+
+def _validate_submission_workdir(path, runner_root):
+    workdir = _require_absolute_directory_path(path, "submission_workdir")
+    if not workdir.is_dir():
+        raise ValueError("submission_workdir must be an existing directory")
+    if not os.access(str(workdir), os.W_OK | os.X_OK):
+        raise ValueError("submission_workdir must be writable and searchable")
+    if _is_within(workdir, runner_root):
+        raise ValueError("submission_workdir must be outside the frozen runner release")
+    return workdir
+
+
 def _load_and_validate_config(config, output_root):
     try:
         payload = json.loads(config.read_text(encoding="utf-8"))
@@ -247,11 +335,55 @@ def _load_and_validate_config(config, output_root):
         raise ValueError("config output directory does not match output_root")
 
 
+def collect_runner_provenance(runner_root, campaign_root):
+    """Freeze runner modules and four Batch JSON files by absolute path/hash."""
+    root = _validate_runner_root(runner_root, campaign_root)
+    campaign = Path(campaign_root).resolve()
+    entries = []
+    for relative in RUNNER_RELATIVE_FILES:
+        path = _require_absolute_file(root / relative, "runner file")
+        entries.append({
+            "kind": "runner",
+            "name": relative,
+            "path": str(path),
+            "sha256": _sha256(path),
+        })
+    for family in FAMILIES:
+        path = _require_absolute_file(
+            campaign / "batches" / (family + "_seed_v1.json"),
+            "Batch JSON",
+        )
+        entries.append({
+            "kind": "batch",
+            "name": family,
+            "path": str(path),
+            "sha256": _sha256(path),
+        })
+    return entries
+
+
+def validate_runner_provenance(runner_root, campaign_root, provenance):
+    """Recompute the complete runner provenance before run-chunk work."""
+    expected = collect_runner_provenance(runner_root, campaign_root)
+    if provenance != expected:
+        raise ValueError("runner or Batch provenance hash changed")
+    return expected
+
+
+def _verify_frozen_inputs(binary_path, config_path, binary_sha256, config_sha256):
+    if _sha256(binary_path) != binary_sha256:
+        raise ValueError("binary hash changed")
+    if _sha256(config_path) != config_sha256:
+        raise ValueError("config hash changed")
+
+
 def build_plan(
     campaign_root,
     binary,
     config,
     output_root,
+    runner_root,
+    submission_workdir=None,
     *,
     chunk_size=CHUNK_SIZE,
     lane_count=LANE_COUNT,
@@ -265,6 +397,13 @@ def build_plan(
     binary_path = _require_absolute_file(binary, "binary")
     config_path = _require_absolute_file(config, "config")
     output_path = _require_absolute_directory_path(output_root, "output_root")
+    runner_path = _validate_runner_root(runner_root, campaign_root)
+    submission_path = _validate_submission_workdir(
+        runner_path / "slurm"
+        if submission_workdir is None
+        else submission_workdir,
+        runner_path,
+    )
     binary_hash_before = _sha256(binary_path)
     config_hash_before = _sha256(config_path)
     if expected_binary_sha256 is not None and binary_hash_before != expected_binary_sha256:
@@ -276,6 +415,9 @@ def build_plan(
         load_active_v2_contract(campaign_root)
         if _verified_contract is None
         else _verified_contract
+    )
+    runner_provenance = collect_runner_provenance(
+        runner_path, contract["campaign_root"]
     )
     chunks = chunk_dates(contract["production_dates"], size=chunk_size)
     lanes = assign_lanes(chunks, lane_count=lane_count)
@@ -302,7 +444,7 @@ def build_plan(
         raise ValueError("binary changed while building plan")
     if config_hash_after != config_hash_before:
         raise ValueError("config changed while building plan")
-    return {
+    plan = {
         "schema_version": 1,
         "dataset_id": contract["dataset_id"],
         "campaign_root": contract["campaign_root"],
@@ -313,12 +455,26 @@ def build_plan(
         "config": str(config_path),
         "config_sha256": config_hash_before,
         "output_root": str(output_path),
+        "runner_root": str(runner_path),
+        "runner_provenance": runner_provenance,
+        "submission_workdir": str(submission_path),
+        "submission_resources": {
+            "cpus": 12,
+            "mybatch_input_memory_gb": MYBATCH_INPUT_MEMORY_GB,
+            "effective_slurm_memory_gb": EFFECTIVE_SLURM_MEMORY_GB,
+            "partition": "cpu_wgh",
+            "time": "2:00:00",
+        },
         "chunk_size": chunk_size,
         "lane_count": lane_count,
         "date_count": len(contract["production_dates"]),
         "chunk_count": len(planned_chunks),
         "chunks": planned_chunks,
     }
+    validate_runner_provenance(
+        runner_path, contract["campaign_root"], runner_provenance
+    )
+    return plan
 
 
 def _write_json_atomic(path, payload):
@@ -339,13 +495,94 @@ def _write_json_atomic(path, payload):
             temporary.unlink()
 
 
+def _json_bytes(payload):
+    return (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def write_plan_once(path, plan):
+    """Atomically create a plan, or reuse only byte-identical contents."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    desired = _json_bytes(plan)
+    if target.exists():
+        if target.read_bytes() != desired:
+            raise ValueError("existing plan bytes differ; refusing overwrite")
+        return
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix="." + target.name + ".", suffix=".tmp", dir=str(target.parent)
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as output:
+            output.write(desired)
+            output.flush()
+            os.fsync(output.fileno())
+        try:
+            os.link(str(temporary), str(target))
+        except FileExistsError:
+            if target.read_bytes() != desired:
+                raise ValueError("existing plan bytes differ; refusing overwrite")
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def read_plan_once(path):
+    """Bind JSON decoding and SHA-256 to one immutable bytes snapshot."""
+    plan_path = Path(path)
+    try:
+        raw = plan_path.read_bytes()
+        plan = json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("plan file is not valid UTF-8 JSON") from error
+    return plan, raw, _sha256_bytes(raw)
+
+
 def submission_receipt_path(plan_output):
     path = Path(plan_output)
     return path.with_name(path.stem + "-submission.json")
 
 
+def submission_lock_path(receipt_path):
+    receipt = Path(receipt_path)
+    return receipt.with_name(receipt.name + ".lock")
+
+
+@contextmanager
+def _submission_lock(receipt_path):
+    lock_path = submission_lock_path(receipt_path)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+") as lock:
+        try:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise RuntimeError("another submission holds the receipt lock") from error
+        try:
+            yield
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+
+
+def plan_provenance(plan):
+    return {
+        "dataset_id": plan["dataset_id"],
+        "date_list_sha256": plan["date_list_sha256"],
+        "binary": plan["binary"],
+        "binary_sha256": plan["binary_sha256"],
+        "config": plan["config"],
+        "config_sha256": plan["config_sha256"],
+        "output_root": plan["output_root"],
+        "runner_root": plan["runner_root"],
+        "runner_provenance": plan["runner_provenance"],
+        "submission_workdir": plan["submission_workdir"],
+        "submission_resources": plan["submission_resources"],
+    }
+
+
 def _chunk_run_command(plan, chunk):
     arguments = [
+        "/usr/bin/env",
+        "PYTHONPATH=" + plan["runner_root"],
         PYTHON38,
         "-m",
         "campaigns.l4_production",
@@ -366,104 +603,253 @@ def _chunk_run_command(plan, chunk):
         plan["config_sha256"],
         "--date-list-sha256",
         plan["date_list_sha256"],
+        "--runner-root",
+        plan["runner_root"],
+        "--runner-provenance-json",
+        json.dumps(plan["runner_provenance"], separators=(",", ":")),
     ]
     return shlex.join(arguments)
 
 
-def submit_plan(plan, plan_path, receipt_path=None, *, _verified_contract=None):
-    """Submit every chunk with bounded lane dependencies and atomic receipt."""
+def recover_job_id(job_name):
+    """Recover one job id by exact unique Slurm job name."""
+    found = set()
+    commands = (
+        ["squeue", "-h", "-n", job_name, "-o", "%i|%j"],
+        ["sacct", "-n", "-X", "--name", job_name, "--format=JobIDRaw,JobName", "--parsable2"],
+    )
+    for command in commands:
+        try:
+            completed = subprocess.run(command, capture_output=True, text=True)
+        except FileNotFoundError:
+            continue
+        if completed.returncode != 0:
+            continue
+        for line in completed.stdout.splitlines():
+            fields = [field.strip() for field in line.split("|")]
+            if len(fields) >= 2 and fields[1] == job_name and fields[0].isdigit():
+                found.add(fields[0])
+    if len(found) > 1:
+        raise RuntimeError("multiple jobs match exact name {}".format(job_name))
+    return next(iter(found)) if found else None
+
+
+def _next_chunk_id(plan, jobs_by_chunk):
+    for chunk in plan["chunks"]:
+        record = jobs_by_chunk.get(chunk["chunk_id"])
+        if record is None or record.get("status") != "submitted":
+            return chunk["chunk_id"]
+    return None
+
+
+def _submission_job_name(submission_id, chunk_id):
+    return "{}-{}".format(submission_id, chunk_id)
+
+
+def _submission_command(plan, chunk, job_name, dependency_job):
+    run_command = _chunk_run_command(plan, chunk)
+    command = ["mybatch"] + list(SLURM_RESOURCES) + ["-J", job_name]
+    if dependency_job is not None:
+        command.extend(["-d", "afterok:" + dependency_job])
+    command.extend(["-s", run_command])
+    return run_command, command
+
+
+def submit_plan(
+    plan,
+    plan_path,
+    receipt_path=None,
+    *,
+    _verified_contract=None,
+    recover_job_id=None,
+):
+    """Submit/resume chunks with a locked, crash-recoverable receipt."""
     plan_file = Path(plan_path)
     output_receipt = (
         submission_receipt_path(plan_file)
         if receipt_path is None
         else Path(receipt_path)
     )
-    if output_receipt.exists():
-        raise ValueError("submission receipt already exists")
-    plan_hash = _sha256(plan_file)
-    try:
-        recorded_plan = json.loads(plan_file.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
-        raise ValueError("plan file is not valid JSON") from error
-    if recorded_plan != plan:
-        raise ValueError("submitted plan payload does not match frozen plan file")
-    contract = (
-        load_active_v2_contract(plan["campaign_root"])
-        if _verified_contract is None
-        else _verified_contract
-    )
-    if contract["production_date_list_sha256"] != plan["date_list_sha256"]:
-        raise ValueError("production date-list hash changed before submission")
-    expected_plan = build_plan(
-        plan["campaign_root"],
-        plan["binary"],
-        plan["config"],
-        plan["output_root"],
-        expected_binary_sha256=plan["binary_sha256"],
-        expected_config_sha256=plan["config_sha256"],
-        _verified_contract=contract,
-    )
-    if expected_plan != plan:
-        raise ValueError("plan does not match deterministic active v2 production")
-    if _sha256(plan["binary"]) != plan["binary_sha256"]:
-        raise ValueError("binary hash changed before submission")
-    if _sha256(plan["config"]) != plan["config_sha256"]:
-        raise ValueError("config hash changed before submission")
-    job_id_by_chunk = {}
-    jobs = []
-    for chunk in plan["chunks"]:
-        dependency_chunk = chunk["depends_on_chunk_id"]
-        dependency_job = (
-            None if dependency_chunk is None else job_id_by_chunk[dependency_chunk]
+    recover = globals()["recover_job_id"] if recover_job_id is None else recover_job_id
+    with _submission_lock(output_receipt):
+        recorded_plan, _, plan_hash = read_plan_once(plan_file)
+        if recorded_plan != plan:
+            raise ValueError("submitted plan payload does not match frozen plan bytes")
+        contract = (
+            load_active_v2_contract(plan["campaign_root"])
+            if _verified_contract is None
+            else _verified_contract
         )
-        run_command = _chunk_run_command(plan, chunk)
-        command = ["mybatch"] + list(SLURM_RESOURCES) + ["-J", chunk["job_name"]]
-        if dependency_job is not None:
-            command.extend(["-d", "afterok:" + dependency_job])
-        command.extend(["-s", run_command])
-        completed = subprocess.run(command, capture_output=True, text=True)
-        if completed.returncode != 0:
-            raise RuntimeError(
-                "mybatch failed for {}: {}".format(
-                    chunk["chunk_id"], completed.stderr.strip()
+        expected_plan = build_plan(
+            plan["campaign_root"],
+            plan["binary"],
+            plan["config"],
+            plan["output_root"],
+            plan["runner_root"],
+            plan["submission_workdir"],
+            expected_binary_sha256=plan["binary_sha256"],
+            expected_config_sha256=plan["config_sha256"],
+            _verified_contract=contract,
+        )
+        if expected_plan != plan:
+            raise ValueError("plan does not match deterministic active v2 production")
+        validate_runner_provenance(
+            plan["runner_root"], plan["campaign_root"], plan["runner_provenance"]
+        )
+        _verify_frozen_inputs(
+            Path(plan["binary"]),
+            Path(plan["config"]),
+            plan["binary_sha256"],
+            plan["config_sha256"],
+        )
+        if output_receipt.exists():
+            try:
+                receipt = json.loads(output_receipt.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as error:
+                raise ValueError("submission receipt is invalid JSON") from error
+            if receipt.get("plan_sha256") != plan_hash:
+                raise ValueError("submission receipt belongs to a different plan")
+            if receipt.get("plan_provenance") != plan_provenance(plan):
+                raise ValueError("submission receipt provenance differs from plan")
+            if receipt.get("status") == "submitted":
+                raise ValueError("plan already has a completed submission receipt")
+            if receipt.get("status") not in {"failed", "submitting"}:
+                raise ValueError("submission receipt has invalid status")
+        else:
+            receipt = {
+                "schema_version": 2,
+                "status": "submitting",
+                "submission_id": secrets.token_hex(12),
+                "plan_path": str(plan_file.resolve()),
+                "plan_sha256": plan_hash,
+                "plan_provenance": plan_provenance(plan),
+                "next_chunk_id": plan["chunks"][0]["chunk_id"],
+                "jobs": [],
+            }
+            _write_json_atomic(output_receipt, receipt)
+
+        jobs_by_chunk = {}
+        for job in receipt.get("jobs", []):
+            chunk_id = job.get("chunk_id")
+            if chunk_id in jobs_by_chunk:
+                raise ValueError("submission receipt contains duplicate chunks")
+            jobs_by_chunk[chunk_id] = job
+        receipt["status"] = "submitting"
+        receipt.pop("error", None)
+        receipt["next_chunk_id"] = _next_chunk_id(plan, jobs_by_chunk)
+        _write_json_atomic(output_receipt, receipt)
+
+        for chunk in plan["chunks"]:
+            chunk_id = chunk["chunk_id"]
+            record = jobs_by_chunk.get(chunk_id)
+            if record is not None and record.get("status") == "submitted":
+                continue
+            dependency_chunk = chunk["depends_on_chunk_id"]
+            dependency_job = None
+            if dependency_chunk is not None:
+                dependency_record = jobs_by_chunk.get(dependency_chunk)
+                if dependency_record is None or dependency_record.get("status") != "submitted":
+                    raise ValueError("missing submitted dependency {}".format(dependency_chunk))
+                dependency_job = dependency_record["job_id"]
+            if record is None:
+                record = {
+                    "chunk_id": chunk_id,
+                    "lane": chunk["lane"],
+                    "dates": list(chunk["dates"]),
+                    "job_name": _submission_job_name(receipt["submission_id"], chunk_id),
+                    "status": "submitting",
+                    "depends_on_chunk_id": dependency_chunk,
+                    "depends_on_job_id": dependency_job,
+                }
+                run_command, command = _submission_command(
+                    plan, chunk, record["job_name"], dependency_job
                 )
-            )
-        match = re.fullmatch(r"Jobid:(\d+)", completed.stdout.strip())
-        if match is None:
-            raise RuntimeError(
-                "invalid mybatch output for {}: {!r}".format(
-                    chunk["chunk_id"], completed.stdout
+                record.update({
+                    "command": command,
+                    "run_command": run_command,
+                    "resources": {
+                        "cpus": 12,
+                        "memory": "243G",
+                        "mybatch_input_memory_gb": MYBATCH_INPUT_MEMORY_GB,
+                        "effective_slurm_memory_gb": EFFECTIVE_SLURM_MEMORY_GB,
+                        "partition": "cpu_wgh",
+                        "time": "2:00:00",
+                    },
+                })
+                receipt["jobs"].append(record)
+                jobs_by_chunk[chunk_id] = record
+            else:
+                if record.get("status") != "submitting" or record.get("job_id") is not None:
+                    raise ValueError("invalid resumable job state for {}".format(chunk_id))
+                record["depends_on_job_id"] = dependency_job
+                run_command, command = _submission_command(
+                    plan, chunk, record["job_name"], dependency_job
                 )
-            )
-        job_id = match.group(1)
-        job_id_by_chunk[chunk["chunk_id"]] = job_id
-        jobs.append({
-            "chunk_id": chunk["chunk_id"],
-            "lane": chunk["lane"],
-            "dates": list(chunk["dates"]),
-            "job_name": chunk["job_name"],
-            "depends_on_chunk_id": dependency_chunk,
-            "depends_on_job_id": dependency_job,
-            "job_id": job_id,
-            "command": command,
-            "run_command": run_command,
-            "resources": {
-                "cpus": 12,
-                "memory": "243G",
-                "partition": "cpu_wgh",
-                "time": "2:00:00",
-            },
-        })
-    receipt = {
-        "schema_version": 1,
-        "status": "submitted",
-        "plan_path": str(plan_file.resolve()),
-        "plan_sha256": plan_hash,
-        "job_count": len(jobs),
-        "jobs": jobs,
-    }
-    _write_json_atomic(output_receipt, receipt)
-    return receipt
+                record["command"] = command
+                record["run_command"] = run_command
+                record["resources"] = {
+                    "cpus": 12,
+                    "memory": "243G",
+                    "mybatch_input_memory_gb": MYBATCH_INPUT_MEMORY_GB,
+                    "effective_slurm_memory_gb": EFFECTIVE_SLURM_MEMORY_GB,
+                    "partition": "cpu_wgh",
+                    "time": "2:00:00",
+                }
+                recovered = recover(record["job_name"])
+                if recovered is not None:
+                    if not str(recovered).isdigit():
+                        raise RuntimeError("recovered job id is not numeric")
+                    record["job_id"] = str(recovered)
+                    record["status"] = "submitted"
+                    receipt["next_chunk_id"] = _next_chunk_id(plan, jobs_by_chunk)
+                    _write_json_atomic(output_receipt, receipt)
+                    continue
+
+            receipt["next_chunk_id"] = chunk_id
+            _write_json_atomic(output_receipt, receipt)
+            try:
+                completed = subprocess.run(
+                    command,
+                    capture_output=True,
+                    text=True,
+                    cwd=plan["submission_workdir"],
+                )
+                if completed.returncode != 0:
+                    raise RuntimeError(
+                        "mybatch failed for {}: {}".format(
+                            chunk_id, completed.stderr.strip()
+                        )
+                    )
+                match = re.fullmatch(r"Jobid:(\d+)", completed.stdout.strip())
+                if match is None:
+                    raise RuntimeError(
+                        "invalid mybatch output for {}: {!r}".format(
+                            chunk_id, completed.stdout
+                        )
+                    )
+            except Exception as error:
+                receipt["status"] = "failed"
+                receipt["error"] = {
+                    "chunk_id": chunk_id,
+                    "type": type(error).__name__,
+                    "message": str(error),
+                }
+                receipt["next_chunk_id"] = chunk_id
+                _write_json_atomic(output_receipt, receipt)
+                raise
+            record.update({
+                "job_id": match.group(1),
+                "status": "submitted",
+            })
+            receipt["next_chunk_id"] = _next_chunk_id(plan, jobs_by_chunk)
+            _write_json_atomic(output_receipt, receipt)
+
+        receipt["status"] = "submitted"
+        receipt["job_count"] = len(receipt["jobs"])
+        receipt["next_chunk_id"] = None
+        receipt.pop("error", None)
+        _write_json_atomic(output_receipt, receipt)
+        return receipt
 
 
 def run_chunk(
@@ -475,20 +861,23 @@ def run_chunk(
     binary_sha256,
     config_sha256,
     date_list_sha256,
+    runner_root,
+    runner_provenance,
 ):
     """Produce and HDF5-only validate one frozen five-date chunk."""
-    from evaluations.l4_preflight import validate_hdf5_only
-
     binary_path = _require_absolute_file(binary, "binary")
     config_path = _require_absolute_file(config, "config")
     output_path = _require_absolute_directory_path(output_root, "output_root")
+    runner_path = _require_absolute_directory_path(runner_root, "runner_root")
+    validate_runner_provenance(runner_path, campaign_root, runner_provenance)
+    from evaluations.l4_preflight import validate_hdf5_only
+
     contract = _load_active_v2_production_contract(campaign_root)
     if contract["production_date_list_sha256"] != date_list_sha256:
         raise ValueError("production date-list hash changed")
-    if _sha256(binary_path) != binary_sha256:
-        raise ValueError("binary hash changed")
-    if _sha256(config_path) != config_sha256:
-        raise ValueError("config hash changed")
+    _verify_frozen_inputs(
+        binary_path, config_path, binary_sha256, config_sha256
+    )
     _load_and_validate_config(config_path, output_path)
     requested = validate_dates_against_frozen_list(
         dates, contract["production_dates"]
@@ -497,11 +886,15 @@ def run_chunk(
         raise ValueError("run-chunk accepts at most five frozen dates")
     results = []
     for date in requested:
-        if _sha256(binary_path) != binary_sha256 or _sha256(config_path) != config_sha256:
-            raise ValueError("frozen binary or config changed during chunk")
+        _verify_frozen_inputs(
+            binary_path, config_path, binary_sha256, config_sha256
+        )
         target = output_path / date / "all_families" / "factors.h5"
         if target.exists():
             inspection = validate_hdf5_only(target, campaign_root)
+            _verify_frozen_inputs(
+                binary_path, config_path, binary_sha256, config_sha256
+            )
             status = "existing_valid"
         else:
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -519,9 +912,15 @@ def run_chunk(
                         date, completed.returncode, completed.stderr.strip()
                     )
                 )
+            _verify_frozen_inputs(
+                binary_path, config_path, binary_sha256, config_sha256
+            )
             if not target.is_file():
                 raise RuntimeError("factor binary did not create {}".format(target))
             inspection = validate_hdf5_only(target, campaign_root)
+            _verify_frozen_inputs(
+                binary_path, config_path, binary_sha256, config_sha256
+            )
             status = "produced_valid"
         results.append({
             "date": date,
@@ -531,6 +930,9 @@ def run_chunk(
             "event_count": inspection["event_count"],
             "factor_count": inspection["factor_count"],
         })
+    _verify_frozen_inputs(
+        binary_path, config_path, binary_sha256, config_sha256
+    )
     return results
 
 
@@ -542,6 +944,8 @@ def _parser():
     plan_parser.add_argument("--binary", type=Path, required=True)
     plan_parser.add_argument("--config", type=Path, required=True)
     plan_parser.add_argument("--output-root", type=Path, required=True)
+    plan_parser.add_argument("--runner-root", type=Path, required=True)
+    plan_parser.add_argument("--submission-workdir", type=Path, required=True)
     plan_parser.add_argument("--plan-output", type=Path, required=True)
     plan_parser.add_argument("--submit", action="store_true")
     chunk_parser = subparsers.add_parser("run-chunk")
@@ -553,6 +957,8 @@ def _parser():
     chunk_parser.add_argument("--binary-sha256", required=True)
     chunk_parser.add_argument("--config-sha256", required=True)
     chunk_parser.add_argument("--date-list-sha256", required=True)
+    chunk_parser.add_argument("--runner-root", type=Path, required=True)
+    chunk_parser.add_argument("--runner-provenance-json", required=True)
     return parser
 
 
@@ -565,9 +971,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             args.binary,
             args.config,
             args.output_root,
+            args.runner_root,
+            args.submission_workdir,
             _verified_contract=contract,
         )
-        _write_json_atomic(args.plan_output, plan)
+        write_plan_once(args.plan_output, plan)
         result = plan
         if args.submit:
             result = submit_plan(
@@ -586,6 +994,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.binary_sha256,
         args.config_sha256,
         args.date_list_sha256,
+        args.runner_root,
+        json.loads(args.runner_provenance_json),
     )
     print(json.dumps(results, ensure_ascii=False))
     return 0
@@ -596,12 +1006,18 @@ __all__ = [
     "assign_lanes",
     "build_plan",
     "chunk_dates",
+    "collect_runner_provenance",
     "load_active_v2_contract",
     "main",
     "run_chunk",
     "submission_receipt_path",
+    "submission_lock_path",
     "submit_plan",
     "validate_dates_against_frozen_list",
+    "validate_runner_provenance",
+    "write_plan_once",
+    "read_plan_once",
+    "plan_provenance",
 ]
 
 
