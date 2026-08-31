@@ -105,8 +105,8 @@ def freeze_release(repo_root, *, commit, binary, config, release_base=RELEASE_BA
     # the sealed holdout list from the release and its readable path metadata.
     release_manifest = target / "campaigns/sfm_stream_001/manifests/formal-history-dataset-v2.json"
     manifest_payload = json.loads(release_manifest.read_text(encoding="utf-8"))
-    manifest_payload.pop("holdout_date_list_path", None)
-    manifest_payload.pop("holdout_date_list_sha256", None)
+    # Keep sealed holdout path/hash metadata for schema validation, but do not
+    # copy the holdout date-list file into the release.
     release_manifest.chmod(0o644)
     release_manifest.write_text(json.dumps(manifest_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     release_manifest.chmod(0o444)
