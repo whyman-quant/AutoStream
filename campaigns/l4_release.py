@@ -16,6 +16,7 @@ import shutil
 import shlex
 import subprocess
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 from campaigns.l4_production import FAMILIES, collect_runner_provenance
@@ -262,7 +263,7 @@ def submit_preflight_plan(plan_path, *, receipt_path=None, submit=False,
                 raise ValueError("preflight plan already submitted")
         else:
             state = {"schema_version": 1, "status": "submitting", "plan_sha256": plan_sha,
-                     "plan_path": str(plan_file), "jobs": []}
+                     "plan_path": str(plan_file), "submitted_at": datetime.now(timezone.utc).isoformat(), "jobs": []}
             _atomic_json(receipt, state)
         recorded = {item["job_name"]: item for item in state["jobs"]}
         runner = subprocess.run if mybatch_runner is None else mybatch_runner
@@ -276,11 +277,27 @@ def submit_preflight_plan(plan_path, *, receipt_path=None, submit=False,
                 if not dependency:
                     raise ValueError("dependency job is not submitted: {}".format(job["depends_on"]))
             entry = recorded.get(name, {"job_name": name, "status": "submitting"})
-            entry.update({"kind": job.get("kind"), "date": job.get("date"), "depends_on": job.get("depends_on")})
+            entry.update({"kind": job.get("kind"), "date": job.get("date"), "depends_on": job.get("depends_on"),
+                          "submitted_at": state.get("submitted_at")})
             if entry not in state["jobs"]:
                 state["jobs"].append(entry)
             recorded[name] = entry
             _atomic_json(receipt, state)
+            if entry.get("status") == "submitting" and recover_job_id is not None:
+                try:
+                    recovered = recover_job_id(name, entry["submitted_at"])
+                except Exception as error:
+                    state["status"] = "failed"
+                    state["error"] = {"job_name": name, "message": "recovery query failed: " + str(error)}
+                    _atomic_json(receipt, state)
+                    raise
+                if recovered is not None:
+                    if not str(recovered).isdigit():
+                        raise ValueError("recovered job id is not numeric")
+                    entry["job_id"] = str(recovered)
+                    entry["status"] = "submitted"
+                    _atomic_json(receipt, state)
+                    continue
             command = ["mybatch", "-c12", "-m256G", "-p", "cpu_wgh", "-t2:00:00", "-J", name]
             if dependency:
                 command.extend(["-d", "afterok:" + str(dependency)])

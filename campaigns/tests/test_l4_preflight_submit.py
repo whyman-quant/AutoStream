@@ -51,5 +51,24 @@ class SubmitPreflightTests(unittest.TestCase):
             with self.assertRaises(RuntimeError): submit_preflight_plan(path, receipt_path=receipt, submit=True, mybatch_runner=flaky)
             state = json.loads(receipt.read_text()); self.assertEqual(state["status"], "failed"); self.assertEqual(state["jobs"][0]["status"], "submitted")
 
+    def test_submitting_job_is_recovered_without_resubmission(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); path = self._plan(root); receipt = root / "receipt.json"
+            state = {"schema_version": 1, "status": "submitting", "plan_sha256": __import__('campaigns.l4_release', fromlist=['sha256']).sha256(path), "submitted_at": "2026-01-01T00:00:00+00:00", "jobs": [{"job_name": "job-0", "status": "submitting", "submitted_at": "2026-01-01T00:00:00+00:00"}]}
+            receipt.write_text(json.dumps(state))
+            def recover(name, submitted_at): return "777" if name == "job-0" else None
+            calls = []
+            def fake(command, **kwargs): calls.append(command); return mock.Mock(returncode=0, stdout="Jobid:778\n", stderr="")
+            result = submit_preflight_plan(path, receipt_path=receipt, submit=True, mybatch_runner=fake, recover_job_id=recover)
+            self.assertEqual(result["jobs"][0]["job_id"], "777"); self.assertEqual(len(calls), 5)
+
+    def test_recovery_exception_is_fail_closed(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); path = self._plan(root); receipt = root / "receipt.json"
+            state = {"schema_version": 1, "status": "submitting", "plan_sha256": __import__('campaigns.l4_release', fromlist=['sha256']).sha256(path), "submitted_at": "2026-01-01T00:00:00+00:00", "jobs": [{"job_name": "job-0", "status": "submitting", "submitted_at": "2026-01-01T00:00:00+00:00"}]}
+            receipt.write_text(json.dumps(state))
+            with self.assertRaises(RuntimeError): submit_preflight_plan(path, receipt_path=receipt, submit=True, mybatch_runner=mock.Mock(), recover_job_id=lambda *_: (_ for _ in ()).throw(RuntimeError("query")))
+            self.assertEqual(json.loads(receipt.read_text())["status"], "failed")
+
 
 if __name__ == "__main__": unittest.main()
