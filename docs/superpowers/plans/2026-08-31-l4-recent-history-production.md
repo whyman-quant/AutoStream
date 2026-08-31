@@ -186,7 +186,8 @@ git push origin main
 
 **Files:**
 - Create after completion: `campaigns/sfm_stream_001/manifests/formal-history-v2-preflight.json`
-- Local ignored release: `base/hf-open5m-factor-demo/release/formal-history-v2-<commit>/`
+- External immutable release: `/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-releases/formal-history-v2-<commit>/`
+- Persistent submission cwd: `/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v2-<commit>/`
 
 - [ ] **Step 1: Run full pre-release verification**
 
@@ -199,7 +200,7 @@ git diff --check
 
 - [ ] **Step 2: Freeze release artifacts**
 
-Copy the verified executable and unified config into a commit-named ignored release directory. Mark the executable read/execute-only and config read-only. Record binary, config, converter, evaluator, dataset manifest, and date-list SHA-256.
+After the final code commit, copy the verified executable and unified config into the external commit-named release directory (never inside a git checkout). Mark the executable read/execute-only and config read-only. Record binary, config, converter, evaluator, dataset manifest, and date-list SHA-256. Use the separate persistent submission cwd for plans, logs, and receipts.
 
 - [ ] **Step 3: Submit only the five approved preflight dates**
 
