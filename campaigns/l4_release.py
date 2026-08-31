@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import tempfile
 from pathlib import Path
@@ -283,7 +284,7 @@ def submit_preflight_plan(plan_path, *, receipt_path=None, submit=False,
             command = ["mybatch", "-c12", "-m256G", "-p", "cpu_wgh", "-t2:00:00", "-J", name]
             if dependency:
                 command.extend(["-d", "afterok:" + str(dependency)])
-            command.extend(["-s", " ".join(str(part) for part in job["command"])])
+            command.extend(["-s", shlex.join([str(part) for part in job["command"])])
             try:
                 completed = runner(command, capture_output=True, text=True, cwd=str(Path(plan["submission_root"])))
                 if completed.returncode != 0:
