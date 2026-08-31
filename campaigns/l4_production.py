@@ -181,6 +181,24 @@ def chunk_dates(dates, size=5):
     return [values[index : index + size] for index in range(0, len(values), size)]
 
 
+def validate_dates_against_frozen_list(requested, verified_dates):
+    """Validate requested dates only against an already verified snapshot."""
+    dates = [str(date) for date in requested]
+    if not dates:
+        raise ValueError("at least one production date is required")
+    if len(set(dates)) != len(dates):
+        raise ValueError("requested dates must not contain duplicates")
+    frozen = set(verified_dates)
+    for date in dates:
+        if len(date) != 8 or not date.isdigit():
+            raise ValueError("invalid date: {}".format(date))
+        if date >= "20250101":
+            raise ValueError("2025 and holdout dates are forbidden: {}".format(date))
+        if date not in frozen:
+            raise ValueError("date is not in the verified production list: {}".format(date))
+    return dates
+
+
 def assign_lanes(chunks, lane_count=4):
     """Assign ordered chunks to deterministic round-robin dependency lanes."""
     values = list(chunks)
@@ -239,6 +257,7 @@ def build_plan(
     lane_count=LANE_COUNT,
     expected_binary_sha256=None,
     expected_config_sha256=None,
+    _verified_contract=None,
 ):
     """Build a deterministic JSON-serializable plan from the active v2 list."""
     if chunk_size != CHUNK_SIZE or lane_count != LANE_COUNT:
@@ -253,7 +272,11 @@ def build_plan(
     if expected_config_sha256 is not None and config_hash_before != expected_config_sha256:
         raise ValueError("config hash changed from frozen input")
     _load_and_validate_config(config_path, output_path)
-    contract = load_active_v2_contract(campaign_root)
+    contract = (
+        load_active_v2_contract(campaign_root)
+        if _verified_contract is None
+        else _verified_contract
+    )
     chunks = chunk_dates(contract["production_dates"], size=chunk_size)
     lanes = assign_lanes(chunks, lane_count=lane_count)
     lane_by_identity = {}
@@ -347,7 +370,7 @@ def _chunk_run_command(plan, chunk):
     return shlex.join(arguments)
 
 
-def submit_plan(plan, plan_path, receipt_path=None):
+def submit_plan(plan, plan_path, receipt_path=None, *, _verified_contract=None):
     """Submit every chunk with bounded lane dependencies and atomic receipt."""
     plan_file = Path(plan_path)
     output_receipt = (
@@ -364,6 +387,13 @@ def submit_plan(plan, plan_path, receipt_path=None):
         raise ValueError("plan file is not valid JSON") from error
     if recorded_plan != plan:
         raise ValueError("submitted plan payload does not match frozen plan file")
+    contract = (
+        load_active_v2_contract(plan["campaign_root"])
+        if _verified_contract is None
+        else _verified_contract
+    )
+    if contract["production_date_list_sha256"] != plan["date_list_sha256"]:
+        raise ValueError("production date-list hash changed before submission")
     expected_plan = build_plan(
         plan["campaign_root"],
         plan["binary"],
@@ -371,12 +401,10 @@ def submit_plan(plan, plan_path, receipt_path=None):
         plan["output_root"],
         expected_binary_sha256=plan["binary_sha256"],
         expected_config_sha256=plan["config_sha256"],
+        _verified_contract=contract,
     )
     if expected_plan != plan:
         raise ValueError("plan does not match deterministic active v2 production")
-    contract = load_active_v2_contract(plan["campaign_root"])
-    if contract["production_date_list_sha256"] != plan["date_list_sha256"]:
-        raise ValueError("production date-list hash changed before submission")
     if _sha256(plan["binary"]) != plan["binary_sha256"]:
         raise ValueError("binary hash changed before submission")
     if _sha256(plan["config"]) != plan["config_sha256"]:
@@ -449,7 +477,7 @@ def run_chunk(
     date_list_sha256,
 ):
     """Produce and HDF5-only validate one frozen five-date chunk."""
-    from evaluations.l4_preflight import validate_hdf5_only, validate_requested_dates
+    from evaluations.l4_preflight import validate_hdf5_only
 
     binary_path = _require_absolute_file(binary, "binary")
     config_path = _require_absolute_file(config, "config")
@@ -462,8 +490,8 @@ def run_chunk(
     if _sha256(config_path) != config_sha256:
         raise ValueError("config hash changed")
     _load_and_validate_config(config_path, output_path)
-    requested = validate_requested_dates(
-        dates, contract["production_date_list_path"]
+    requested = validate_dates_against_frozen_list(
+        dates, contract["production_dates"]
     )
     if len(requested) > CHUNK_SIZE:
         raise ValueError("run-chunk accepts at most five frozen dates")
@@ -531,16 +559,22 @@ def _parser():
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "plan":
+        contract = load_active_v2_contract(args.campaign_root)
         plan = build_plan(
             args.campaign_root,
             args.binary,
             args.config,
             args.output_root,
+            _verified_contract=contract,
         )
         _write_json_atomic(args.plan_output, plan)
         result = plan
         if args.submit:
-            result = submit_plan(plan, args.plan_output)
+            result = submit_plan(
+                plan,
+                args.plan_output,
+                _verified_contract=contract,
+            )
         print(json.dumps(result, ensure_ascii=False))
         return 0
     results = run_chunk(
@@ -567,6 +601,7 @@ __all__ = [
     "run_chunk",
     "submission_receipt_path",
     "submit_plan",
+    "validate_dates_against_frozen_list",
 ]
 
 

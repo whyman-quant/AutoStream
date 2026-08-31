@@ -114,6 +114,26 @@ class L4ProductionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             l4_production.chunk_dates(["20210104", "20210104"])
 
+    def test_validate_dates_against_frozen_list_is_pure_and_holdout_safe(self):
+        frozen = ["20210104", "20210105"]
+        self.assertEqual(
+            l4_production.validate_dates_against_frozen_list(
+                ["20210105"], frozen
+            ),
+            ["20210105"],
+        )
+        for requested in (
+            [],
+            ["20210104", "20210104"],
+            ["2021-01-04"],
+            ["20250102"],
+            ["20210106"],
+        ):
+            with self.subTest(requested=requested), self.assertRaises(ValueError):
+                l4_production.validate_dates_against_frozen_list(
+                    requested, frozen
+                )
+
     def test_assign_lanes_is_stable_round_robin_with_each_chunk_once(self):
         chunks = [[str(index)] for index in range(10)]
 
@@ -256,12 +276,19 @@ class L4ProductionTests(unittest.TestCase):
             binary, config = _write_inputs(root, output_root)
             plan_output = root / "plan.json"
             responses = [mock.Mock(returncode=0, stdout="Jobid:{}\n".format(7000 + index), stderr="") for index in range(194)]
-            with mock.patch("campaigns.l4_production.subprocess.run", side_effect=responses) as run, mock.patch("sys.stdout"):
+            real_loader = l4_production.load_active_v2_contract
+            with mock.patch(
+                "campaigns.l4_production.load_active_v2_contract",
+                wraps=real_loader,
+            ) as load_contract, mock.patch(
+                "campaigns.l4_production.subprocess.run", side_effect=responses
+            ) as run, mock.patch("sys.stdout"):
                 l4_production.main([
                     "plan", "--campaign-root", str(campaign_root),
                     "--binary", str(binary), "--config", str(config),
                     "--output-root", str(output_root), "--plan-output", str(plan_output), "--submit",
                 ])
+            self.assertEqual(load_contract.call_count, 1)
             receipt_path = l4_production.submission_receipt_path(plan_output)
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
             self.assertEqual(receipt["plan_sha256"], _sha256(plan_output))
@@ -389,6 +416,80 @@ class L4ProductionTests(unittest.TestCase):
                     _sha256(binary), _sha256(config), manifest["production_date_list_sha256"],
                 )
 
+            self.assertEqual(result[0]["status"], "existing_valid")
+
+    def test_run_chunk_rejects_date_added_after_verified_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            campaign_root = root / "campaign"
+            output_root = (root / "outputs").resolve()
+            manifest, production, _, names = _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            production_path = campaign_root / "manifests" / "production.txt"
+            real_loader = l4_production._load_active_v2_production_contract
+
+            def load_then_tamper(active_campaign_root):
+                contract = real_loader(active_campaign_root)
+                production_path.write_text(
+                    production_path.read_text(encoding="utf-8") + "20200101\n",
+                    encoding="utf-8",
+                )
+                return contract
+
+            with mock.patch(
+                "campaigns.l4_production._load_active_v2_production_contract",
+                side_effect=load_then_tamper,
+            ), mock.patch(
+                "campaigns.l4_production.subprocess.run"
+            ) as run, mock.patch(
+                "evaluations.l4_preflight.validate_hdf5_only",
+                return_value=_inspection(names),
+            ):
+                with self.assertRaises(ValueError):
+                    l4_production.run_chunk(
+                        ["20200101"], campaign_root, binary, config, output_root,
+                        _sha256(binary), _sha256(config),
+                        manifest["production_date_list_sha256"],
+                    )
+
+            run.assert_not_called()
+
+    def test_run_chunk_uses_legal_date_from_verified_snapshot_after_tamper(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            campaign_root = root / "campaign"
+            output_root = (root / "outputs").resolve()
+            manifest, production, _, names = _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            target = output_root / production[0] / "all_families" / "factors.h5"
+            _write_placeholder(target)
+            production_path = campaign_root / "manifests" / "production.txt"
+            real_loader = l4_production._load_active_v2_production_contract
+
+            def load_then_tamper(active_campaign_root):
+                contract = real_loader(active_campaign_root)
+                production_path.write_text(
+                    production_path.read_text(encoding="utf-8") + "20200101\n",
+                    encoding="utf-8",
+                )
+                return contract
+
+            with mock.patch(
+                "campaigns.l4_production._load_active_v2_production_contract",
+                side_effect=load_then_tamper,
+            ), mock.patch(
+                "campaigns.l4_production.subprocess.run"
+            ) as run, mock.patch(
+                "evaluations.l4_preflight.validate_hdf5_only",
+                return_value=_inspection(names),
+            ):
+                result = l4_production.run_chunk(
+                    [production[0]], campaign_root, binary, config, output_root,
+                    _sha256(binary), _sha256(config),
+                    manifest["production_date_list_sha256"],
+                )
+
+            run.assert_not_called()
             self.assertEqual(result[0]["status"], "existing_valid")
 
     def test_run_chunk_existing_valid_skips_binary_and_existing_invalid_is_preserved(self):
