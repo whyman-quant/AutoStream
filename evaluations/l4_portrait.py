@@ -107,7 +107,7 @@ def _value_correlations(arrow_root, dates, factors, events):
     return peers, file_hashes
 
 
-def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]], labels: Sequence[str], universes: Sequence[str], expected_factors: Sequence[str], events: Sequence[int], arrow_root: Path, candidates_root: Path, coverage_threshold: float = .95, campaign_id: str = "sfm_stream_001"):
+def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]], labels: Sequence[str], universes: Sequence[str], expected_factors: Sequence[str], events: Sequence[int], arrow_root: Path, candidates_root: Path, coverage_threshold: float = .95, campaign_id: str = "sfm_stream_001", provenance: Optional[Mapping[str, str]] = None):
     factors, labels, universes, events = list(expected_factors), list(labels), list(universes), list(events)
     if len(set(factors)) != len(factors): raise ValueError("duplicate factors")
     frames, receipts = _strict_frames(result_root, split_dates, labels, universes, factors, events, coverage_threshold)
@@ -121,6 +121,14 @@ def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]],
         series = [frame[factor + "|RankIC"] for frame in frames.values()]
         ic_series[factor] = pd.concat(series, axis=1).mean(axis=1).sort_index()
     ic_corr = pd.DataFrame(ic_series).corr(method="spearman")
+
+    provenance = dict(provenance or {})
+    empty_hash = "sha256:" + ("0" * 64)
+    for key in ("dataset_manifest", "binary", "config", "evaluator", "label_contract", "methodology", "evaluation_receipt"):
+        provenance.setdefault(key + "_path", "fixture/" + key)
+        provenance.setdefault(key + "_sha256", empty_hash)
+    correlation_artifact = provenance.get("correlation_artifact_path", "correlations/value-spearman.json")
+    correlation_hash = provenance.get("correlation_artifact_sha256", "sha256:" + hashlib.sha256(json.dumps(value_peers, sort_keys=True).encode()).hexdigest())
 
     docs = []
     for factor in factors:
@@ -155,7 +163,7 @@ def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]],
         docs.append({
             "schema_version": 2, "kind": "factor_portrait", "portrait_id": factor + "__formal_history_v2", "campaign_id": campaign_id, "family_id": candidate["family_id"], "candidate_id": factor, "factor": factor, "scope": "formal_history", "evidence_level": "L4",
             "dataset": {"dataset_id": "sfm_stream_001_formal_history_v2", "date_start": all_dates[0], "date_end": all_dates[-1], "date_count": len(all_dates), "events": events, "labels": labels, "universes": universes, "split_date_list_sha256": {key: _dates_sha(list(value)) for key, value in split_dates.items()}},
-            "lineage": {"candidate_path": str(candidate_path), "candidate_hash": candidate["canonical_hash"], "candidate_source_commit": candidate["lineage"]["source_commit"], "evaluation_files": receipts, "arrow_files": arrow_hashes},
+            "lineage": {"candidate_path": str(candidate_path), "candidate_hash": candidate["canonical_hash"], "candidate_source_commit": candidate["lineage"]["source_commit"], "dataset_manifest_path": provenance["dataset_manifest_path"], "dataset_manifest_sha256": provenance["dataset_manifest_sha256"], "binary_path": provenance["binary_path"], "binary_sha256": provenance["binary_sha256"], "config_path": provenance["config_path"], "config_sha256": provenance["config_sha256"], "evaluator_path": provenance["evaluator_path"], "evaluator_sha256": provenance["evaluator_sha256"], "label_contract_path": provenance["label_contract_path"], "label_contract_sha256": provenance["label_contract_sha256"], "methodology_path": provenance["methodology_path"], "methodology_sha256": provenance["methodology_sha256"], "evaluation_receipt_path": provenance["evaluation_receipt_path"], "evaluation_receipt_sha256": provenance["evaluation_receipt_sha256"], "evaluation_files": receipts, "correlation_artifact_path": correlation_artifact, "correlation_artifact_sha256": correlation_hash},
             "data_quality": {"coverage_threshold": coverage_threshold, "minimum_coverage": min(r["minimum_column_coverage"] for rows in receipts.values() for r in rows), "all_required_values_finite": True, "duplicate_date_event_count": 0, "matrix_complete": True},
             "direction": "raw_signed", "metrics": {"rank_ic": dict(_stats(all_rank), std_ddof=1, ir_formula="mean/std")}, "splits": split_output,
             "rolling_stability": {"window": 60, "min_periods": 30, "groups": rolling_groups, "positive_fraction": float(np.mean(rolling_positive)) if rolling_positive else None, "split_mean_sign_disagreement": bool(disagreement), "unstable": bool((rolling_positive and np.mean(rolling_positive) < .55) or disagreement)},
