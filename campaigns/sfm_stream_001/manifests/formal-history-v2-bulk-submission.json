@@ -29,6 +29,13 @@
   "holdout_labels_read": false,
   "status": "submitted",
   "completion_certified": false,
+  "full_preflight_job": {
+    "job_id": "18510113",
+    "job_name": "l4-v2-full-preflight-5d5fffe",
+    "status": "SUBMITTED",
+    "output": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v2-bulk-5d5fffe/full-preflight-validation.json",
+    "scope": "969 production dates; HDF5 to Arrow conversion plus strict factor-only validation"
+  },
   "promotion_allowed": false,
   "note": "All 194 production chunks were submitted. The CLI validated the sealed holdout date-list contract while planning, but no 2025 market data, factor data, labels, or evaluation results were read. Production workers consume only the frozen 2021-2024 production date list."
 }
