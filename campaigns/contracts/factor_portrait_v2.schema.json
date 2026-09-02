@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whyman-quant.github.io/AutoStream/contracts/factor-portrait-v2.schema.json",
+  "title": "AutoStream Factor Portrait v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "portrait_id", "campaign_id", "factor", "scope", "evidence_level", "dataset", "coverage", "direction", "promotion_allowed", "metrics", "decision"],
+  "properties": {
+    "schema_version": {"const": 2}, "kind": {"const": "factor_portrait"},
+    "portrait_id": {"type": "string", "minLength": 1}, "campaign_id": {"type": "string", "minLength": 1}, "factor": {"type": "string", "minLength": 1},
+    "scope": {"const": "formal_history"}, "evidence_level": {"const": "L4"},
+    "dataset": {"type": "object", "required": ["date_start", "date_end", "date_count", "events", "labels", "universes"], "additionalProperties": false, "properties": {"date_start": {"type": "string"}, "date_end": {"type": "string"}, "date_count": {"type": "integer", "minimum": 1}, "events": {"type": "array"}, "labels": {"type": "array"}, "universes": {"type": "array"}}},
+    "coverage": {"type": "number", "minimum": 0, "maximum": 1}, "direction": {"const": "raw_signed"}, "promotion_allowed": {"const": false},
+    "metrics": {"type": "object"}, "splits": {"type": "object"}, "slices": {"type": "object"}, "correlations": {"type": "object"}, "anomaly_days": {"type": "array"}, "rolling_stability": {"type": "object"},
+    "decision": {"const": "observation_only"}
+  }
+}

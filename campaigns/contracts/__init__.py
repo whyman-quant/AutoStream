@@ -18,11 +18,13 @@ CONTRACT_FILES = {
 }
 
 
-def load_schema(kind: str) -> dict:
+def load_schema(kind: str, schema_version=None) -> dict:
     try:
         filename = CONTRACT_FILES[kind]
     except KeyError as error:
         raise ValueError("unknown contract kind: {}".format(kind)) from error
+    if kind == "factor_portrait" and schema_version == 2:
+        filename = "factor_portrait_v2.schema.json"
     path = Path(__file__).with_name(filename)
     schema = json.loads(path.read_text(encoding="utf-8"))
     Draft7Validator.check_schema(schema)
@@ -30,7 +32,8 @@ def load_schema(kind: str) -> dict:
 
 
 def validate_document(kind: str, document: Mapping[str, object]) -> None:
-    validator = Draft7Validator(load_schema(kind))
+    version = document.get("schema_version") if isinstance(document, Mapping) else None
+    validator = Draft7Validator(load_schema(kind, version))
     errors = sorted(validator.iter_errors(dict(document)), key=lambda item: list(item.path))
     if not errors:
         return

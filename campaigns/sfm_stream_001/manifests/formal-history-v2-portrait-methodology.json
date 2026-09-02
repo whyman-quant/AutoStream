@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "scope": "l4_formal_history_recent_history",
+  "dataset": "formal_history_v2_20210104_20241231",
+  "statistics": {"std": {"ddof": 1}, "ir": "mean/std", "rank_correlation": "Spearman", "direction": "raw_signed"},
+  "rolling_stability": {"window_observations": 60, "min_periods": 30},
+  "redundancy": {"correlation": "Spearman", "threshold_abs": 0.90, "scope": "factor_value_and_ic"},
+  "instability": {"rolling_positive_fraction_lt": 0.55, "split_mean_sign_disagreement": true},
+  "anomaly_days": {"method": "top_5_absolute_standardized_RankIC_contribution", "count": 5},
+  "coverage": {"minimum": 0.95, "unit": "date_event"},
+  "metrics": ["RankIC", "IC", "LS", "Monotonicity", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10"],
+  "labels": ["raw926", "ease926"],
+  "universes": ["000985", "003800", "000906"],
+  "decision": "observation_only",
+  "promotion_allowed": false,
+  "holdout_policy": "2025留出区间不得读取或评价"
+}
