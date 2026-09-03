@@ -13,6 +13,8 @@ from .factor_eval import evaluate_columns, read_hdf5_factor_file, read_hdf5_read
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--factor-file", required=True)
+    parser.add_argument("--dataset", default="/factordata", help="HDF5 factor dataset path")
+    parser.add_argument("--readiness-dataset", help="optional HDF5 readiness dataset path")
     parser.add_argument("--labels-csv")
     parser.add_argument("--label-column", default="label")
     parser.add_argument("--output", required=True)
@@ -24,8 +26,11 @@ def main() -> int:
     parser.add_argument("--min-effective-rank-count", type=int, default=2)
     parser.add_argument("--groups", type=int, default=10)
     args = parser.parse_args()
-    columns = read_hdf5_factor_file(args.factor_file)
-    ready_masks = read_hdf5_readiness_file(args.factor_file)
+    columns = read_hdf5_factor_file(args.factor_file, dataset=args.dataset)
+    readiness_dataset = args.readiness_dataset
+    if readiness_dataset is None and args.dataset == "/factordata":
+        readiness_dataset = "/readiness"
+    ready_masks = read_hdf5_readiness_file(args.factor_file, dataset=readiness_dataset) if readiness_dataset else None
     labels = read_label_csv(args.labels_csv, args.label_column) if args.labels_csv else None
     if labels is not None and len(labels) != len(next(iter(columns.values()))):
         raise SystemExit("labels row count does not match factordata row count")
