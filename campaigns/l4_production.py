@@ -68,7 +68,6 @@ def _resolve_recorded_path(recorded_path, campaign_root):
     candidates = [campaign / recorded]
     if campaign.parent.name == "campaigns":
         candidates.append(campaign.parents[1] / recorded)
-    candidates.append(REPOSITORY_ROOT / recorded)
     for candidate in candidates:
         if candidate.exists():
             return candidate.resolve()
@@ -457,7 +456,7 @@ def build_plan(
         raise ValueError("config hash changed from frozen input")
     _load_and_validate_config(config_path, output_path)
     contract = (
-        load_active_v2_contract(campaign_root)
+        _load_active_v2_production_contract(campaign_root)
         if _verified_contract is None
         else _verified_contract
     )
@@ -1104,7 +1103,7 @@ def _parser():
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "plan":
-        contract = load_active_v2_contract(args.campaign_root)
+        contract = _load_active_v2_production_contract(args.campaign_root)
         plan = build_plan(
             args.campaign_root,
             args.binary,

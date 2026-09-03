@@ -254,6 +254,55 @@ class L4ProductionTests(unittest.TestCase):
                 self.assertEqual(chunk["depends_on_chunk_id"], previous.get(chunk["lane"]))
                 previous[chunk["lane"]] = chunk["chunk_id"]
 
+    def test_build_plan_bootstraps_frozen_release_without_reading_holdout(self):
+        """Planner bootstrap must require only production contract files."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            campaign_root = root / "campaign"
+            output_root = (root / "outputs").resolve()
+            manifest, _, _, _ = _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            (campaign_root / "manifests" / "holdout.txt").unlink()
+
+            # A checkout-like fallback must never satisfy a frozen release path.
+            fallback = root / "checkout"
+            (fallback / "manifests").mkdir(parents=True)
+            (fallback / "manifests" / "holdout.txt").write_text(
+                "20250102\n", encoding="utf-8"
+            )
+            real_reader = l4_production._read_frozen_lines
+
+            def reject_holdout(path, expected_sha256, description):
+                if description == "holdout date list":
+                    raise AssertionError("planner accessed holdout")
+                return real_reader(path, expected_sha256, description)
+
+            with mock.patch.object(l4_production, "REPOSITORY_ROOT", fallback), mock.patch(
+                "campaigns.l4_production._read_frozen_lines",
+                side_effect=reject_holdout,
+            ):
+                plan = l4_production.build_plan(
+                    campaign_root, binary, config, output_root, root.resolve()
+                )
+
+            self.assertEqual(plan["dataset_id"], manifest["dataset_id"])
+            self.assertEqual(plan["date_count"], 969)
+
+    def test_recorded_path_never_falls_back_to_repository_checkout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            campaign = root / "campaign"
+            fallback = root / "checkout"
+            (fallback / "manifests").mkdir(parents=True)
+            (fallback / "manifests" / "sentinel.txt").write_text(
+                "sentinel\n", encoding="utf-8"
+            )
+            with mock.patch.object(l4_production, "REPOSITORY_ROOT", fallback):
+                with self.assertRaises(ValueError):
+                    l4_production._resolve_recorded_path(
+                        "manifests/sentinel.txt", campaign
+                    )
+
     def test_build_plan_rejects_relative_missing_mismatched_output_and_hash_drift(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -386,9 +435,9 @@ class L4ProductionTests(unittest.TestCase):
             binary, config = _write_inputs(root, output_root)
             plan_output = root / "plan.json"
             responses = [mock.Mock(returncode=0, stdout="Jobid:{}\n".format(7000 + index), stderr="") for index in range(194)]
-            real_loader = l4_production.load_active_v2_contract
+            real_loader = l4_production._load_active_v2_production_contract
             with mock.patch(
-                "campaigns.l4_production.load_active_v2_contract",
+                "campaigns.l4_production._load_active_v2_production_contract",
                 wraps=real_loader,
             ) as load_contract, mock.patch(
                 "campaigns.l4_production.subprocess.run", side_effect=responses
@@ -400,6 +449,8 @@ class L4ProductionTests(unittest.TestCase):
                     "--submission-workdir", str((root / "slurm").resolve()),
                     "--plan-output", str(plan_output), "--submit",
                 ])
+            # Planner/submission bootstrap validates only production inputs;
+            # holdout remains reserved for the full audit API.
             self.assertEqual(load_contract.call_count, 1)
             receipt_path = l4_production.submission_receipt_path(plan_output)
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
