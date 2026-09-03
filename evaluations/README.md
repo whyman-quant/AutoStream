@@ -4,6 +4,7 @@
 
 - HDF5 `factordata` / `factorlist` 读取；
 - 逐列 finite、NaN、Inf、zero 和 warmup 后覆盖率；
+- 事件级横截面有效性：标准差、唯一值数、非零比例和有效排名数，均可通过 CLI 阈值配置；
 - 常数列拒绝；
 - Spearman RankIC；
 - 分组平均收益和 Q_last-Q_first 多空差；
@@ -21,6 +22,20 @@ python3 -m evaluations.run_factor_eval \
 ```
 
 没有 `--labels-csv` 时，输出可以证明技术质量，但不会声称因子有投资收益。标签 CSV 至少需要一列 `label`，行顺序必须与 HDF5 `factordata` 行顺序一致。
+
+横截面门槛可按批次显式冻结，例如：
+
+```bash
+python3 -m evaluations.run_campaign_technical \
+  --directory /path/to/event-checkpoints \
+  --output /tmp/technical.json \
+  --min-cross-section-std 1e-12 \
+  --min-unique-count 2 \
+  --min-nonzero-ratio 0.01 \
+  --min-effective-rank-count 2
+```
+
+如果生产端能提供每个因子的 readiness mask，可将其传给 `evaluate_columns(..., ready_masks=...)`；未准备好样本会单独统计为 `not_ready_count` / `not_ready_zero_count`，不会被当作真实零值参与横截面统计。
 
 `portfolio_metrics` 是回测层的无依赖核心函数：传入按时间排序的十进制收益序列，
 可选传入连续持仓权重向量（换手定义为相邻权重向量 L1 变化的一半）。

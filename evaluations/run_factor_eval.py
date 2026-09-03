@@ -18,13 +18,27 @@ def main() -> int:
     parser.add_argument("--output", required=True)
     parser.add_argument("--warmup", type=int, default=0)
     parser.add_argument("--min-post-warmup-coverage", type=float, default=0.8)
+    parser.add_argument("--min-cross-section-std", type=float, default=0.0)
+    parser.add_argument("--min-unique-count", type=int, default=2)
+    parser.add_argument("--min-nonzero-ratio", type=float, default=0.0)
+    parser.add_argument("--min-effective-rank-count", type=int, default=2)
     parser.add_argument("--groups", type=int, default=10)
     args = parser.parse_args()
     columns = read_hdf5_factor_file(args.factor_file)
     labels = read_label_csv(args.labels_csv, args.label_column) if args.labels_csv else None
     if labels is not None and len(labels) != len(next(iter(columns.values()))):
         raise SystemExit("labels row count does not match factordata row count")
-    results = evaluate_columns(columns, labels, warmup=args.warmup, min_post_warmup_coverage=args.min_post_warmup_coverage, groups=args.groups)
+    results = evaluate_columns(
+        columns,
+        labels,
+        warmup=args.warmup,
+        min_post_warmup_coverage=args.min_post_warmup_coverage,
+        groups=args.groups,
+        min_cross_section_std=args.min_cross_section_std,
+        min_unique_count=args.min_unique_count,
+        min_nonzero_ratio=args.min_nonzero_ratio,
+        min_effective_rank_count=args.min_effective_rank_count,
+    )
     payload = {
         "schema_version": 1,
         "factor_file": str(Path(args.factor_file).resolve()),

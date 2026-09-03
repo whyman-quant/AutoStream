@@ -141,35 +141,105 @@ def portfolio_metrics(returns: Sequence[float], *, weights: Optional[Sequence[Se
     }
 
 
-def evaluate_columns(columns: Mapping[str, Sequence[float]], labels: Optional[Sequence[float]] = None, *, warmup: int = 0, min_post_warmup_coverage: float = 0.8, groups: int = 10) -> Dict[str, dict]:
-    if warmup < 0 or not 0.0 <= min_post_warmup_coverage <= 1.0:
+def evaluate_columns(
+    columns: Mapping[str, Sequence[float]],
+    labels: Optional[Sequence[float]] = None,
+    *,
+    warmup: int = 0,
+    min_post_warmup_coverage: float = 0.8,
+    groups: int = 10,
+    min_cross_section_std: float = 0.0,
+    min_unique_count: int = 2,
+    min_nonzero_ratio: float = 0.0,
+    min_effective_rank_count: int = 2,
+    ready_masks: Optional[Mapping[str, Sequence[bool]]] = None,
+) -> Dict[str, dict]:
+    """Evaluate factor columns, including event-level cross-sectional validity.
+
+    A column normally represents one event snapshot.  ``ready_masks`` may be
+    supplied by producers that can distinguish a not-ready value from a real
+    numeric zero.  Not-ready observations are excluded from coverage and
+    cross-sectional statistics, while ``not_ready_zero_count`` records how
+    often they were encoded as zero by an upstream producer.
+    """
+    if (
+        warmup < 0
+        or not 0.0 <= min_post_warmup_coverage <= 1.0
+        or min_cross_section_std < 0.0
+        or min_unique_count < 0
+        or not 0.0 <= min_nonzero_ratio <= 1.0
+        or min_effective_rank_count < 0
+    ):
         raise ValueError("invalid warmup or coverage threshold")
+    if labels is not None and columns:
+        expected = len(next(iter(columns.values())))
+        if len(labels) != expected:
+            raise ValueError("factor and label lengths must match")
     results = {}
     for name, values in columns.items():
         numeric = [float(value) for value in values]
-        finite = [value for value in numeric if math.isfinite(value)]
+        mask = [True] * len(numeric)
+        if ready_masks is not None:
+            if name not in ready_masks:
+                raise ValueError("ready_masks must contain every factor column")
+            mask = [bool(value) for value in ready_masks[name]]
+            if len(mask) != len(numeric):
+                raise ValueError("ready mask length must match factor column")
+        finite = [value for value, is_ready in zip(numeric, mask) if is_ready and math.isfinite(value)]
         post = numeric[warmup:]
-        post_finite = [value for value in post if math.isfinite(value)]
+        post_mask = mask[warmup:]
+        post_finite = [value for value, is_ready in zip(post, post_mask) if is_ready and math.isfinite(value)]
         rejects = []
         coverage = len(post_finite) / len(post) if post else 0.0
         if coverage < min_post_warmup_coverage:
             rejects.append("post_warmup_coverage_below_threshold")
         if len(finite) >= 2 and len(set(finite)) == 1:
             rejects.append("constant_column")
+        unique_count = len(set(post_finite))
+        cross_section_std = None
+        if post_finite:
+            mean = sum(post_finite) / len(post_finite)
+            cross_section_std = math.sqrt(sum((value - mean) ** 2 for value in post_finite) / len(post_finite))
+        nonzero_ratio = (
+            sum(value != 0.0 for value in post_finite) / len(post_finite)
+            if post_finite
+            else 0.0
+        )
+        # Ties share a rank, so the number of distinct finite values is the
+        # effective number of ranks available to an event-level IC estimate.
+        effective_rank_count = unique_count
+        if cross_section_std is None or cross_section_std < min_cross_section_std:
+            rejects.append("cross_section_std_below_threshold")
+        if unique_count < min_unique_count:
+            rejects.append("cross_section_unique_count_below_threshold")
+        if nonzero_ratio < min_nonzero_ratio:
+            rejects.append("cross_section_nonzero_ratio_below_threshold")
+        if effective_rank_count < min_effective_rank_count:
+            rejects.append("cross_section_effective_rank_count_below_threshold")
+        not_ready_count = sum(not is_ready for is_ready in mask)
+        not_ready_zero_count = sum((not is_ready) and value == 0.0 for value, is_ready in zip(numeric, mask))
         result = {
             "status": "technical_reject" if rejects else "technical_pass",
             "evaluation_status": "data_missing" if labels is None else "pending",
             "row_count": len(numeric),
             "finite_count": len(finite),
+            "ready_count": sum(mask),
+            "not_ready_count": not_ready_count,
+            "not_ready_zero_count": not_ready_zero_count,
             "nan_count": sum(math.isnan(value) for value in numeric),
             "inf_count": sum(math.isinf(value) for value in numeric),
-            "zero_count": sum(value == 0.0 for value in numeric if math.isfinite(value)),
+            "zero_count": sum(value == 0.0 for value, is_ready in zip(numeric, mask) if is_ready and math.isfinite(value)),
             "post_warmup_coverage": coverage,
+            "cross_section_std": cross_section_std,
+            "unique_count": unique_count,
+            "nonzero_ratio": nonzero_ratio,
+            "effective_rank_count": effective_rank_count,
             "reject_reasons": rejects,
         }
         if labels is not None:
-            result["rank_ic"] = rank_ic(numeric, labels)
-            result["groups"] = quantile_group_returns(numeric, labels, groups=groups)
+            eval_values = [value if is_ready else math.nan for value, is_ready in zip(numeric, mask)]
+            result["rank_ic"] = rank_ic(eval_values, labels)
+            result["groups"] = quantile_group_returns(eval_values, labels, groups=groups)
             result["evaluation_status"] = "evaluated"
         results[name] = result
     return results

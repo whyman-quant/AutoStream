@@ -42,6 +42,35 @@ class FactorEvalTests(unittest.TestCase):
         result = evaluate_columns({"factor": [1.0, 2.0]}, labels=None)
         self.assertEqual(result["factor"]["evaluation_status"], "data_missing")
 
+    def test_event_cross_section_metrics_reject_degenerate_values(self):
+        result = evaluate_columns(
+            {"factor": [0.0, 0.0, 0.0, 0.0]},
+            min_cross_section_std=0.01,
+            min_unique_count=2,
+            min_nonzero_ratio=0.25,
+            min_effective_rank_count=2,
+        )["factor"]
+        self.assertEqual(result["cross_section_std"], 0.0)
+        self.assertEqual(result["unique_count"], 1)
+        self.assertEqual(result["nonzero_ratio"], 0.0)
+        self.assertEqual(result["effective_rank_count"], 1)
+        self.assertIn("cross_section_std_below_threshold", result["reject_reasons"])
+        self.assertIn("cross_section_unique_count_below_threshold", result["reject_reasons"])
+        self.assertIn("cross_section_nonzero_ratio_below_threshold", result["reject_reasons"])
+        self.assertIn("cross_section_effective_rank_count_below_threshold", result["reject_reasons"])
+
+    def test_readiness_mask_separates_not_ready_zero_from_real_zero(self):
+        result = evaluate_columns(
+            {"factor": [0.0, 0.0, 1.0, 2.0]},
+            ready_masks={"factor": [False, True, True, True]},
+            min_post_warmup_coverage=0.75,
+        )["factor"]
+        self.assertEqual(result["not_ready_count"], 1)
+        self.assertEqual(result["not_ready_zero_count"], 1)
+        self.assertEqual(result["ready_count"], 3)
+        self.assertEqual(result["zero_count"], 1)
+        self.assertAlmostEqual(result["nonzero_ratio"], 2.0 / 3.0)
+
     def test_reads_factor_hdf5_schema_without_python_hdf5_package(self):
         path = Path("/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/acceptance/20251013/book_imbalance/20251013/092700.h5")
         if not path.exists():
