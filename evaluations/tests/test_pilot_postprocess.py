@@ -126,7 +126,7 @@ class PilotPostprocessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "ready.arrow"
             table = pa.table({
-                "symbol": ["000001", "000001", "000001", "000001"],
+                "symbol": ["000001", "000002", "000001", "000002"],
                 "date": ["20251014"] * 4,
                 "event": [92600000, 92600000, 100000000, 100000000],
                 "factor": [math.nan, 1.0, 2.0, 3.0],
