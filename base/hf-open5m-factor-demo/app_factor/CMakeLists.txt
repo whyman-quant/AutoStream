@@ -70,6 +70,15 @@ target_link_libraries(${EXECUTABLE_TARGET_NAME} PRIVATE
     Threads::Threads
 )
 
+if(BUILD_TESTING)
+    add_executable(order_routing_policy_test
+        ${CMAKE_SOURCE_DIR}/tests/order_routing_policy_test.cpp)
+    target_include_directories(order_routing_policy_test PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR})
+    add_test(NAME order_routing_policy COMMAND order_routing_policy_test)
+endif()
+
 #=============================================================================
 # 构建信息
 #=============================================================================

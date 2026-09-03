@@ -1,0 +1,162 @@
+{
+  "audit": "market_input_audit",
+  "schema_version": "1.0",
+  "audit_date": "2026-09-03",
+  "dates": ["20210104", "20251013"],
+  "symbols": ["000001", "600000"],
+  "reader": {
+    "python_api": "my.data.quote.data(date, mi_type, symbol, 0, '0')",
+    "cpp_api": "TicksData::GetTransactionV2/GetOrderV2",
+    "default_root": "/data",
+    "resolved_root": "/mnt/beegfs_npq107",
+    "path_resolution_verified": true,
+    "note": "C++ and Python default readers resolve the same /data tree; the EV code-list root is separate and is not the tick-data root."
+  },
+  "checks": {
+    "expected_market": {"000001": 48, "600000": 49},
+    "market_values_match_expected": true,
+    "all_binary_sizes_match_struct_layout": true,
+    "all_trade_volumes_positive": true,
+    "all_order_ids_nonzero": true,
+    "unsupported_market_seen": false,
+    "order_synthesizer_replay": {
+      "binary": "/home/fangwei/mnt-ssd/AutoStream/.migration/base-working/build-tests/order-builder/order_synthesizer_npq_replay",
+      "samples": 4,
+      "return_code_all_zero": true,
+      "hard_errors_all_zero": true,
+      "negative_rest_all_zero": true,
+      "conservation_failures_all_zero": true,
+      "late_events_all_zero": true,
+      "notes": "20210104/20251013 × 000001/600000; Shanghai max_pending was 1097 and 1313, with no hard error."
+    }
+  },
+  "samples": [
+    {
+      "date": "20210104",
+      "symbol": "000001",
+      "market": 48,
+      "transaction": {
+        "path": "/data/256/2021/20210104/0/0/000001.npq",
+        "rows": 141776,
+        "bytes": 13610496,
+        "sha256": "54808bd510cc9bf500e0db98e23ab33d18c05bb9b5432e998d11f2b1ae1c9cb3",
+        "trade_type": {"0": 119328, "C": 22448},
+        "bsflag": {"B": 47663, "S": 71665, "": 22448},
+        "time_range": [91500030, 150000000]
+      },
+      "order": {
+        "path": "/data/257/2021/20210104/0/0/000001.npq",
+        "rows": 155627,
+        "bytes": 12450160,
+        "sha256": "4d5c06559cb0b70f09a150e246a3ad3f2dc7021f9aa5ef62cf881e4bebf4b342",
+        "order_type": {"0": 155303, "1": 309, "U": 15},
+        "bsflag": {"B": 99922, "S": 55705},
+        "orderorino_zero": 0,
+        "order_index_zero": 0,
+        "biz_index_nonzero": 0,
+        "time_range": [91500000, 145959950]
+      }
+    },
+    {
+      "date": "20210104",
+      "symbol": "600000",
+      "market": 49,
+      "transaction": {
+        "path": "/data/256/2021/20210104/0/0/600000.npq",
+        "rows": 30567,
+        "bytes": 2934432,
+        "sha256": "e8b077b75a6c5d322e2f87b41edab5403cf934f0a6317fec5f8802f549be6643",
+        "trade_type": {"": 30567},
+        "bsflag": {"B": 16748, "S": 13819},
+        "time_range": [92500820, 150000150]
+      },
+      "order": {
+        "path": "/data/257/2021/20210104/0/0/600000.npq",
+        "rows": 34192,
+        "bytes": 2735360,
+        "sha256": "9bb7085d6172254a56a8655fee42f9506a8f454d49010d82a6370b41dcfaf7ad",
+        "order_type": {"A": 26255, "D": 7937},
+        "bsflag": {"B": 17377, "S": 16815},
+        "orderorino_zero": 0,
+        "order_index_zero": 0,
+        "biz_index_nonzero": 34192,
+        "time_range": [91500160, 145959950]
+      }
+    },
+    {
+      "date": "20251013",
+      "symbol": "000001",
+      "market": 48,
+      "transaction": {
+        "path": "/data/256/2025/20251013/0/0/000001.npq",
+        "rows": 87429,
+        "bytes": 8393184,
+        "sha256": "77a40ed11ed0410755620e5c08af5235f39a5385cedd42381a51c9ea65d57cb2",
+        "trade_type": {"0": 64172, "C": 23257},
+        "bsflag": {"B": 32817, "S": 31355, "": 23257},
+        "time_range": [91500170, 150000000]
+      },
+      "order": {
+        "path": "/data/257/2025/20251013/0/0/000001.npq",
+        "rows": 99397,
+        "bytes": 7951760,
+        "sha256": "197d7c7d26d388c2aaa86715633f3eef36bd866c1fd4428d540f141092c3b2e9",
+        "order_type": {"0": 98725, "1": 647, "U": 25},
+        "bsflag": {"B": 51970, "S": 47427},
+        "orderorino_zero": 0,
+        "order_index_zero": 0,
+        "biz_index_nonzero": 0,
+        "time_range": [91500000, 145959920]
+      }
+    },
+    {
+      "date": "20251013",
+      "symbol": "600000",
+      "market": 49,
+      "transaction": {
+        "path": "/data/256/2025/20251013/0/0/600000.npq",
+        "rows": 155109,
+        "bytes": 14890464,
+        "sha256": "f6ad04b9277a11793c88aa042d3c451ee8c8fa96c865028d0bd37a0964a86480",
+        "trade_type": {"": 155109},
+        "bsflag": {"B": 96448, "S": 58661},
+        "time_range": [92502050, 150000500]
+      },
+      "order": {
+        "path": "/data/257/2025/20251013/0/0/600000.npq",
+        "rows": 157179,
+        "bytes": 12574320,
+        "sha256": "3cbdebb48d6a72822dd07a72f7e872607ad7d18b87b31d9818b822622584e0a7",
+        "order_type": {"A": 127620, "D": 29559},
+        "bsflag": {"B": 59506, "S": 97673},
+        "orderorino_zero": 0,
+        "order_index_zero": 0,
+        "biz_index_nonzero": 157179,
+        "time_range": [91500000, 145958900]
+      }
+    }
+  ],
+  "conclusion": {
+    "status": "audit_passed",
+    "shanghai_market_49_present": true,
+    "shanghai_orderorino_and_a_d_present": true,
+    "root_cause_of_opening_ic_nan": "opening snapshot has constant/insufficient-history factor values, not Shanghai data omission",
+    "opening_metric_semantics": {
+      "status": "paused_for_contract_decision",
+      "finding": "For constant opening factors the evaluator emits NaN IC/RankIC but still emits D1-D10, LS and Monotonicity from tied ranks; those group metrics must not be treated as valid signal evidence.",
+      "imputation_allowed": false,
+      "promotion_allowed": false
+    },
+    "remaining_action": "record the resolved tick-data root and MYDATA_BUSINESS_TYPE in future production receipts; the market-specific order identity fix is now applied to future builds",
+    "existing_l3_production_log": {
+      "path": "slurm/flow_pressure_grid_pilot_v1_20251009_20251031/fpg_20251013.18443192.out",
+      "codes": 4964,
+      "sz_codes": 2745,
+      "sh_codes": 2219,
+      "tick_rows": 21209527,
+      "transaction_rows": 182042750,
+      "order_rows": 223761853,
+      "mydata_business_type_recorded": false
+    }
+  }
+}

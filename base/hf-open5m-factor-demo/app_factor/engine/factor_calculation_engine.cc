@@ -38,6 +38,7 @@
 #include "data/runtime_policy.h"
 #include "factors/_comm/factor_entry_base.h"
 #include "factors/_comm/factor_time_stats.h"
+#include "engine/order_routing_policy.h"
 
 // 拉入各因子 factor_entry.h 中的 REGISTER_*，使注册逻辑进入本 TU，避免链静态因子库时 .o 被链接器丢弃。
 #include "factors_include.h"
@@ -634,8 +635,8 @@ void FactorCalculationEngine::OnOrder(Stock_Order_Internal_Book_New* quote, star
 	__builtin_prefetch(quote, 0, 1);
 	// 如果此时依然有未处理的时间戳，则给对应的数据缓存发送行情数据
 	if (send_time_point_idx_ < send_time_points_vector_.size()) {
-		// 过滤掉 order_type 为 'S' 或 orderorino 为 0 的订单
-		if (quote->order_type != 'S' && quote->orderorino != 0) {
+		// 按交易所使用正确的母单编号过滤：深市使用 order_index，沪市使用 orderorino。
+		if (factors::ShouldRouteOrderToFactors(*quote)) {
 			const int code_int = std::atoi(quote->symbol);
 			AssetInfo* asset_info = asset_info_map_.find(code_int);
 			if (asset_info != nullptr) {

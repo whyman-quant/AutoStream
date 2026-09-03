@@ -33,8 +33,7 @@ double OrderSynthesizer::SafeDiv(double a, double b, double def) {
 
 OrderSynthesizer::OrderSynthesizer(int ttl_ms) : ttl_ms_(ttl_ms) {}
 
-// 判断是否为沪市股票
-// 根据 market 字段：49=上交所(沪市), 50=深交所(深市)
+// 判断是否为沪市股票；market=48 为深市，market=49 为沪市。
 static bool IsShanghai(uint8_t market) {
     return (market == 49);
 }
