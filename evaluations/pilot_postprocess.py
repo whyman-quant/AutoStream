@@ -40,8 +40,15 @@ def inspect_hdf5(path: Path, *, expected_events: Sequence[int]) -> dict:
                 raise ValueError("inconsistent codelist stock counts")
             if len(set(symbols)) != len(symbols):
                 raise ValueError("duplicate symbols in event {}".format(event))
-            if not np.isfinite(values).all():
-                raise ValueError("event {} contains non-finite values".format(event))
+            readiness_key = "readiness_" + key
+            if readiness_key in source:
+                readiness = np.asarray(source[readiness_key][:], dtype=np.uint8)
+                if readiness.shape != values.shape or np.any((readiness != 0) & (readiness != 1)):
+                    raise ValueError("event {} readiness shape/values mismatch".format(event))
+            else:
+                readiness = np.ones(values.shape, dtype=np.uint8)
+            if np.any((readiness != 0) & ~np.isfinite(values)):
+                raise ValueError("event {} contains non-finite ready values".format(event))
     return {"path": str(path), "stock_count": stock_count or 0, "factor_count": len(factor_names), "factor_names": factor_names, "events": list(expected_events)}
 
 
@@ -52,7 +59,7 @@ def validate_arrow(path: Path, *, expected_stock_count: int, expected_events: Se
     with ipc.open_file(str(path)) as reader:
         table = reader.read_all()
     names = list(table.column_names)
-    factors = [name for name in names if name not in {"symbol", "date", "event"}]
+    factors = [name for name in names if name not in {"symbol", "date", "event"} and not name.startswith("ready_")]
     if factors != list(expected_factor_names):
         raise ValueError("factor names mismatch")
     rows = table.num_rows
@@ -67,8 +74,17 @@ def validate_arrow(path: Path, *, expected_stock_count: int, expected_events: Se
     if len(set(keys)) != rows:
         raise ValueError("duplicate (symbol,event) rows")
     for name in factors:
-        if not np.isfinite(np.asarray(table[name].to_numpy(zero_copy_only=False), dtype=float)).all():
-            raise ValueError("non-finite factor values")
+        values = np.asarray(table[name].to_numpy(zero_copy_only=False), dtype=float)
+        ready_name = "ready_" + name
+        if ready_name in names:
+            ready = np.asarray(table[ready_name].to_numpy(zero_copy_only=False), dtype=bool)
+        else:
+            ready = np.ones(values.shape, dtype=bool)
+        if np.any(ready & ~np.isfinite(values)):
+            raise ValueError("non-finite ready factor values")
+    readiness_columns = {name for name in names if name.startswith("ready_")}
+    if readiness_columns and readiness_columns != {"ready_" + name for name in factors}:
+        raise ValueError("readiness column set mismatch")
     return {"path": str(path), "rows": rows, "events": events, "factor_count": len(factors), "factor_names": factors}
 
 

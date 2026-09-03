@@ -288,6 +288,33 @@ def read_hdf5_factor_file(path: str, dataset: str = "/factordata") -> Dict[str, 
     return {name: [values[row * columns + column] for row in range(rows)] for column, name in enumerate(names)}
 
 
+def read_hdf5_readiness_file(path: str, dataset: str = "/readiness") -> Optional[Dict[str, List[bool]]]:
+    """Read optional uint8 readiness matrix aligned with ``factordata``."""
+    try:
+        text = _run_h5dump(dataset, path)
+    except RuntimeError:
+        return None
+    shape_match = re.search(r"DATASPACE\s+SIMPLE\s+\{\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)", text)
+    if not shape_match:
+        raise ValueError("readiness must be a 2-D HDF5 dataset")
+    rows, columns = int(shape_match.group(1)), int(shape_match.group(2))
+    data_start = text.find("DATA {")
+    data_end = text.rfind("\n   }", data_start)
+    if data_start < 0 or data_end < 0:
+        raise ValueError("readiness DATA block not found")
+    values = []
+    for token in text[data_start + len("DATA {"):data_end].replace("\n", " ").split(","):
+        token = token.strip()
+        if token:
+            values.append(bool(int(float(token))))
+    if len(values) != rows * columns:
+        raise ValueError("readiness value count mismatch")
+    names = read_hdf5_string_dataset(path, "/factorlist")
+    if len(names) != columns:
+        raise ValueError("readiness columns do not match factorlist")
+    return {name: [values[row * columns + column] for row in range(rows)] for column, name in enumerate(names)}
+
+
 def read_hdf5_string_dataset(path: str, dataset: str) -> List[str]:
     text = _run_h5dump(dataset, path)
     data_start = text.find("DATA {")

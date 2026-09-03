@@ -231,6 +231,9 @@ private:
 	std::shared_ptr<std::vector<std::vector<char>>> result_cache_;
 	// 最终结果保存容器
 	std::shared_ptr<std::vector<std::vector<factors::fval_t>>> result_data_;
+	// 事件级 readiness 缓存及落盘容器（按行、按全局因子列，1=ready）
+	std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_cache_;
+	std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_data_;
 
 	// ----- 线程相关 -----
 	// 时序因子计算线程

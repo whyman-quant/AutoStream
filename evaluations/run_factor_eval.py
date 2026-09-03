@@ -7,7 +7,7 @@ import json
 import math
 from pathlib import Path
 
-from .factor_eval import evaluate_columns, read_hdf5_factor_file, read_label_csv
+from .factor_eval import evaluate_columns, read_hdf5_factor_file, read_hdf5_readiness_file, read_label_csv
 
 
 def main() -> int:
@@ -25,6 +25,7 @@ def main() -> int:
     parser.add_argument("--groups", type=int, default=10)
     args = parser.parse_args()
     columns = read_hdf5_factor_file(args.factor_file)
+    ready_masks = read_hdf5_readiness_file(args.factor_file)
     labels = read_label_csv(args.labels_csv, args.label_column) if args.labels_csv else None
     if labels is not None and len(labels) != len(next(iter(columns.values()))):
         raise SystemExit("labels row count does not match factordata row count")
@@ -38,6 +39,7 @@ def main() -> int:
         min_unique_count=args.min_unique_count,
         min_nonzero_ratio=args.min_nonzero_ratio,
         min_effective_rank_count=args.min_effective_rank_count,
+        ready_masks=ready_masks,
     )
     technical_reject = labels is not None and any(
         value.get("status") == "technical_reject" for value in results.values()

@@ -57,7 +57,8 @@ public:
 	    std::shared_ptr<std::unordered_map<int, TriggerTimePointInfo>> trigger_time_points_map,
 	    std::shared_ptr<moodycamel::ReaderWriterQueue<TickDataInfo>> data_queue,
 	    std::shared_ptr<velapex::spsc_queue::SPSCQueue<int>> result_queue,
-	    std::shared_ptr<std::vector<std::vector<char>>> result_cache)
+	    std::shared_ptr<std::vector<std::vector<char>>> result_cache,
+	    std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_cache)
 	    : thread_id_(thread_id),
 	      off_set_(off_set),
 	      code_list_(code_list),
@@ -70,6 +71,7 @@ public:
 	      data_queue_(std::move(data_queue)),
 	      result_queue_(std::move(result_queue)),
 	      result_cache_(std::move(result_cache)),
+	      readiness_cache_(std::move(readiness_cache)),
 	      row_factor_capacity_(static_cast<size_t>(factor_size)),
 	      single_asset_raw_data_size_(factor_size * sizeof(factors::fval_t)),
 	      single_asset_send_data_size_(sizeof(my_factor_double_v2) + single_asset_raw_data_size_),
@@ -284,6 +286,12 @@ private:
 							    single_asset_send_data_size_ * (off_set_ + i) + sizeof(my_factor_double_v2));
 							asset_states_[ci].factor_entry_writer->WriteAllOwnedFactorSetsInto(row,
 							    row_factor_capacity_);
+							if (readiness_cache_ != nullptr) {
+								unsigned char* readiness_row = readiness_cache_->at(q.trigger_send_batch_idx).data() +
+								    (off_set_ + i) * row_factor_capacity_;
+								asset_states_[ci].factor_entry_writer->WriteAllReadinessInto(factor_api_time_ms,
+								    readiness_row, row_factor_capacity_);
+							}
 						}
 						// 通知扫描线程，该时间戳的结果已准备好
 						while (!result_queue_->Push(q.trigger_send_batch_idx)) {
@@ -332,6 +340,7 @@ private:
 	std::shared_ptr<moodycamel::ReaderWriterQueue<TickDataInfo>> data_queue_;
 	std::shared_ptr<velapex::spsc_queue::SPSCQueue<int>> result_queue_;
 	std::shared_ptr<std::vector<std::vector<char>>> result_cache_;
+	std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_cache_;
 
 	// --- 单行 payload 尺寸（原始因子区 + SDP 包头） ---
 	size_t row_factor_capacity_;  // 单行因子列数（= factor_size，供 RowWriter 写入边界检查）

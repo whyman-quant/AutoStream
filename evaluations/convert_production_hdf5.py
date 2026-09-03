@@ -51,6 +51,7 @@ def convert_hdf5(
         dates = []
         event_values = []
         factor_values = []
+        readiness_values = []
         date = _infer_date(input_path)
         for event in events:
             matrix = np.asarray(source[str(event)][:], dtype=np.float64)
@@ -59,21 +60,35 @@ def convert_hdf5(
                 raise ValueError("event {} shape {} does not match {}x{}".format(event, matrix.shape, expected_rows, expected_factor_count))
             if len(event_symbols) != expected_rows or len(set(event_symbols)) != expected_rows:
                 raise ValueError("event {} codelist mismatch".format(event))
-            if not np.isfinite(matrix).all():
-                raise ValueError("event {} contains non-finite factor values".format(event))
+            readiness_key = "readiness_" + str(event)
+            if readiness_key in source:
+                readiness = np.asarray(source[readiness_key][:], dtype=np.uint8)
+                if readiness.shape != matrix.shape:
+                    raise ValueError("event {} readiness shape {} does not match {}".format(event, readiness.shape, matrix.shape))
+                if np.any((readiness != 0) & (readiness != 1)):
+                    raise ValueError("event {} readiness values must be 0/1".format(event))
+            else:
+                readiness = np.ones(matrix.shape, dtype=np.uint8)
+            # Non-finite values are permitted only where the producer marked
+            # the factor unavailable.  Ready values must remain finite.
+            if np.any((readiness != 0) & ~np.isfinite(matrix)):
+                raise ValueError("event {} contains non-finite ready values".format(event))
             symbols.extend(event_symbols)
             dates.extend([date] * expected_rows)
             evaluation_event = EVALUATION_EVENT_BY_SOURCE_EVENT.get(event, event)
             event_values.extend([evaluation_event] * expected_rows)
             factor_values.append(matrix)
+            readiness_values.append(readiness)
         if len(set(zip(symbols, event_values))) != expected_rows * len(events):
             raise ValueError("duplicate (symbol,event) rows")
         matrix = np.concatenate(factor_values, axis=0)
+        readiness_matrix = np.concatenate(readiness_values, axis=0)
         table = pa.table({
             "symbol": pa.array(symbols, type=pa.string()),
             "date": pa.array(dates, type=pa.string()),
             "event": pa.array(event_values, type=pa.int64()),
             **{name: pa.array(matrix[:, index], type=pa.float64()) for index, name in enumerate(names)},
+            **{"ready_" + name: pa.array(readiness_matrix[:, index].astype(bool), type=pa.bool_()) for index, name in enumerate(names)},
         })
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = output_path.with_name("." + output_path.name + ".tmp")

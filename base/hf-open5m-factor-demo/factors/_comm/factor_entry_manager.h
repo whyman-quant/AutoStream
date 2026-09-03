@@ -513,6 +513,20 @@ public:
         }
     }
 
+    // 将本 RowWriter 持有的各因子集 readiness 写入行缓冲；1 表示该值可用于评价。
+    void WriteAllReadinessInto(int64_t timestamp, unsigned char* row, size_t row_capacity) const {
+        if (unlikely(row == nullptr)) return;
+        for (const auto& pair : records_) {
+            const auto& record = pair.second;
+            if (unlikely(record.output_start + record.factor_count > row_capacity)) continue;
+            const auto mask = record.entry->GetReadinessMask(timestamp);
+            if (mask.size() != record.factor_count) continue;
+            for (size_t i = 0; i < record.factor_count; ++i) {
+                row[record.output_start + i] = mask[i] ? 1 : 0;
+            }
+        }
+    }
+
 private:
     size_t row_factor_capacity_ = 0;  // 单行因子区可容纳的列数（= 引擎 factor_size_）
 };

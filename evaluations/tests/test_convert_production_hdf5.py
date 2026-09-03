@@ -44,6 +44,27 @@ class ProductionHdf5ConversionTests(unittest.TestCase):
             table = ipc.open_file(pa.memory_map(str(output_path), "r")).read_all()
             self.assertEqual(table.column("event").to_pylist(), [92600000])
 
+    def test_carries_event_readiness_masks_into_arrow(self):
+        import h5py
+        import numpy as np
+        import pyarrow as pa
+        import pyarrow.ipc as ipc
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "20251014" / "impact_efficiency"
+            root.mkdir(parents=True)
+            input_path = root / "factors.h5"
+            output_path = root / "20251014.arrow"
+            with h5py.File(str(input_path), "w") as target:
+                target.create_dataset("factorlist", data=np.asarray([b"f0", b"f1"]))
+                target.create_dataset("92700000", data=np.asarray([[0.0, 1.0]]))
+                target.create_dataset("codelist_92700000", data=np.asarray([b"000001"]))
+                target.create_dataset("readiness_92700000", data=np.asarray([[0, 1]], dtype=np.uint8))
+            convert_hdf5(input_path, output_path, expected_rows=1, expected_events=[92700000], expected_factor_count=2)
+            table = ipc.open_file(pa.memory_map(str(output_path), "r")).read_all()
+            self.assertEqual(table.column("ready_f0").to_pylist(), [False])
+            self.assertEqual(table.column("ready_f1").to_pylist(), [True])
+
     def test_infers_date_for_any_factor_family_directory(self):
         import h5py
         import numpy as np

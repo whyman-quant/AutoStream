@@ -119,6 +119,25 @@ class PilotPostprocessTests(unittest.TestCase):
             self.assertEqual(result["events"], EVALUATION_EVENTS)
             self.assertEqual(result["factor_count"], 1)
 
+    def test_validate_arrow_allows_nan_only_for_unready_rows(self):
+        import math
+        import pyarrow as pa
+        import pyarrow.ipc as ipc
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ready.arrow"
+            table = pa.table({
+                "symbol": ["000001", "000001", "000001", "000001"],
+                "date": ["20251014"] * 4,
+                "event": [92600000, 92600000, 100000000, 100000000],
+                "factor": [math.nan, 1.0, 2.0, 3.0],
+                "ready_factor": [False, True, True, True],
+            })
+            with pa.OSFile(str(path), "wb") as sink:
+                with ipc.RecordBatchFileWriter(sink, table.schema) as writer:
+                    writer.write_table(table)
+            result = validate_arrow(path, expected_stock_count=2, expected_events=EVALUATION_EVENTS, expected_factor_names=["factor"])
+            self.assertEqual(result["rows"], 4)
+
             invalid_cases = [
                 (
                     "wrong_rows",

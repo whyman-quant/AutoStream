@@ -170,11 +170,12 @@ inline bool Save1DNumericVectorToH5(hid_t file_id,
 		return false;
 	}
 
-	// 只允许 float / double / int / long
+	// 只允许 float / double / int / long / unsigned char（readiness 位）
 	static_assert(std::is_same<T, float>::value  ||
 				  std::is_same<T, double>::value ||
 				  std::is_same<T, int>::value    ||
-				  std::is_same<T, long>::value,
+				  std::is_same<T, long>::value   ||
+				  std::is_same<T, unsigned char>::value,
 				  "Unsupported numeric type");
 
 	hsize_t dims[1] = { values.size() };
@@ -211,11 +212,12 @@ inline bool Save2DNumericVectorToH5(hid_t file_id,
 		return false;
 	}
 
-	// 只允许 float / double / int / long
+	// 只允许 float / double / int / long / unsigned char（readiness 位）
 	static_assert(std::is_same<T, float>::value  ||
 				  std::is_same<T, double>::value ||
 				  std::is_same<T, int>::value    ||
-				  std::is_same<T, long>::value,
+				  std::is_same<T, long>::value   ||
+				  std::is_same<T, unsigned char>::value,
 				  "Unsupported numeric type");
 
 	// 计算维度
@@ -251,7 +253,8 @@ inline bool Save2DNumericVectorToH5(hid_t file_id,
 	if      (std::is_same<T, float>::value)  f_tid = H5T_NATIVE_FLOAT;
 	else if (std::is_same<T, double>::value) f_tid = H5T_NATIVE_DOUBLE;
 	else if (std::is_same<T, int>::value)    f_tid = H5T_NATIVE_INT;
-	else                                     f_tid = H5T_NATIVE_LONG;
+	else if (std::is_same<T, long>::value)   f_tid = H5T_NATIVE_LONG;
+	else                                     f_tid = H5T_NATIVE_UCHAR;
 
 	hsize_t dims[] = { static_cast<hsize_t>(row), static_cast<hsize_t>(column) };
 
