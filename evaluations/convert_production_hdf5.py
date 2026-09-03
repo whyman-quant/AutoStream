@@ -65,12 +65,12 @@ def convert_hdf5(
                 readiness = np.asarray(source[readiness_key][:], dtype=np.uint8)
             elif "readiness" in source:
                 readiness = np.asarray(source["readiness"][:], dtype=np.uint8)
-                if readiness.shape != matrix.shape:
-                    raise ValueError("event {} readiness shape {} does not match {}".format(event, readiness.shape, matrix.shape))
-                if np.any((readiness != 0) & (readiness != 1)):
-                    raise ValueError("event {} readiness values must be 0/1".format(event))
             else:
                 readiness = np.ones(matrix.shape, dtype=np.uint8)
+            if readiness.shape != matrix.shape:
+                raise ValueError("event {} readiness shape {} does not match {}".format(event, readiness.shape, matrix.shape))
+            if np.any((readiness != 0) & (readiness != 1)):
+                raise ValueError("event {} readiness values must be 0/1".format(event))
             # Non-finite values are permitted only where the producer marked
             # the factor unavailable.  Ready values must remain finite.
             if np.any((readiness != 0) & ~np.isfinite(matrix)):
