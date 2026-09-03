@@ -1,0 +1,770 @@
+{
+  "schema_version": 1,
+  "date_count": 17,
+  "dates": [
+    "20251009",
+    "20251010",
+    "20251013",
+    "20251014",
+    "20251015",
+    "20251016",
+    "20251017",
+    "20251020",
+    "20251021",
+    "20251022",
+    "20251023",
+    "20251024",
+    "20251027",
+    "20251028",
+    "20251029",
+    "20251030",
+    "20251031"
+  ],
+  "event_count": 8,
+  "labels": [
+    "raw926",
+    "ease926"
+  ],
+  "universes": [
+    "000985",
+    "003800",
+    "000906"
+  ],
+  "factor_count": 12,
+  "combinations": {
+    "raw926:000985": {
+      "impact_efficiency_signed_price_impact_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0024489949965923762,
+        "rank_ic_positive_fraction": 0.4369747899159664,
+        "mean_ic": -0.00031685521207252805,
+        "ic_positive_fraction": 0.5042016806722689,
+        "mean_long_short": 5.404588644792969e-06,
+        "long_short_positive_fraction": 0.5042016806722689,
+        "mean_monotonicity": 0.012070282658517948
+      },
+      "impact_efficiency_signed_price_impact_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004577071009988279,
+        "rank_ic_positive_fraction": 0.4117647058823529,
+        "mean_ic": -0.001976377156483079,
+        "ic_positive_fraction": 0.453781512605042,
+        "mean_long_short": -0.0002528642845876658,
+        "long_short_positive_fraction": 0.4117647058823529,
+        "mean_monotonicity": 0.012375859434682958
+      },
+      "impact_efficiency_signed_price_impact_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004783450014461155,
+        "rank_ic_positive_fraction": 0.40336134453781514,
+        "mean_ic": -0.0015727873740669811,
+        "ic_positive_fraction": 0.48739495798319327,
+        "mean_long_short": -0.00010578296152470027,
+        "long_short_positive_fraction": 0.5210084033613446,
+        "mean_monotonicity": 0.009218232747644517
+      },
+      "impact_efficiency_signed_price_impact_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004774361038306085,
+        "rank_ic_positive_fraction": 0.3865546218487395,
+        "mean_ic": -0.00294964871528031,
+        "ic_positive_fraction": 0.453781512605042,
+        "mean_long_short": -0.00017884071338802272,
+        "long_short_positive_fraction": 0.42857142857142855,
+        "mean_monotonicity": 0.024395212630506733
+      },
+      "impact_efficiency_mid_price_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0011643339870721398,
+        "rank_ic_positive_fraction": 0.453781512605042,
+        "mean_ic": 0.0009467690941237093,
+        "ic_positive_fraction": 0.5630252100840336,
+        "mean_long_short": 0.00014308210984354281,
+        "long_short_positive_fraction": 0.5630252100840336,
+        "mean_monotonicity": -0.03733129615482555
+      },
+      "impact_efficiency_mid_price_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.001061394278115437,
+        "rank_ic_positive_fraction": 0.42857142857142855,
+        "mean_ic": 0.002719796696967705,
+        "ic_positive_fraction": 0.5630252100840336,
+        "mean_long_short": 0.00038422252744497857,
+        "long_short_positive_fraction": 0.5714285714285714,
+        "mean_monotonicity": -0.021237585943468296
+      },
+      "impact_efficiency_mid_price_response_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0031845776563990914,
+        "rank_ic_positive_fraction": 0.5294117647058824,
+        "mean_ic": 0.005665296447100676,
+        "ic_positive_fraction": 0.5798319327731093,
+        "mean_long_short": 0.0005557219126578036,
+        "long_short_positive_fraction": 0.5882352941176471,
+        "mean_monotonicity": -0.024395212630506754
+      },
+      "impact_efficiency_mid_price_response_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0056115487574359395,
+        "rank_ic_positive_fraction": 0.6050420168067226,
+        "mean_ic": 0.004910799830655904,
+        "ic_positive_fraction": 0.5798319327731093,
+        "mean_long_short": 0.0006267041966283308,
+        "long_short_positive_fraction": 0.5798319327731093,
+        "mean_monotonicity": -0.04272981920040742
+      },
+      "impact_efficiency_ofi_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.002200666901560502,
+        "rank_ic_positive_fraction": 0.4369747899159664,
+        "mean_ic": 0.0004687548872541547,
+        "ic_positive_fraction": 0.4957983193277311,
+        "mean_long_short": 8.435278603477038e-05,
+        "long_short_positive_fraction": 0.4789915966386555,
+        "mean_monotonicity": -0.008708938120702826
+      },
+      "impact_efficiency_ofi_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004783328422327051,
+        "rank_ic_positive_fraction": 0.36134453781512604,
+        "mean_ic": 0.001269135449578296,
+        "ic_positive_fraction": 0.5714285714285714,
+        "mean_long_short": -0.0001295822952887009,
+        "long_short_positive_fraction": 0.48739495798319327,
+        "mean_monotonicity": 0.02286732874968166
+      },
+      "impact_efficiency_absorption_divergence_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.001511702198629768,
+        "rank_ic_positive_fraction": 0.5220588235294118,
+        "mean_ic": 0.0008775964123829914,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 5.799213842243445e-05,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.029500891265597146
+      },
+      "impact_efficiency_absorption_divergence_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0027015166912349475,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0015423046631330849,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": -2.001174640295095e-05,
+        "long_short_positive_fraction": 0.49264705882352944,
+        "mean_monotonicity": -0.03021390374331548
+      }
+    },
+    "raw926:003800": {
+      "impact_efficiency_signed_price_impact_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.006317184085766594,
+        "rank_ic_positive_fraction": 0.4117647058823529,
+        "mean_ic": -0.0025407170522861924,
+        "ic_positive_fraction": 0.44537815126050423,
+        "mean_long_short": -8.653322446659332e-05,
+        "long_short_positive_fraction": 0.4789915966386555,
+        "mean_monotonicity": 0.006875477463712755
+      },
+      "impact_efficiency_signed_price_impact_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.008764754574963647,
+        "rank_ic_positive_fraction": 0.4117647058823529,
+        "mean_ic": -0.00482020866210351,
+        "ic_positive_fraction": 0.44537815126050423,
+        "mean_long_short": -0.0004441548178017724,
+        "long_short_positive_fraction": 0.46218487394957986,
+        "mean_monotonicity": 0.01033868092691621
+      },
+      "impact_efficiency_signed_price_impact_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.01161651032299623,
+        "rank_ic_positive_fraction": 0.37815126050420167,
+        "mean_ic": -0.006805051903149183,
+        "ic_positive_fraction": 0.4117647058823529,
+        "mean_long_short": -0.0005354617161901946,
+        "long_short_positive_fraction": 0.42857142857142855,
+        "mean_monotonicity": 0.04405398523045582
+      },
+      "impact_efficiency_signed_price_impact_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.008754206415806888,
+        "rank_ic_positive_fraction": 0.4117647058823529,
+        "mean_ic": -0.0076065777011078035,
+        "ic_positive_fraction": 0.44537815126050423,
+        "mean_long_short": -0.00039759418799664795,
+        "long_short_positive_fraction": 0.42016806722689076,
+        "mean_monotonicity": 0.03672014260249553
+      },
+      "impact_efficiency_mid_price_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.003166353552751616,
+        "rank_ic_positive_fraction": 0.453781512605042,
+        "mean_ic": -2.7540811504790046e-05,
+        "ic_positive_fraction": 0.48739495798319327,
+        "mean_long_short": 0.00023374637215190828,
+        "long_short_positive_fraction": 0.48739495798319327,
+        "mean_monotonicity": 0.0047364400305576785
+      },
+      "impact_efficiency_mid_price_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.003873020767540912,
+        "rank_ic_positive_fraction": 0.44537815126050423,
+        "mean_ic": 0.0008171903816469334,
+        "ic_positive_fraction": 0.5210084033613446,
+        "mean_long_short": 0.00024274321844792456,
+        "long_short_positive_fraction": 0.6134453781512605,
+        "mean_monotonicity": -0.013598166539343006
+      },
+      "impact_efficiency_mid_price_response_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004331888884698813,
+        "rank_ic_positive_fraction": 0.44537815126050423,
+        "mean_ic": 0.0028808504274818515,
+        "ic_positive_fraction": 0.5714285714285714,
+        "mean_long_short": 0.00028521906480517736,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": 0.003615991851285972
+      },
+      "impact_efficiency_mid_price_response_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0017278867767784548,
+        "rank_ic_positive_fraction": 0.5462184873949579,
+        "mean_ic": 0.003911329586536483,
+        "ic_positive_fraction": 0.5630252100840336,
+        "mean_long_short": 0.0007049645421189496,
+        "long_short_positive_fraction": 0.5630252100840336,
+        "mean_monotonicity": -0.011560988031576267
+      },
+      "impact_efficiency_ofi_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00594785071540669,
+        "rank_ic_positive_fraction": 0.3865546218487395,
+        "mean_ic": -0.000553049345730578,
+        "ic_positive_fraction": 0.5126050420168067,
+        "mean_long_short": 0.00011890295472522045,
+        "long_short_positive_fraction": 0.5462184873949579,
+        "mean_monotonicity": -0.008301502419149483
+      },
+      "impact_efficiency_ofi_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00827085553841946,
+        "rank_ic_positive_fraction": 0.4369747899159664,
+        "mean_ic": -0.001942001015813167,
+        "ic_positive_fraction": 0.46218487394957986,
+        "mean_long_short": -0.0003939255829142875,
+        "long_short_positive_fraction": 0.4117647058823529,
+        "mean_monotonicity": 0.021645021645021648
+      },
+      "impact_efficiency_absorption_divergence_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00012240016685561658,
+        "rank_ic_positive_fraction": 0.5147058823529411,
+        "mean_ic": 0.0009874158047191335,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 7.227978272206838e-05,
+        "long_short_positive_fraction": 0.5661764705882353,
+        "mean_monotonicity": -0.0445632798573975
+      },
+      "impact_efficiency_absorption_divergence_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0009387235455234978,
+        "rank_ic_positive_fraction": 0.5073529411764706,
+        "mean_ic": 0.0017267994971130558,
+        "ic_positive_fraction": 0.5441176470588235,
+        "mean_long_short": 1.8957558425542232e-05,
+        "long_short_positive_fraction": 0.5073529411764706,
+        "mean_monotonicity": -0.019875222816399283
+      }
+    },
+    "raw926:000906": {
+      "impact_efficiency_signed_price_impact_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.008217336361145315,
+        "rank_ic_positive_fraction": 0.40336134453781514,
+        "mean_ic": -0.003052743005045795,
+        "ic_positive_fraction": 0.5210084033613446,
+        "mean_long_short": -9.713611888966606e-05,
+        "long_short_positive_fraction": 0.5210084033613446,
+        "mean_monotonicity": 0.04802648332060099
+      },
+      "impact_efficiency_signed_price_impact_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.009382733630179432,
+        "rank_ic_positive_fraction": 0.3697478991596639,
+        "mean_ic": -0.0041712101715826976,
+        "ic_positive_fraction": 0.42016806722689076,
+        "mean_long_short": -0.000230377966438818,
+        "long_short_positive_fraction": 0.44537815126050423,
+        "mean_monotonicity": 0.052813852813852806
+      },
+      "impact_efficiency_signed_price_impact_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0048943134568155645,
+        "rank_ic_positive_fraction": 0.5210084033613446,
+        "mean_ic": 0.0006327043489592458,
+        "ic_positive_fraction": 0.48739495798319327,
+        "mean_long_short": 0.00022246864902376762,
+        "long_short_positive_fraction": 0.5126050420168067,
+        "mean_monotonicity": 0.0031066972243442496
+      },
+      "impact_efficiency_signed_price_impact_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.007216533267472579,
+        "rank_ic_positive_fraction": 0.47058823529411764,
+        "mean_ic": -0.004420818239055322,
+        "ic_positive_fraction": 0.48739495798319327,
+        "mean_long_short": -2.9201804357005434e-05,
+        "long_short_positive_fraction": 0.5126050420168067,
+        "mean_monotonicity": 0.0011713776419658782
+      },
+      "impact_efficiency_mid_price_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0063010012986622855,
+        "rank_ic_positive_fraction": 0.44537815126050423,
+        "mean_ic": 0.0006988111548195222,
+        "ic_positive_fraction": 0.5630252100840336,
+        "mean_long_short": -5.683407342115679e-05,
+        "long_short_positive_fraction": 0.44537815126050423,
+        "mean_monotonicity": 0.04507257448433919
+      },
+      "impact_efficiency_mid_price_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.006589550011219782,
+        "rank_ic_positive_fraction": 0.3949579831932773,
+        "mean_ic": 0.0050175376309533,
+        "ic_positive_fraction": 0.5966386554621849,
+        "mean_long_short": -6.561629333292454e-06,
+        "long_short_positive_fraction": 0.453781512605042,
+        "mean_monotonicity": 0.048739495798319266
+      },
+      "impact_efficiency_mid_price_response_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00026961177301362257,
+        "rank_ic_positive_fraction": 0.5462184873949579,
+        "mean_ic": 0.007434210954817092,
+        "ic_positive_fraction": 0.5546218487394958,
+        "mean_long_short": 0.0007474960883211008,
+        "long_short_positive_fraction": 0.5882352941176471,
+        "mean_monotonicity": 0.0010695187165775486
+      },
+      "impact_efficiency_mid_price_response_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.00021972551904349619,
+        "rank_ic_positive_fraction": 0.5378151260504201,
+        "mean_ic": 0.002684527116338709,
+        "ic_positive_fraction": 0.5966386554621849,
+        "mean_long_short": 0.00048541523682676745,
+        "long_short_positive_fraction": 0.5546218487394958,
+        "mean_monotonicity": 0.00473644003055769
+      },
+      "impact_efficiency_ofi_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0075571850318764565,
+        "rank_ic_positive_fraction": 0.44537815126050423,
+        "mean_ic": -0.004338735010737803,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.0003379085045343322,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": 0.04120193531958238
+      },
+      "impact_efficiency_ofi_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.009382411022161499,
+        "rank_ic_positive_fraction": 0.3697478991596639,
+        "mean_ic": -0.003108047100764737,
+        "ic_positive_fraction": 0.453781512605042,
+        "mean_long_short": -0.00043006787996054016,
+        "long_short_positive_fraction": 0.47058823529411764,
+        "mean_monotonicity": 0.06269416857652145
+      },
+      "impact_efficiency_absorption_divergence_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00023125316965892743,
+        "rank_ic_positive_fraction": 0.4485294117647059,
+        "mean_ic": 0.003800191412453546,
+        "ic_positive_fraction": 0.4852941176470588,
+        "mean_long_short": 0.0002915760440682196,
+        "long_short_positive_fraction": 0.5,
+        "mean_monotonicity": -0.018538324420677352
+      },
+      "impact_efficiency_absorption_divergence_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00029553142657889485,
+        "rank_ic_positive_fraction": 0.4411764705882353,
+        "mean_ic": 0.003998540746725488,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00041322726144301763,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": -0.028966131907308387
+      }
+    },
+    "ease926:000985": {
+      "impact_efficiency_signed_price_impact_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.006390903405889882,
+        "rank_ic_positive_fraction": 0.4117647058823529,
+        "mean_ic": -0.002239940743161208,
+        "ic_positive_fraction": 0.48739495798319327,
+        "mean_long_short": -0.0001624834257607693,
+        "long_short_positive_fraction": 0.46218487394957986,
+        "mean_monotonicity": 0.0215431627196333
+      },
+      "impact_efficiency_signed_price_impact_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.008257887922253238,
+        "rank_ic_positive_fraction": 0.3865546218487395,
+        "mean_ic": -0.003744688654557128,
+        "ic_positive_fraction": 0.4117647058823529,
+        "mean_long_short": -0.0003831729926111411,
+        "long_short_positive_fraction": 0.3949579831932773,
+        "mean_monotonicity": 0.021848739495798325
+      },
+      "impact_efficiency_signed_price_impact_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0102868115727155,
+        "rank_ic_positive_fraction": 0.35294117647058826,
+        "mean_ic": -0.00486709796455538,
+        "ic_positive_fraction": 0.3697478991596639,
+        "mean_long_short": -0.00030223956668607967,
+        "long_short_positive_fraction": 0.42857142857142855,
+        "mean_monotonicity": 0.05800865800865799
+      },
+      "impact_efficiency_signed_price_impact_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.009592304950967143,
+        "rank_ic_positive_fraction": 0.33613445378151263,
+        "mean_ic": -0.00613122602945817,
+        "ic_positive_fraction": 0.3949579831932773,
+        "mean_long_short": -0.0003231791787611467,
+        "long_short_positive_fraction": 0.42016806722689076,
+        "mean_monotonicity": 0.05923096511331808
+      },
+      "impact_efficiency_mid_price_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.003498168392753459,
+        "rank_ic_positive_fraction": 0.453781512605042,
+        "mean_ic": -0.00010312227884834447,
+        "ic_positive_fraction": 0.5462184873949579,
+        "mean_long_short": -7.674374630625744e-05,
+        "long_short_positive_fraction": 0.4789915966386555,
+        "mean_monotonicity": 0.006875477463712757
+      },
+      "impact_efficiency_mid_price_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.003895909343626591,
+        "rank_ic_positive_fraction": 0.3949579831932773,
+        "mean_ic": 0.0014797189275670942,
+        "ic_positive_fraction": 0.5966386554621849,
+        "mean_long_short": 9.389676902515291e-05,
+        "long_short_positive_fraction": 0.5462184873949579,
+        "mean_monotonicity": -0.009727527374586207
+      },
+      "impact_efficiency_mid_price_response_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004293260119454952,
+        "rank_ic_positive_fraction": 0.3949579831932773,
+        "mean_ic": 0.0023102733148160416,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.00010513473768529532,
+        "long_short_positive_fraction": 0.5210084033613446,
+        "mean_monotonicity": 0.008505220269926159
+      },
+      "impact_efficiency_mid_price_response_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0015934904677164458,
+        "rank_ic_positive_fraction": 0.4369747899159664,
+        "mean_ic": 0.0003055399381081521,
+        "ic_positive_fraction": 0.4789915966386555,
+        "mean_long_short": 0.00029961710772250297,
+        "long_short_positive_fraction": 0.5882352941176471,
+        "mean_monotonicity": 0.00911637382225618
+      },
+      "impact_efficiency_ofi_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.005771553255224174,
+        "rank_ic_positive_fraction": 0.4117647058823529,
+        "mean_ic": 0.0004007917922628274,
+        "ic_positive_fraction": 0.4789915966386555,
+        "mean_long_short": 2.7623360934052302e-05,
+        "long_short_positive_fraction": 0.5042016806722689,
+        "mean_monotonicity": 0.02826585179526357
+      },
+      "impact_efficiency_ofi_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.008108348180724938,
+        "rank_ic_positive_fraction": 0.37815126050420167,
+        "mean_ic": 0.0018404721348768234,
+        "ic_positive_fraction": 0.5462184873949579,
+        "mean_long_short": -0.00013116362593971852,
+        "long_short_positive_fraction": 0.48739495798319327,
+        "mean_monotonicity": 0.025515660809778438
+      },
+      "impact_efficiency_absorption_divergence_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0016103751026587249,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.0006215844222044668,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 6.031085785933824e-05,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": -0.018894830659536538
+      },
+      "impact_efficiency_absorption_divergence_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0021216566665945217,
+        "rank_ic_positive_fraction": 0.47794117647058826,
+        "mean_ic": 0.0007459605581879313,
+        "ic_positive_fraction": 0.4852941176470588,
+        "mean_long_short": 4.446797869907694e-05,
+        "long_short_positive_fraction": 0.5,
+        "mean_monotonicity": -0.0024955436720142405
+      }
+    },
+    "ease926:003800": {
+      "impact_efficiency_signed_price_impact_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.006695297008475289,
+        "rank_ic_positive_fraction": 0.37815126050420167,
+        "mean_ic": -0.0015654379568903697,
+        "ic_positive_fraction": 0.4789915966386555,
+        "mean_long_short": -3.8666655649059207e-05,
+        "long_short_positive_fraction": 0.4957983193277311,
+        "mean_monotonicity": -0.01135727018079959
+      },
+      "impact_efficiency_signed_price_impact_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00839113079215836,
+        "rank_ic_positive_fraction": 0.42016806722689076,
+        "mean_ic": -0.0031217665712100695,
+        "ic_positive_fraction": 0.47058823529411764,
+        "mean_long_short": -0.00031852885185154443,
+        "long_short_positive_fraction": 0.40336134453781514,
+        "mean_monotonicity": 0.02337662337662338
+      },
+      "impact_efficiency_signed_price_impact_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.014593560976503385,
+        "rank_ic_positive_fraction": 0.226890756302521,
+        "mean_ic": -0.007586807075842989,
+        "ic_positive_fraction": 0.3865546218487395,
+        "mean_long_short": -0.0006244143055532521,
+        "long_short_positive_fraction": 0.3949579831932773,
+        "mean_monotonicity": 0.08530685001273235
+      },
+      "impact_efficiency_signed_price_impact_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.011779914393665747,
+        "rank_ic_positive_fraction": 0.3025210084033613,
+        "mean_ic": -0.008739992189983814,
+        "ic_positive_fraction": 0.3277310924369748,
+        "mean_long_short": -0.0004391694586988833,
+        "long_short_positive_fraction": 0.4369747899159664,
+        "mean_monotonicity": 0.05118411000763942
+      },
+      "impact_efficiency_mid_price_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004365854203174383,
+        "rank_ic_positive_fraction": 0.453781512605042,
+        "mean_ic": -2.0521173162195895e-05,
+        "ic_positive_fraction": 0.5042016806722689,
+        "mean_long_short": 6.789879770187826e-05,
+        "long_short_positive_fraction": 0.4957983193277311,
+        "mean_monotonicity": -0.02144130379424497
+      },
+      "impact_efficiency_mid_price_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00469150780899846,
+        "rank_ic_positive_fraction": 0.42016806722689076,
+        "mean_ic": 0.00103139592253397,
+        "ic_positive_fraction": 0.5714285714285714,
+        "mean_long_short": 0.00010814942277927693,
+        "long_short_positive_fraction": 0.5630252100840336,
+        "mean_monotonicity": 0.010236822001527883
+      },
+      "impact_efficiency_mid_price_response_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.009249690283670295,
+        "rank_ic_positive_fraction": 0.29411764705882354,
+        "mean_ic": -0.0004077060815426994,
+        "ic_positive_fraction": 0.46218487394957986,
+        "mean_long_short": -0.000139016582238941,
+        "long_short_positive_fraction": 0.42016806722689076,
+        "mean_monotonicity": 0.059638400814871394
+      },
+      "impact_efficiency_mid_price_response_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.004063768105169388,
+        "rank_ic_positive_fraction": 0.3949579831932773,
+        "mean_ic": -0.0005500949097977044,
+        "ic_positive_fraction": 0.48739495798319327,
+        "mean_long_short": 0.0002927732350417831,
+        "long_short_positive_fraction": 0.5462184873949579,
+        "mean_monotonicity": 0.017163228927934822
+      },
+      "impact_efficiency_ofi_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.006246098421249862,
+        "rank_ic_positive_fraction": 0.3949579831932773,
+        "mean_ic": -0.000919272914239718,
+        "ic_positive_fraction": 0.47058823529411764,
+        "mean_long_short": 0.00015623942442622202,
+        "long_short_positive_fraction": 0.5882352941176471,
+        "mean_monotonicity": -0.002495543672014261
+      },
+      "impact_efficiency_ofi_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.007867222909708404,
+        "rank_ic_positive_fraction": 0.3949579831932773,
+        "mean_ic": -0.000769794172823622,
+        "ic_positive_fraction": 0.46218487394957986,
+        "mean_long_short": -0.00024452959743162723,
+        "long_short_positive_fraction": 0.453781512605042,
+        "mean_monotonicity": 0.005042016806722697
+      },
+      "impact_efficiency_absorption_divergence_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0005676430139785723,
+        "rank_ic_positive_fraction": 0.49264705882352944,
+        "mean_ic": 0.00097491479677875,
+        "ic_positive_fraction": 0.5073529411764706,
+        "mean_long_short": 0.00014196981001937176,
+        "long_short_positive_fraction": 0.49264705882352944,
+        "mean_monotonicity": -0.01461675579322638
+      },
+      "impact_efficiency_absorption_divergence_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0010128713602380575,
+        "rank_ic_positive_fraction": 0.4852941176470588,
+        "mean_ic": 0.001099460094769384,
+        "ic_positive_fraction": 0.5,
+        "mean_long_short": 8.280632150397236e-05,
+        "long_short_positive_fraction": 0.4852941176470588,
+        "mean_monotonicity": 0.006595365418894819
+      }
+    },
+    "ease926:000906": {
+      "impact_efficiency_signed_price_impact_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.003527378747853711,
+        "rank_ic_positive_fraction": 0.48739495798319327,
+        "mean_ic": 0.0005459104099692298,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.00030333849551754817,
+        "long_short_positive_fraction": 0.5630252100840336,
+        "mean_monotonicity": 0.02358034122740007
+      },
+      "impact_efficiency_signed_price_impact_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0002952614876334635,
+        "rank_ic_positive_fraction": 0.46218487394957986,
+        "mean_ic": 0.0030084042121712356,
+        "ic_positive_fraction": 0.5210084033613446,
+        "mean_long_short": 0.00020961725382541972,
+        "long_short_positive_fraction": 0.48739495798319327,
+        "mean_monotonicity": -0.011153552330022918
+      },
+      "impact_efficiency_signed_price_impact_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00617933341403031,
+        "rank_ic_positive_fraction": 0.37815126050420167,
+        "mean_ic": 0.0015523760707157254,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 3.357002086315101e-05,
+        "long_short_positive_fraction": 0.4957983193277311,
+        "mean_monotonicity": 0.005958747135217689
+      },
+      "impact_efficiency_signed_price_impact_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0045565873767285416,
+        "rank_ic_positive_fraction": 0.44537815126050423,
+        "mean_ic": -0.001245656862736167,
+        "ic_positive_fraction": 0.453781512605042,
+        "mean_long_short": 0.0001396851958295261,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": -0.017672523554876505
+      },
+      "impact_efficiency_mid_price_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.002335736011293592,
+        "rank_ic_positive_fraction": 0.5126050420168067,
+        "mean_ic": 0.001671949248930647,
+        "ic_positive_fraction": 0.6050420168067226,
+        "mean_long_short": 6.551832181682199e-05,
+        "long_short_positive_fraction": 0.453781512605042,
+        "mean_monotonicity": 0.016144639674051435
+      },
+      "impact_efficiency_mid_price_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": 0.0016322436695444349,
+        "rank_ic_positive_fraction": 0.5042016806722689,
+        "mean_ic": 0.007227963173731252,
+        "ic_positive_fraction": 0.6218487394957983,
+        "mean_long_short": 0.00029246999745486437,
+        "long_short_positive_fraction": 0.5210084033613446,
+        "mean_monotonicity": -0.00901451489686783
+      },
+      "impact_efficiency_mid_price_response_w64": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0033129632882565557,
+        "rank_ic_positive_fraction": 0.3949579831932773,
+        "mean_ic": 0.003753586553936929,
+        "ic_positive_fraction": 0.5378151260504201,
+        "mean_long_short": 0.00010404429675551016,
+        "long_short_positive_fraction": 0.5210084033613446,
+        "mean_monotonicity": 0.002597402597402604
+      },
+      "impact_efficiency_mid_price_response_w128": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.00042715541390478113,
+        "rank_ic_positive_fraction": 0.5210084033613446,
+        "mean_ic": -0.0016552124692178717,
+        "ic_positive_fraction": 0.48739495798319327,
+        "mean_long_short": 0.00015548349634685938,
+        "long_short_positive_fraction": 0.4957983193277311,
+        "mean_monotonicity": 0.003310415075120963
+      },
+      "impact_efficiency_ofi_response_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.003526426275182342,
+        "rank_ic_positive_fraction": 0.4957983193277311,
+        "mean_ic": -0.003587987196017057,
+        "ic_positive_fraction": 0.4957983193277311,
+        "mean_long_short": 0.00041595756950484986,
+        "long_short_positive_fraction": 0.5546218487394958,
+        "mean_monotonicity": 0.016042780748663093
+      },
+      "impact_efficiency_ofi_response_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0008339421891879513,
+        "rank_ic_positive_fraction": 0.4957983193277311,
+        "mean_ic": -0.0007639423930480793,
+        "ic_positive_fraction": 0.5126050420168067,
+        "mean_long_short": 0.0001245779200900605,
+        "long_short_positive_fraction": 0.5042016806722689,
+        "mean_monotonicity": 0.009218232747644524
+      },
+      "impact_efficiency_absorption_divergence_w16": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.0016209402524104584,
+        "rank_ic_positive_fraction": 0.47058823529411764,
+        "mean_ic": 0.0020074788770350948,
+        "ic_positive_fraction": 0.5294117647058824,
+        "mean_long_short": 0.00016948647778007746,
+        "long_short_positive_fraction": 0.5,
+        "mean_monotonicity": -0.018181818181818177
+      },
+      "impact_efficiency_absorption_divergence_w32": {
+        "observation_count": 136,
+        "mean_rank_ic": -0.001326149921683865,
+        "rank_ic_positive_fraction": 0.4485294117647059,
+        "mean_ic": 0.00216126730510101,
+        "ic_positive_fraction": 0.5220588235294118,
+        "mean_long_short": 0.00032371401301262793,
+        "long_short_positive_fraction": 0.5294117647058824,
+        "mean_monotonicity": -0.02049910873440285
+      }
+    }
+  },
+  "promotion_allowed": false,
+  "decision": "observation_only"
+}
