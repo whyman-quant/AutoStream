@@ -167,6 +167,13 @@ public:
 	}
 
 	const std::vector<fval_t>& GetFactorValues() const override { return fvals_; }
+	// Optional event-level validity channel.  Numeric factor values may remain
+	// finite for backwards-compatible writers, while consumers use this mask to
+	// distinguish an unsupported/not-ready value from a measured zero.
+	virtual std::vector<bool> GetReadinessMask(int64_t timestamp) const {
+		(void)timestamp;
+		return std::vector<bool>(factor_size_, true);
+	}
 	std::vector<std::string> GetFactorNames() const override { return factor_names_; }
 	std::string GetAsset() const { return asset_; }
 	FactorEntryConfig GetConfig() const { return config_; }

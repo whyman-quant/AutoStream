@@ -3,6 +3,22 @@
 #include <cmath>
 namespace factors { namespace impact_efficiency {
 FactorEntry::FactorEntry(const std::string& asset,const comm::FactorMetadata& metadata,const comm::FactorEntryConfig& config):comm::FactorEntryBase(asset,metadata,config){}
+std::vector<bool> FactorEntry::GetReadinessMask(int64_t timestamp) const {
+ std::vector<bool> ready(kFactorSize, false);
+ const bool enough_trades = trades_.size() >= 2;
+ // 09:27 is the opening-auction checkpoint used by the production snapshot.
+ // Price-response factors have no identifiable price change there, so mark
+ // them unsupported instead of treating their numeric zero as a valid signal.
+ const bool opening_auction = timestamp == 92700000;
+ if (!opening_auction && enough_trades) {
+  for (size_t i = 0; i < 10; ++i) ready[i] = true;
+ }
+ if (enough_trades) {
+  ready[10] = true;
+  ready[11] = true;
+ }
+ return ready;
+}
 void FactorEntry::DoOnAddQuote(const Stock_Internal_Book& quote){(void)quote;}
 void FactorEntry::DoOnAddOrder(const Stock_Order_Internal_Book_New& order){(void)order;}
 void FactorEntry::DoOnAddTrans(const Stock_Transaction_Internal_Book_New& trade){

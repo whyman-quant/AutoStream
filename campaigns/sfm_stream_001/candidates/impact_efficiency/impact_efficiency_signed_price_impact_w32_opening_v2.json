@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "kind": "candidate",
+  "candidate_id": "impact_efficiency_signed_price_impact_w32_opening_v2",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "impact_efficiency",
+  "batch_id": "impact_efficiency_opening_v2",
+  "generation": 1,
+  "parent_candidate_ids": [
+    "impact_efficiency_signed_price_impact_w32"
+  ],
+  "hypothesis_id": "impact_efficiency_opening_readiness",
+  "operator_id": "signed_price_impact",
+  "formula": "(last_price-first_price)/mid_price * net_signed_volume/max(sum_absolute_volume,1) over the last 32 trades; unsupported on the opening auction checkpoint",
+  "source_streams": [
+    "trade"
+  ],
+  "parameters": {
+    "window_events": 32,
+    "normalization": "absolute_volume",
+    "include_cancels": false
+  },
+  "state": {
+    "window_type": "event_count",
+    "window_events": 32,
+    "warmup_events": 2,
+    "reset_policy": "trading_day"
+  },
+  "availability": {
+    "update_on": [
+      "trade"
+    ],
+    "output_at": "scheduled_snapshot",
+    "lag_events": 0,
+    "unsupported_events": [
+      92700000
+    ],
+    "readiness_policy": "FactorEntry::GetReadinessMask(timestamp)",
+    "invalid_policy": "unavailable"
+  },
+  "output": {
+    "factor_name": "impact_efficiency_signed_price_impact_w32",
+    "dtype": "float64",
+    "research_direction": "raw_signed"
+  },
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_001/ideas/impact_efficiency.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/impact_efficiency/factor_entry.cpp",
+    "source_commit": "3cee1b0"
+  },
+  "evidence_level": "L1",
+  "canonical_hash": "sha256:e160e18bd9b735c71d1044144a6b08c5360c9e4366cdb0252c0fb5774138d769"
+}
