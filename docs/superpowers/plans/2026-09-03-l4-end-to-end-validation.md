@@ -19,19 +19,19 @@
 - Read: the four `*_seed_v1.json` Batches
 - Test: `campaigns/tests/test_l4_production.py`, `evaluations/tests/test_l4_preflight.py`
 
-- [ ] **Step 1: Verify split counts, hashes, disjointness, and leakage policy.**
+- [x] **Step 1: Verify split counts, hashes, disjointness, and leakage policy.**
 
     Run `/usr/local/python3.8.10/bin/python3 -m unittest evaluations.tests.test_l4_preflight campaigns.tests.test_l4_production -q`, then assert dataset v2 has 969 production dates, 485 training dates, 484 observation dates, 228 holdout dates, matching date-list SHA256 values, disjoint production/holdout lists, and `holdout_may_read=[]`.
 
     Expected: all tests pass and no frozen manifest/date list changes.
 
-- [ ] **Step 2: Verify the exact formal candidate set.**
+- [x] **Step 2: Verify the exact formal candidate set.**
 
     Load `book_imbalance_seed_v1`, `flow_pressure_seed_v1`, `liquidity_resilience_seed_v1`, and `impact_efficiency_seed_v1`; concatenate `candidate_ids`; assert exactly 48 unique IDs. Assert no `opening_v2` or `liquidity_resilience_v2` ID is mixed into this L4 set.
 
     Expected: `48 seed candidates ok`; v2 readiness Pilots remain separate evidence.
 
-- [ ] **Step 3: Verify frozen provenance.**
+- [x] **Step 3: Verify frozen provenance.**
 
     Recompute SHA256 for the binary, L4 config, runner modules, four Batches, label contract, methodology, and date lists. Store the values in the preflight and submission receipts before any Slurm submission.
 
@@ -43,17 +43,17 @@
 - Runtime: `/mnt/beegfs_ssd_raid91/AutoStream-l4-releases/formal-history-v2-5d5fffe796615c85ce878e1eac2a09728ffbb0bc`
 - Runtime: `/mnt/beegfs_ssd_raid91/AutoStream-l4-submissions/formal-history-v2-5d5fffe796615c85ce878e1eac2a09728ffbb0bc`
 
-- [ ] **Step 1: Build a non-submitting plan from the frozen release.**
+- [x] **Step 1: Build a non-submitting plan from the frozen release.**
 
     Run `/usr/local/python3.8.10/bin/python3 -m campaigns.l4_production plan` with the release campaign root, frozen binary/config, output root, runner root, submission workdir, and plan output path; do not pass `--submit`.
 
     Expected: `chunk_size=5`, `lane_count=4`, `date_count=969`, `chunk_count=194`; all planned dates are before 20250101; runner root has no Git ancestor and no holdout path.
 
-- [ ] **Step 2: Check dependencies and resources.**
+- [x] **Step 2: Check dependencies and resources.**
 
     Parse `plan.json`; for each lane assert every chunk depends on the previous chunk in that lane. Assert each job requests 12 CPUs, 256G input memory on `cpu_wgh`, and carries binary/config/date-list/runner provenance.
 
-- [ ] **Step 3: Run planner failure injection.**
+- [x] **Step 3: Run planner failure injection.**
 
     In temporary copies, mutate binary hash, config hash, date-list hash, duplicate dates, a holdout date, runner root, and dependency receipt. Run planner tests and `run_chunk`.
 
@@ -96,7 +96,7 @@
 
 - [ ] **Step 3: Convert and validate every Arrow file.**
 
-    Require 969 Arrow files, 8 mapped evaluation events, 48 factors plus matching readiness columns, rows equal to `stock_count*8`, unique `(symbol,event)), and finite values wherever ready. Compare HDF5 and Arrow values for at least one date per year and every event; preserve the documented 09:27→09:26 mapping and never replace unavailable values with real zero.
+    Require 969 Arrow files, 8 mapped evaluation events, 48 factors plus matching readiness columns, rows equal to `stock_count*8`, unique `(symbol,event)`, and finite values wherever ready. Compare HDF5 and Arrow values for at least one date per year and every event; preserve the documented 09:27→09:26 mapping and never replace unavailable values with real zero.
 
 ### Task 5: Run leakage-safe labels and build the evaluation receipt
 
