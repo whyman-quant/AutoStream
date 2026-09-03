@@ -46,7 +46,7 @@
   "lineage": {
     "idea_path": "campaigns/sfm_stream_001/ideas/impact_efficiency.json",
     "implementation_path": "base/hf-open5m-factor-demo/factors/impact_efficiency/factor_entry.cpp",
-    "source_commit": "3cee1b0"
+    "source_commit": "ba56b4b"
   },
   "evidence_level": "L1",
   "canonical_hash": "sha256:2de92075043268e03a9ed0b66aadd1063d4fe44c2ab2c3dd1c5707d0be5a106a"

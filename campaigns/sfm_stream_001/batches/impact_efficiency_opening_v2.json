@@ -26,6 +26,6 @@
   ],
   "search_policy": {"method": "readiness_contract", "candidate_budget": 12},
   "created_at": "2026-09-03",
-  "source_commit": "pending",
+  "source_commit": "ba56b4b",
   "status": "design_only"
 }

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "idea_spec",
+  "idea_id": "spread_adjusted_depth_recovery_v2",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "title": "Shock-gated liquidity recovery (v2)",
+  "source": {"type": "historical_experiment", "reference": "liquidity_resilience_v1 early-event audit", "retrieved_at": "2026-09-03"},
+  "hypothesis": {"mechanism": "Depth recovery is informative only after a material quote-book drawdown.", "expected_sign": "raw_signed", "falsifiable_condition": "No stable relation after requiring an observed shock and sufficient quote warmup."},
+  "inputs": {"streams": ["quote"], "fields": ["bp_array", "ap_array", "bv_array", "av_array"]},
+  "operators": [
+    {"operator_id": "spread_adjusted_depth_recovery", "description": "Current spread-adjusted depth divided by rolling peak; unavailable before a full window.", "representative": true},
+    {"operator_id": "multi_level_depth_recovery", "description": "Current five-level spread-adjusted depth divided by rolling peak; unavailable before a full window.", "representative": false},
+    {"operator_id": "shock_recovery_speed", "description": "Recovery speed only after a >=20% drawdown and a subsequent rebound quote; otherwise missing.", "representative": false}
+  ],
+  "parameter_space": {"window_events": [16, 32, 64, 128], "depth_levels": [1, 5], "shock_threshold": [0.8], "lag_events": [0, 1, 2]},
+  "state": {"window_type": "event_count", "warmup_events": 16, "reset_policy": "trading_day"},
+  "availability": {"update_on": ["quote"], "output_at": "scheduled_snapshot", "lag_events": 0, "invalid_policy": "unavailable"},
+  "implementation": {"language": "cpp", "target_path": "base/hf-open5m-factor-demo/factors/liquidity_resilience_v2/factor_entry.cpp", "complexity": "O(window) per scheduled snapshot"},
+  "representative_candidate_id": "liquidity_resilience_v2_spread_adjusted_depth_recovery_w16"
+}

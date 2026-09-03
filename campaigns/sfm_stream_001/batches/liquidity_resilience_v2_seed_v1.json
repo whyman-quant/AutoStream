@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "batch",
+  "batch_id": "liquidity_resilience_v2_seed_v1",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "generation": 0,
+  "parent_batch_ids": ["liquidity_resilience_seed_v1"],
+  "parent_experience_ids": [],
+  "hypothesis_id": "spread_adjusted_depth_recovery_v2",
+  "objective": "Re-test liquidity recovery with explicit shock detection and readiness semantics; old v1 candidates remain immutable.",
+  "change_dimension": "shock_gate_warmup_invalid_policy",
+  "candidate_ids": [
+    "liquidity_resilience_v2_spread_adjusted_depth_recovery_w16", "liquidity_resilience_v2_spread_adjusted_depth_recovery_w32_lag0", "liquidity_resilience_v2_spread_adjusted_depth_recovery_w64_lag1", "liquidity_resilience_v2_spread_adjusted_depth_recovery_w128_lag2",
+    "liquidity_resilience_v2_multi_level_depth_recovery_w16_lag0", "liquidity_resilience_v2_multi_level_depth_recovery_w32_lag0", "liquidity_resilience_v2_multi_level_depth_recovery_w64_lag1", "liquidity_resilience_v2_multi_level_depth_recovery_w128_lag2",
+    "liquidity_resilience_v2_shock_recovery_speed_w16_lag0", "liquidity_resilience_v2_shock_recovery_speed_w32_lag0", "liquidity_resilience_v2_shock_recovery_speed_w64_lag1", "liquidity_resilience_v2_shock_recovery_speed_w128_lag2"
+  ],
+  "search_policy": {"method": "mechanism_grid", "candidate_budget": 12},
+  "created_at": "2026-09-03",
+  "source_commit": "3cee1b0",
+  "status": "proposed"
+}
