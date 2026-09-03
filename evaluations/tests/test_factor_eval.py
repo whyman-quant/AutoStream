@@ -71,6 +71,16 @@ class FactorEvalTests(unittest.TestCase):
         self.assertEqual(result["zero_count"], 1)
         self.assertAlmostEqual(result["nonzero_ratio"], 2.0 / 3.0)
 
+    def test_rejected_event_does_not_emit_informative_label_metrics(self):
+        result = evaluate_columns(
+            {"factor": [0.0, 0.0, 0.0]},
+            labels=[0.1, -0.2, 0.3],
+        )["factor"]
+        self.assertEqual(result["status"], "technical_reject")
+        self.assertEqual(result["evaluation_status"], "technical_reject")
+        self.assertIsNone(result["rank_ic"])
+        self.assertIsNone(result["groups"])
+
     def test_reads_factor_hdf5_schema_without_python_hdf5_package(self):
         path = Path("/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/acceptance/20251013/book_imbalance/20251013/092700.h5")
         if not path.exists():

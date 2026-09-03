@@ -237,10 +237,19 @@ def evaluate_columns(
             "reject_reasons": rejects,
         }
         if labels is not None:
-            eval_values = [value if is_ready else math.nan for value, is_ready in zip(numeric, mask)]
-            result["rank_ic"] = rank_ic(eval_values, labels)
-            result["groups"] = quantile_group_returns(eval_values, labels, groups=groups)
-            result["evaluation_status"] = "evaluated"
+            if rejects:
+                # Label joins are deliberately blocked for a technically
+                # invalid event.  In particular, quantile grouping of a
+                # constant column would fabricate a Long-Short result from
+                # arbitrary tie ordering.
+                result["rank_ic"] = None
+                result["groups"] = None
+                result["evaluation_status"] = "technical_reject"
+            else:
+                eval_values = [value if is_ready else math.nan for value, is_ready in zip(numeric, mask)]
+                result["rank_ic"] = rank_ic(eval_values, labels)
+                result["groups"] = quantile_group_returns(eval_values, labels, groups=groups)
+                result["evaluation_status"] = "evaluated"
         results[name] = result
     return results
 

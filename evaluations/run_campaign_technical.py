@@ -49,6 +49,7 @@ def evaluate_directory(
             "factor_count": len(columns),
             "technical_status": "technical_reject" if rejected else "technical_pass",
             "rejected_columns": rejected,
+            "columns": results,
         })
     technical_status = "technical_pass" if all(item["technical_status"] == "technical_pass" for item in snapshots) else "technical_reject"
     return {
