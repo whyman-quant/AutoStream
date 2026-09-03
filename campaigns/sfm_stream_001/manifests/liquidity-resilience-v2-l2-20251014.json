@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "batch_id": "liquidity_resilience_v2_seed_v1",
+  "scope": "single_day_l2_readiness_technical",
+  "date": "20251014",
+  "events": [
+    92700000,
+    100000000,
+    103000000,
+    110000000,
+    113000000,
+    133000000,
+    140000000,
+    143000000
+  ],
+  "factor_names": [
+    "liquidity_resilience_v2_spread_adjusted_depth_recovery_w16",
+    "liquidity_resilience_v2_spread_adjusted_depth_recovery_w32_lag0",
+    "liquidity_resilience_v2_spread_adjusted_depth_recovery_w64_lag1",
+    "liquidity_resilience_v2_spread_adjusted_depth_recovery_w128_lag2",
+    "liquidity_resilience_v2_multi_level_depth_recovery_w16_lag0",
+    "liquidity_resilience_v2_multi_level_depth_recovery_w32_lag0",
+    "liquidity_resilience_v2_multi_level_depth_recovery_w64_lag1",
+    "liquidity_resilience_v2_multi_level_depth_recovery_w128_lag2",
+    "liquidity_resilience_v2_shock_recovery_speed_w16_lag0",
+    "liquidity_resilience_v2_shock_recovery_speed_w32_lag0",
+    "liquidity_resilience_v2_shock_recovery_speed_w64_lag1",
+    "liquidity_resilience_v2_shock_recovery_speed_w128_lag2"
+  ],
+  "factor_count": 12,
+  "hdf5_path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/liquidity-resilience-v2-l2/20251014/liquidity_resilience_v2/factors.h5",
+  "hdf5_sha256": "sha256:4d678acc7543c5b8bc8dac3b1b105287c6ead24ea0e0cfd24e1e7ad1dc3161f5",
+  "config_path": "/home/fangwei/mnt-ssd/AutoStream/.worktrees/l4-recent-history/base/hf-open5m-factor-demo/config_factor_sfm_stream_001_liquidity_resilience_v2_l2.json",
+  "config_sha256": "sha256:338d34c00d19303c6197893ddea20ab7324b29865ed153d64a2a0763ddb0c291",
+  "binary_sha256": "sha256:a3fa6fc35653f689ddd393db066242907daab0c824d2d30769c59fde4f56d9be",
+  "jobs": [
+    18524965
+  ],
+  "strict_checks": {
+    "all_events_present": true,
+    "all_factor_names_unique": true,
+    "all_shapes_4968x12": true,
+    "readiness_datasets_present": true,
+    "ready_values_finite": true,
+    "unsupported_events_declared": true
+  },
+  "event_reports": {
+    "92700000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 0,
+      "not_ready_count": 59616,
+      "finite_ready": true,
+      "unsupported_factors": [
+        "liquidity_resilience_v2_spread_adjusted_depth_recovery_w16",
+        "liquidity_resilience_v2_spread_adjusted_depth_recovery_w32_lag0",
+        "liquidity_resilience_v2_spread_adjusted_depth_recovery_w64_lag1",
+        "liquidity_resilience_v2_spread_adjusted_depth_recovery_w128_lag2",
+        "liquidity_resilience_v2_multi_level_depth_recovery_w16_lag0",
+        "liquidity_resilience_v2_multi_level_depth_recovery_w32_lag0",
+        "liquidity_resilience_v2_multi_level_depth_recovery_w64_lag1",
+        "liquidity_resilience_v2_multi_level_depth_recovery_w128_lag2",
+        "liquidity_resilience_v2_shock_recovery_speed_w16_lag0",
+        "liquidity_resilience_v2_shock_recovery_speed_w32_lag0",
+        "liquidity_resilience_v2_shock_recovery_speed_w64_lag1",
+        "liquidity_resilience_v2_shock_recovery_speed_w128_lag2"
+      ],
+      "declared_unsupported_event": true
+    },
+    "100000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 56559,
+      "not_ready_count": 3057,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "103000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 56043,
+      "not_ready_count": 3573,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "110000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 55815,
+      "not_ready_count": 3801,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "113000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 55911,
+      "not_ready_count": 3705,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "133000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 55815,
+      "not_ready_count": 3801,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "140000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 55980,
+      "not_ready_count": 3636,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "143000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 56672,
+      "not_ready_count": 2944,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    }
+  },
+  "decision": "technical_pass_with_declared_unsupported_event",
+  "promotion_allowed": false
+}

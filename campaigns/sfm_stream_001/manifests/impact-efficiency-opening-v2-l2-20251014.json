@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "campaign_id": "sfm_stream_001",
+  "family_id": "impact_efficiency",
+  "batch_id": "impact_efficiency_opening_v2",
+  "scope": "single_day_l2_readiness_technical",
+  "date": "20251014",
+  "events": [
+    92700000,
+    100000000,
+    103000000,
+    110000000,
+    113000000,
+    133000000,
+    140000000,
+    143000000
+  ],
+  "factor_names": [
+    "impact_efficiency_signed_price_impact_w16",
+    "impact_efficiency_signed_price_impact_w32",
+    "impact_efficiency_signed_price_impact_w64",
+    "impact_efficiency_signed_price_impact_w128",
+    "impact_efficiency_mid_price_response_w16",
+    "impact_efficiency_mid_price_response_w32",
+    "impact_efficiency_mid_price_response_w64",
+    "impact_efficiency_mid_price_response_w128",
+    "impact_efficiency_ofi_response_w16",
+    "impact_efficiency_ofi_response_w32",
+    "impact_efficiency_absorption_divergence_w16",
+    "impact_efficiency_absorption_divergence_w32"
+  ],
+  "factor_count": 12,
+  "hdf5_path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/impact-efficiency-opening-v2-l2/20251014/impact_efficiency/factors.h5",
+  "hdf5_sha256": "sha256:1115d5fe8d293058e899b8fba89a5305703cf2d98825f9355083f34e9d54d78e",
+  "config_path": "/home/fangwei/mnt-ssd/AutoStream/.worktrees/l4-recent-history/base/hf-open5m-factor-demo/config_factor_sfm_stream_001_impact_efficiency_opening_v2_l2.json",
+  "config_sha256": "sha256:d670ddb49bdc12d16c77127ef99887f1ceaeba46994584249ce32f6aacdc25e3",
+  "binary_sha256": "sha256:a3fa6fc35653f689ddd393db066242907daab0c824d2d30769c59fde4f56d9be",
+  "jobs": [
+    18524963
+  ],
+  "strict_checks": {
+    "all_events_present": true,
+    "all_factor_names_unique": true,
+    "all_shapes_4968x12": true,
+    "readiness_datasets_present": true,
+    "ready_values_finite": true,
+    "unsupported_events_declared": true
+  },
+  "event_reports": {
+    "92700000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 9872,
+      "not_ready_count": 49744,
+      "finite_ready": true,
+      "unsupported_factors": [
+        "impact_efficiency_signed_price_impact_w16",
+        "impact_efficiency_signed_price_impact_w32",
+        "impact_efficiency_signed_price_impact_w64",
+        "impact_efficiency_signed_price_impact_w128",
+        "impact_efficiency_mid_price_response_w16",
+        "impact_efficiency_mid_price_response_w32",
+        "impact_efficiency_mid_price_response_w64",
+        "impact_efficiency_mid_price_response_w128",
+        "impact_efficiency_ofi_response_w16",
+        "impact_efficiency_ofi_response_w32"
+      ],
+      "declared_unsupported_event": true
+    },
+    "100000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 59604,
+      "not_ready_count": 12,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "103000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 59604,
+      "not_ready_count": 12,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "110000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 59604,
+      "not_ready_count": 12,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "113000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 59604,
+      "not_ready_count": 12,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "133000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 59604,
+      "not_ready_count": 12,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "140000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 59604,
+      "not_ready_count": 12,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    },
+    "143000000": {
+      "rows": 4968,
+      "factor_count": 12,
+      "ready_count": 59604,
+      "not_ready_count": 12,
+      "finite_ready": true,
+      "unsupported_factors": [],
+      "declared_unsupported_event": false
+    }
+  },
+  "decision": "technical_pass_with_declared_unsupported_event",
+  "promotion_allowed": false
+}
