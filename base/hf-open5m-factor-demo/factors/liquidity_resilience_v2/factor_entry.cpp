@@ -56,6 +56,12 @@ double Speed(const std::deque<double>& h,size_t w,size_t lag) {
 
 FactorEntry::FactorEntry(const std::string& asset,const comm::FactorMetadata& metadata,const comm::FactorEntryConfig& config)
     : comm::FactorEntryBase(asset,metadata,config) {}
+std::vector<bool> FactorEntry::GetReadinessMask(int64_t timestamp) const {
+    (void)timestamp;
+    std::vector<bool> ready(fvals_.size(), false);
+    for (size_t i = 0; i < fvals_.size(); ++i) ready[i] = std::isfinite(fvals_[i]);
+    return ready;
+}
 void FactorEntry::DoOnAddQuote(const Stock_Internal_Book& q) {
     const double l1=Liquidity(q,1); if (!(l1>0.0)) { current_valid_=false; return; }
     const double l5=Liquidity(q,5); current_valid_=true; l1_.push_back(l1); l5_.push_back(l5>0.0?l5:l1);

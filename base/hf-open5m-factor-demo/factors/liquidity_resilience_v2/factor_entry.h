@@ -9,6 +9,7 @@ class FactorEntry : public comm::FactorEntryBase {
 public:
     FactorEntry(const std::string& asset, const comm::FactorMetadata& metadata,
                 const comm::FactorEntryConfig& config);
+    std::vector<bool> GetReadinessMask(int64_t timestamp) const override;
 private:
     void DoOnAddQuote(const Stock_Internal_Book&) override;
     void DoOnAddTrans(const Stock_Transaction_Internal_Book_New&) override {}
