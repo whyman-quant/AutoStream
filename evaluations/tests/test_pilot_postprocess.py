@@ -124,6 +124,7 @@ class PilotPostprocessTests(unittest.TestCase):
         import pyarrow as pa
         import pyarrow.ipc as ipc
         with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
             path = Path(directory) / "ready.arrow"
             table = pa.table({
                 "symbol": ["000001", "000002", "000001", "000002"],
