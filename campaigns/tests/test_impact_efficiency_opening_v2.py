@@ -17,7 +17,8 @@ class ImpactEfficiencyOpeningV2ContractTest(unittest.TestCase):
         for candidate_id in batch["candidate_ids"]:
             candidate = json.loads((CANDIDATES / (candidate_id + ".json")).read_text())
             self.assertEqual(candidate["batch_id"], batch["batch_id"])
-            self.assertEqual(candidate["availability"]["unsupported_events"], [92700000])
+            expected_unsupported = [92700000] if "absorption_divergence" not in candidate_id else []
+            self.assertEqual(candidate["availability"]["unsupported_events"], expected_unsupported)
             self.assertEqual(candidate["availability"]["invalid_policy"], "unavailable")
             self.assertEqual(candidate["availability"]["readiness_policy"], "FactorEntry::GetReadinessMask(timestamp)")
 

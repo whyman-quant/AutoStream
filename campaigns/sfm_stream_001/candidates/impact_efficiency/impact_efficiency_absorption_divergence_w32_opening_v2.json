@@ -11,7 +11,7 @@
   ],
   "hypothesis_id": "impact_efficiency_opening_readiness",
   "operator_id": "absorption_divergence",
-  "formula": "signed absolute flow minus absolute price response over the last 32 trades; unsupported on the opening auction checkpoint",
+  "formula": "signed absolute flow minus absolute price response over the last 32 trades; requires at least two valid trades",
   "source_streams": [
     "trade"
   ],
@@ -32,9 +32,7 @@
     ],
     "output_at": "scheduled_snapshot",
     "lag_events": 0,
-    "unsupported_events": [
-      92700000
-    ],
+    "unsupported_events": [],
     "readiness_policy": "FactorEntry::GetReadinessMask(timestamp)",
     "invalid_policy": "unavailable"
   },
@@ -49,5 +47,5 @@
     "source_commit": "ba56b4b"
   },
   "evidence_level": "L1",
-  "canonical_hash": "sha256:d23550493064206e6c8df831500ebfe0de6c0d1f8f506c405bb90963070b8943"
+  "canonical_hash": "sha256:5d4ac0220480f7be3c82568cf8a0f85cc67b67cdd52e21cbb3299f5078573c7b"
 }
