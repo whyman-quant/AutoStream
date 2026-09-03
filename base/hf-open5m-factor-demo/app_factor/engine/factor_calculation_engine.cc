@@ -65,30 +65,6 @@ using constant_space::kTransNumPerAsset;
 
 namespace {
 
-std::vector<std::vector<int>> BuildReadinessMatrix(
-    const std::vector<std::vector<factors::fval_t>>& values,
-    const std::vector<std::string>& factor_names,
-    int timestamp) {
-	std::vector<std::vector<int>> readiness(values.size(), std::vector<int>(factor_names.size(), 1));
-	for (size_t row = 0; row < values.size(); ++row) {
-		for (size_t col = 0; col < factor_names.size(); ++col) {
-			const bool finite = std::isfinite(values[row][col]);
-			bool ready = finite;
-			// The legacy impact implementation has no identifiable price response
-			// during the opening auction.  Preserve its numeric zero for backward
-			// compatibility, but expose the value as unavailable to evaluators.
-			if (timestamp == 92700000 &&
-			    (factor_names[col].find("impact_efficiency_signed_price_impact_") == 0 ||
-			     factor_names[col].find("impact_efficiency_mid_price_response_") == 0 ||
-			     factor_names[col].find("impact_efficiency_ofi_response_") == 0)) {
-				ready = false;
-			}
-			readiness[row][col] = ready ? 1 : 0;
-		}
-	}
-	return readiness;
-}
-
 // 生成线程树后缀：(tid = …):  initial[…] -> reallocate[…]
 std::string FormatThreadOsTidCpuSuffix(pid_t tid, int initial_cpu, int realloc_cpu) {
 	return velatools::thread_cpu_trace::FormatEntryPhaseSuffix(tid, initial_cpu, realloc_cpu);
@@ -1187,8 +1163,6 @@ void FactorCalculationEngine::SaveResultsToH5CollectTimestamp() {
 		}
 		hdf5_utils::Save2DNumericVectorToH5(file_id, std::to_string(ts), tmp_data);
 		if (!tmp_readiness.empty()) hdf5_utils::Save2DNumericVectorToH5(file_id, "readiness_" + std::to_string(ts), tmp_readiness);
-		hdf5_utils::Save2DNumericVectorToH5(
-		    file_id, "readiness_" + std::to_string(ts), BuildReadinessMatrix(tmp_data, factor_column_names_, ts));
 	}
 
 	// 如果第一个时间戳和最后一个时间戳之间没有跨越92500000，则代表所有时刻的codelist相同，可以保存一个codelist
@@ -1278,8 +1252,6 @@ void FactorCalculationEngine::SaveResultsToH5SplitTimestamp() {
 		}
 		hdf5_utils::Save2DNumericVectorToH5(file_id, factor_data_dataset_name_, tmp_data);
 		if (!tmp_readiness.empty()) hdf5_utils::Save2DNumericVectorToH5(file_id, "readiness", tmp_readiness);
-		hdf5_utils::Save2DNumericVectorToH5(
-		    file_id, "readiness_" + std::to_string(ts), BuildReadinessMatrix(tmp_data, factor_column_names_, ts));
 		// 保存因子输出列名
 		hdf5_utils::Save1DStringVectorToH5(file_id, "factorlist", factor_column_names_);
 		if (H5Fclose(file_id) < 0) {

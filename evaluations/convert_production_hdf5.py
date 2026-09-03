@@ -63,6 +63,8 @@ def convert_hdf5(
             readiness_key = "readiness_" + str(event)
             if readiness_key in source:
                 readiness = np.asarray(source[readiness_key][:], dtype=np.uint8)
+            elif "readiness" in source:
+                readiness = np.asarray(source["readiness"][:], dtype=np.uint8)
                 if readiness.shape != matrix.shape:
                     raise ValueError("event {} readiness shape {} does not match {}".format(event, readiness.shape, matrix.shape))
                 if np.any((readiness != 0) & (readiness != 1)):
