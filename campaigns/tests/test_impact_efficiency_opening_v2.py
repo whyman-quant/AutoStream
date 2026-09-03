@@ -12,7 +12,7 @@ CANDIDATES = ROOT / "campaigns/sfm_stream_001/candidates/impact_efficiency"
 class ImpactEfficiencyOpeningV2ContractTest(unittest.TestCase):
     def test_batch_declares_opening_readiness_contract(self):
         batch = json.loads(BATCH.read_text())
-        self.assertEqual(batch["status"], "design_only")
+        self.assertEqual(batch["status"], "proposed")
         self.assertEqual(len(batch["candidate_ids"]), 12)
         for candidate_id in batch["candidate_ids"]:
             candidate = json.loads((CANDIDATES / (candidate_id + ".json")).read_text())

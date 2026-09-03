@@ -71,6 +71,16 @@ class FactorEvalTests(unittest.TestCase):
         self.assertEqual(result["zero_count"], 1)
         self.assertAlmostEqual(result["nonzero_ratio"], 2.0 / 3.0)
 
+    def test_technical_reject_blocks_label_metrics_for_degenerate_event(self):
+        result = evaluate_columns(
+            {"factor": [0.0, 0.0, 0.0]},
+            labels=[0.1, -0.1, 0.2],
+            min_unique_count=2,
+        )["factor"]
+        self.assertEqual(result["evaluation_status"], "technical_reject")
+        self.assertIsNone(result["rank_ic"])
+        self.assertIsNone(result["groups"])
+
     def test_rejected_event_does_not_emit_informative_label_metrics(self):
         result = evaluate_columns(
             {"factor": [0.0, 0.0, 0.0]},

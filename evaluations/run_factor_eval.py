@@ -39,12 +39,18 @@ def main() -> int:
         min_nonzero_ratio=args.min_nonzero_ratio,
         min_effective_rank_count=args.min_effective_rank_count,
     )
+    technical_reject = labels is not None and any(
+        value.get("status") == "technical_reject" for value in results.values()
+    )
     payload = {
         "schema_version": 1,
         "factor_file": str(Path(args.factor_file).resolve()),
         "row_count": len(next(iter(columns.values()))) if columns else 0,
         "factor_count": len(columns),
-        "evaluation_status": "data_missing" if labels is None else "evaluated",
+        "evaluation_status": (
+            "data_missing" if labels is None
+            else "technical_reject" if technical_reject else "evaluated"
+        ),
         "columns": results,
     }
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
