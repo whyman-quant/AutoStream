@@ -32,12 +32,22 @@ double Recovery(const std::deque<double>& h,size_t w,size_t lag) {
 }
 double Speed(const std::deque<double>& h,size_t w,size_t lag) {
     const Bounds b=Window(h.size(),w,lag); if (b.end-b.begin<w) return kNaN;
-    size_t min_i=b.begin; double peak=h[b.begin], minimum=h[b.begin];
-    for(size_t i=b.begin+1;i<b.end;++i) { peak=std::max(peak,h[i]); if(h[i]<minimum){minimum=h[i];min_i=i;} }
+    // A shock must be a drawdown from a peak that was observed earlier.  Do
+    // not compare a low value with a peak that appears later in the window:
+    // that would misclassify a rising-only series as shock recovery.
+    double running_peak=h[b.begin], shock_peak=0.0, minimum=0.0;
+    size_t min_i=b.end;
+    for(size_t i=b.begin+1;i+1<b.end;++i) {
+        if (running_peak>0.0 && h[i] < running_peak*kShockRatio &&
+            (min_i==b.end || h[i]<minimum)) {
+            shock_peak=running_peak; minimum=h[i]; min_i=i;
+        }
+        running_peak=std::max(running_peak,h[i]);
+    }
     // A recovery speed is defined only after a material drawdown and a later rebound.
-    if (!(peak>0.0) || !(minimum < peak*kShockRatio) || min_i>=b.end-1) return kNaN;
+    if (min_i==b.end || !(shock_peak>0.0)) return kNaN;
     const double rebound=h[b.end-1]-minimum; if (!(rebound>0.0)) return kNaN;
-    const double denominator=peak-minimum; if (!(denominator>0.0)) return kNaN;
+    const double denominator=shock_peak-minimum; if (!(denominator>0.0)) return kNaN;
     const double age=static_cast<double>(b.end-1-min_i);
     const double v=(rebound/denominator)/age;
     return std::isfinite(v)?v:kNaN;

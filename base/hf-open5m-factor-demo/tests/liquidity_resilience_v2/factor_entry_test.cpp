@@ -11,6 +11,16 @@ Stock_Internal_Book Quote(uint32_t bid, uint32_t ask, uint32_t bv, uint32_t av) 
 
 int main() {
     factors::comm::FactorEntryConfig cfg;
+    // A rising-only window has no drawdown, so it must not be classified as
+    // shock recovery merely because its first value is far below a later peak.
+    factors::liquidity_resilience_v2::FactorEntry rising(
+        "000001", factors::liquidity_resilience_v2::GetMetadata(), cfg);
+    for (uint32_t volume = 10; volume <= 160; volume += 10) {
+        rising.AddQuote(Quote(10000, 10100, volume, volume));
+    }
+    const auto& rising_only = rising.UpdateFactors(100000000);
+    if (!std::isnan(rising_only.at(8))) return 1;
+
     factors::liquidity_resilience_v2::FactorEntry e("000001", factors::liquidity_resilience_v2::GetMetadata(), cfg);
     // Values before the declared warmup are not valid zeros.
     e.AddQuote(Quote(10000, 10100, 100, 100));
