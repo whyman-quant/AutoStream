@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from campaigns.contracts import validate_document
-from evaluations.l4_portrait import METRICS, build_portraits, write_portraits
+from evaluations.l4_portrait import METRICS, build_portraits, write_portraits, classify_validity_cell, build_validity_matrix, summarize_validity_matrix
 
 
 class L4PortraitTests(unittest.TestCase):
@@ -93,6 +93,31 @@ class L4PortraitTests(unittest.TestCase):
             paths = write_portraits(docs, Path(tmp) / "out")
             self.assertEqual(len(paths), 2)
             self.assertTrue(all(json.loads(p.read_text())["schema_version"] == 2 for p in paths))
+
+    def test_validity_matrix_classifies_independent_cells(self):
+        values = np.arange(1, 7, dtype=float)
+        self.assertEqual(classify_validity_cell(values, {"IC": values})["status"], "pass")
+        self.assertEqual(classify_validity_cell(values, {"IC": np.zeros(6)})["status"], "metric_undefined")
+        self.assertEqual(classify_validity_cell(values, {"IC": np.full(6, np.nan)})["status"], "metric_undefined")
+        self.assertEqual(classify_validity_cell(values, {"IC": values}, readiness=np.zeros(6, dtype=bool))["status"], "not_ready")
+
+    def test_zero_values_are_not_inferred_as_not_ready(self):
+        cell = classify_validity_cell(np.zeros(6), {"IC": np.arange(6, dtype=float)})
+        self.assertNotEqual(cell["status"], "not_ready")
+        cell = classify_validity_cell(np.zeros(6), {"IC": np.arange(6, dtype=float)}, readiness=np.array([False, True, True, True, True, True]))
+        self.assertEqual(cell["status"], "not_ready")
+        self.assertEqual(cell["not_ready_zero_count"], 1)
+
+    def test_build_and_summarize_four_dimensional_matrix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            frames, _ = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, 0.0)
+            matrix = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes)
+            self.assertEqual(len(matrix), 2 * 2 * 2 * 3 * 2)
+            self.assertEqual({c["status"] for c in matrix}, {"pass"})
+            summary = summarize_validity_matrix(matrix)
+            self.assertEqual(summary["cell_count"], len(matrix))
+            self.assertEqual(summary["pass_count"], len(matrix))
 
 
 if __name__ == "__main__": unittest.main()
