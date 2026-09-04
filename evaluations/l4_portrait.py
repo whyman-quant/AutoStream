@@ -254,6 +254,8 @@ def _cross_section_stats(values, readiness=None):
         "nonzero_ratio": float((finite != 0).mean()) if len(finite) else 0.0,
         "effective_rank_count": int(finite.rank(method="dense").nunique()),
     }
+    if not finite_mask.all():
+        stats.update(status="review", reason="raw_factor_nonfinite")
     if readiness is not None:
         ready = _normalize_readiness(readiness)
         ready_values = series[ready]
@@ -265,6 +267,14 @@ def _cross_section_stats(values, readiness=None):
             "ready_finite_count": int(ready_finite.sum()),
             "ready_factor_nonfinite_count": int((~ready_finite).sum()),
         })
+        if (~ready_finite).any():
+            stats.update(status="review", reason="ready_factor_value_not_finite")
+        elif stats.get("reason") == "raw_factor_nonfinite":
+            # NaN values in explicitly not-ready rows are allowed and remain
+            # distinguishable from a malformed ready value.
+            not_ready_values = series[~ready]
+            if not np.isinf(not_ready_values.to_numpy()).any():
+                stats.update(status="provided", reason=None)
     else:
         stats["readiness_provided"] = False
     return stats
