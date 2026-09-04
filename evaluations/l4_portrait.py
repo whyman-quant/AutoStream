@@ -10,7 +10,6 @@ from typing import Mapping, Optional, Sequence
 
 import numpy as np
 import pandas as pd
-import pyarrow.feather as pa_feather
 
 METRICS = tuple(["D{}".format(i) for i in range(1, 11)] + ["LS", "Monotonicity", "IC", "RankIC"])
 
@@ -289,6 +288,10 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
     symbols in the file; it must never be inferred from Parquet metric panels.
     """
     requested = [str(d) for d in dates]
+    try:
+        import pyarrow.feather as pa_feather
+    except ImportError as exc:
+        raise ValueError("pyarrow is required to inspect Arrow cross sections") from exc
     if requested != sorted(set(requested)):
         raise ValueError("Arrow date list invalid")
     if any(d >= "20250101" for d in requested):
