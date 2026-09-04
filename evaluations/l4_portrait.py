@@ -347,7 +347,7 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
             reason = next(row.get("reason", "raw_factor_invalid") for row in rows if row.get("status") != "provided")
             summaries[key] = {"status": "review", "reason": reason, "source": "arrow",
                               "universe_scope": "all_symbols", "date_count": len(requested),
-                              "factor_available": True}
+                              "factor_available": True, "by_date": rows}
             continue
         def _mean(name):
             vals = [row[name] for row in rows if row.get(name) is not None]
