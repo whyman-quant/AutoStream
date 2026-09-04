@@ -10,6 +10,7 @@ from typing import Mapping, Optional, Sequence
 
 import numpy as np
 import pandas as pd
+import pyarrow.feather as pa_feather
 
 METRICS = tuple(["D{}".format(i) for i in range(1, 11)] + ["LS", "Monotonicity", "IC", "RankIC"])
 
@@ -298,7 +299,17 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
         path = Path(arrow_root) / (date + ".arrow")
         if not path.is_file():
             raise ValueError("missing Arrow {}".format(path))
-        frame = pd.read_feather(path)
+        # Inspect the IPC schema first, then materialize only the identifier,
+        # requested factor and readiness columns.  This keeps the 969-day scan
+        # bounded even when Arrow carries auxiliary payload columns.
+        schema_names = set(pa_feather.read_table(path, columns=[]).schema.names)
+        readiness_names = {name for factor in factors for name in
+                           (factor + "|ready", factor + "|readiness", "ready_" + factor, "readiness_" + factor)
+                           if name in schema_names}
+        selected = [name for name in ("symbol", "date", "event") if name in schema_names]
+        selected += [factor for factor in factors if factor in schema_names]
+        selected += sorted(readiness_names)
+        frame = pd.read_feather(path, columns=selected)
         required = {"symbol", "date", "event"}
         if not required.issubset(frame.columns):
             raise ValueError("Arrow columns missing")
@@ -308,6 +319,7 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
             raise ValueError("Arrow event mismatch")
         if frame.duplicated(["symbol", "event"]).any():
             raise ValueError("Arrow duplicate symbol/event")
+        event_groups = {event: group for event, group in frame.groupby("event", sort=False)}
         for factor in factors:
             readiness_name = _readiness_column(frame, factor)
             if factor not in frame.columns:
@@ -315,7 +327,7 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
                     available[(factor, event)] = False
                 continue
             for event in events:
-                event_frame = frame.loc[frame["event"] == event]
+                event_frame = event_groups[event]
                 readiness = event_frame[readiness_name] if readiness_name else None
                 stats = _cross_section_stats(event_frame[factor], readiness)
                 if stats.get("ready_factor_nonfinite_count", 0):

@@ -244,5 +244,41 @@ class L4PortraitTests(unittest.TestCase):
             self.assertEqual(summary[(self.factors[0], self.events[0])]["status"], "review")
             self.assertEqual(summary[(self.factors[0], self.events[0])]["reason"], "ready_factor_value_not_finite")
 
+    def test_arrow_ready_false_nan_is_allowed_when_no_ready_true_nan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            path = Path(tmp) / "arrow" / (dates["training"][0] + ".arrow")
+            frame = pd.read_feather(path)
+            ready_name = "ready_" + self.factors[0]
+            frame[ready_name] = True
+            mask = (frame["event"] == self.events[0]) & (frame["symbol"] == "0")
+            frame.loc[mask, self.factors[0]] = np.nan
+            frame.loc[mask, ready_name] = False
+            frame.to_feather(path)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_load_arrow_cross_section"])
+            summary = mod._load_arrow_cross_section(Path(tmp) / "arrow", dates["training"], self.factors, self.events)
+            self.assertEqual(summary[(self.factors[0], self.events[0])]["status"], "provided")
+
+    def test_arrow_loader_reads_only_required_columns(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            path = Path(tmp) / "arrow" / (dates["training"][0] + ".arrow")
+            frame = pd.read_feather(path)
+            frame["unrelated_payload"] = 1
+            frame.to_feather(path)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_load_arrow_cross_section"])
+            original = mod.pd.read_feather
+            calls = []
+            def wrapped(*args, **kwargs):
+                calls.append(kwargs.get("columns"))
+                return original(*args, **kwargs)
+            mod.pd.read_feather = wrapped
+            try:
+                mod._load_arrow_cross_section(Path(tmp) / "arrow", dates["training"], self.factors, self.events)
+            finally:
+                mod.pd.read_feather = original
+            self.assertTrue(calls)
+            self.assertTrue(all("unrelated_payload" not in (columns or []) for columns in calls))
+
 
 if __name__ == "__main__": unittest.main()
