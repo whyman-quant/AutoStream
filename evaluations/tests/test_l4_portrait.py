@@ -172,5 +172,19 @@ class L4PortraitTests(unittest.TestCase):
         bad_metric = classify_validity_cell(np.ones(3), {"IC": [1., np.inf, 2.]}, readiness=[False, False, False])
         self.assertEqual(bad_metric["status"], "data_error")
 
+    def test_cell_and_summary_expose_pass_only_metric_stats(self):
+        values = np.arange(1., 7.)
+        cell = classify_validity_cell(values, {"IC": values}, readiness=np.ones(6, dtype=bool))
+        self.assertEqual(cell["metric_stats"]["IC"]["count"], 6)
+        self.assertEqual(cell["metric_stats"]["IC"]["std_ddof"], 1)
+        self.assertIn("ir", cell["metric_stats"]["IC"])
+        summary = summarize_validity_matrix([dict(cell, split="training", factor="f", event=1, universe="u", label="l")])
+        self.assertEqual(summary["summaries"]["event"]["1"]["metric_stats"]["IC"]["count"], 1)
+        self.assertIn("mean", summary["summaries"]["event"]["1"]["metric_stats"]["IC"])
+
+    def test_ready_true_requires_finite_factor_values(self):
+        cell = classify_validity_cell(np.array([1., np.nan, 2.]), {"IC": [1., 2., 3.]}, readiness=[1, 1, 1])
+        self.assertEqual(cell["status"], "data_error")
+
 
 if __name__ == "__main__": unittest.main()

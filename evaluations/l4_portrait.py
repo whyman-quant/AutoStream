@@ -154,12 +154,16 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
         false_mask = ~ready
         result["not_ready_count"] = int(false_mask.sum())
         result["not_ready_zero_count"] = int((false_mask & factor_values.eq(0)).sum())
+        if not false_mask.any() and factor_values.isna().any():
+            result.update(status="data_error", reason="ready_factor_value_not_finite")
+            return result
         if false_mask.any():
             result.update(status="not_ready", reason="explicit_readiness_false")
             return result
 
     metric_ok = True
     metric_defined = False
+    result["metric_stats"] = {}
     for name, values in metric_series.items():
         series = pd.Series(values, dtype="float64")
         if len(series) != n:
@@ -171,9 +175,15 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
             return result
         count = int(len(finite)); result["metric_counts"][name] = count
         result["metric_finite_count"] += count
+        result["metric_stats"][name] = {"count": count,
+                                         "mean": float(finite.mean()) if count else None,
+                                         "std": float(finite.std(ddof=1)) if count > 1 else None,
+                                         "std_ddof": 1,
+                                         "ir": (float(finite.mean()) / float(finite.std(ddof=1))) if count > 1 and float(finite.std(ddof=1)) > 0 else None,
+                                         "positive_fraction": float((finite > 0).mean()) if count else None}
         if count:
             metric_defined = True
-            if int(finite.nunique()) < min_unique or int(finite.rank(method="first").nunique()) < min_rank_count:
+            if int(finite.nunique()) < min_unique or int(finite.rank(method="dense").nunique()) < min_rank_count:
                 metric_ok = False
         if count == 0:
             metric_ok = False
@@ -263,6 +273,16 @@ def summarize_validity_matrix(cells, min_pass_events=6):
         return {"cell_count": 0, "status_counts": {}, "pass_count": 0, "summaries": {}}
     status_counts = {state: sum(c.get("status") == state for c in cells) for state in VALIDITY_STATES}
     result = {"cell_count": len(cells), "status_counts": status_counts, "pass_count": status_counts["pass"], "summaries": {}}
+    def aggregate_stats(subset):
+        out = {}
+        names = sorted(set(k for c in subset for k in c.get("metric_stats", {})))
+        for name in names:
+            vals = [c["metric_stats"][name].get("mean") for c in subset if c.get("status") == "pass" and c.get("metric_stats", {}).get(name, {}).get("mean") is not None]
+            s = pd.Series(vals, dtype="float64")
+            mean = float(s.mean()) if len(s) else None
+            std = float(s.std(ddof=1)) if len(s) > 1 else None
+            out[name] = {"count": int(len(s)), "mean": mean, "std": std, "ir": mean / std if std and std > 0 else None}
+        return out
     for dimension in ("event", "universe", "label", "split"):
         values = sorted(set(c[dimension] for c in cells), key=str)
         result["summaries"][dimension] = {}
@@ -272,6 +292,7 @@ def summarize_validity_matrix(cells, min_pass_events=6):
                 "cell_count": len(subset),
                 "pass_count": sum(c["status"] == "pass" for c in subset),
                 "status_counts": {state: sum(c["status"] == state for c in subset) for state in VALIDITY_STATES},
+                "metric_stats": aggregate_stats(subset),
             }
     factor_summaries = {}
     for factor in sorted(set(c["factor"] for c in cells)):
@@ -281,7 +302,7 @@ def summarize_validity_matrix(cells, min_pass_events=6):
         for split in ("training", "observation"):
             scoped = [c for c in fcells if c["split"] == split]
             event_pass = {e: sum(c["status"] == "pass" for c in scoped if c["event"] == e) for e in sorted(set(c["event"] for c in scoped))}
-            cells_per_event = max(1, len(set(c["universe"] for c in scoped)) * len(set(c["label"] for c in scoped)))
+            cells_per_event = 6  # frozen: three universes × two labels
             broad = sum(v >= int(math.ceil(cells_per_event / 2.0)) for v in event_pass.values())
             split_summaries[split] = {"event_pass_counts": event_pass, "broad_pass_event_count": broad,
                                       "broad_pass": broad >= min_pass_events, "pass_count": sum(c["status"] == "pass" for c in scoped)}
