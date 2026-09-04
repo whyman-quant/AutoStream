@@ -98,6 +98,8 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
     Readiness is intentionally explicit: zero-valued factors never imply ``not_ready``.
     ``metric_series`` is a mapping of metric name to a one-dimensional sequence.
     """
+    if not hasattr(metric_series, "items"):
+        return {"status": "data_error", "reason": "invalid_metric_series", "readiness_source": "provided" if readiness is not None else "not_provided"}
     try:
         factor_values = pd.Series(factor_values, dtype="float64")
     except (TypeError, ValueError):
