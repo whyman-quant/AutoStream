@@ -223,13 +223,151 @@ def _readiness_column(frame, factor):
     return None
 
 
-def build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold=.95):
+def _normalize_readiness(values):
+    """Normalize an Arrow readiness column to a strict boolean mask."""
+    ready = pd.Series(values)
+    if ready.isna().any():
+        raise ValueError("readiness contains null")
+    if pd.api.types.is_bool_dtype(ready):
+        return ready.astype(bool)
+    if pd.api.types.is_numeric_dtype(ready):
+        numeric = ready.to_numpy(dtype="float64")
+        if not np.isfinite(numeric).all() or not np.isin(numeric, [0.0, 1.0]).all():
+            raise ValueError("readiness must contain only bool/0/1")
+        return ready.astype(bool)
+    raise ValueError("readiness must contain only bool/0/1")
+
+
+def _cross_section_stats(values, readiness=None):
+    """Summarize one date/event Arrow cross section without using evaluation panels."""
+    try:
+        series = pd.Series(values, dtype="float64")
+    except (TypeError, ValueError):
+        return {"status": "review", "reason": "raw_factor_values_not_numeric"}
+    finite_mask = np.isfinite(series.to_numpy())
+    finite = series[finite_mask]
+    stats = {
+        "status": "provided", "symbol_count": int(len(series)),
+        "finite_count": int(finite_mask.sum()),
+        "std": float(finite.std(ddof=1)) if len(finite) > 1 else None,
+        "unique_count": int(finite.nunique()),
+        "nonzero_ratio": float((finite != 0).mean()) if len(finite) else 0.0,
+        "effective_rank_count": int(finite.rank(method="dense").nunique()),
+    }
+    if readiness is not None:
+        ready = _normalize_readiness(readiness)
+        ready_values = series[ready]
+        ready_finite = np.isfinite(ready_values.to_numpy())
+        stats.update({
+            "readiness_provided": True,
+            "ready_count": int(ready.sum()),
+            "ready_false_count": int((~ready).sum()),
+            "ready_finite_count": int(ready_finite.sum()),
+            "ready_factor_nonfinite_count": int((~ready_finite).sum()),
+        })
+    else:
+        stats["readiness_provided"] = False
+    return stats
+
+
+def _load_arrow_cross_section(arrow_root, dates, factors, events):
+    """Load Arrow raw values and aggregate cross-sectional stats by event/factor.
+
+    Arrow files contain symbols but no frozen index constituent mapping for each
+    universe.  Consequently the returned summary is explicitly scoped to all
+    symbols in the file; it must never be inferred from Parquet metric panels.
+    """
+    requested = [str(d) for d in dates]
+    if requested != sorted(set(requested)):
+        raise ValueError("Arrow date list invalid")
+    if any(d >= "20250101" for d in requested):
+        raise ValueError("holdout dates are forbidden")
+    accum = {(factor, event): [] for factor in factors for event in events}
+    available = {(factor, event): True for factor in factors for event in events}
+    for date in requested:
+        path = Path(arrow_root) / (date + ".arrow")
+        if not path.is_file():
+            raise ValueError("missing Arrow {}".format(path))
+        frame = pd.read_feather(path)
+        required = {"symbol", "date", "event"}
+        if not required.issubset(frame.columns):
+            raise ValueError("Arrow columns missing")
+        if set(str(x) for x in frame["date"].unique()) != {date}:
+            raise ValueError("Arrow date mismatch")
+        if set(frame["event"].unique()) != set(events):
+            raise ValueError("Arrow event mismatch")
+        if frame.duplicated(["symbol", "event"]).any():
+            raise ValueError("Arrow duplicate symbol/event")
+        for factor in factors:
+            readiness_name = _readiness_column(frame, factor)
+            if factor not in frame.columns:
+                for event in events:
+                    available[(factor, event)] = False
+                continue
+            for event in events:
+                event_frame = frame.loc[frame["event"] == event]
+                readiness = event_frame[readiness_name] if readiness_name else None
+                stats = _cross_section_stats(event_frame[factor], readiness)
+                if stats.get("ready_factor_nonfinite_count", 0):
+                    stats["status"] = "review"
+                    stats["reason"] = "ready_factor_value_not_finite"
+                stats["date"] = date
+                accum[(factor, event)].append(stats)
+    summaries = {}
+    for key, rows in accum.items():
+        factor, event = key
+        if not rows or not available[key]:
+            summaries[key] = {"status": "review", "reason": "raw_factor_column_missing",
+                              "source": "arrow", "universe_scope": "all_symbols",
+                              "date_count": len(requested), "factor_available": False}
+            continue
+        if any(row.get("status") != "provided" for row in rows):
+            reason = next(row.get("reason", "raw_factor_invalid") for row in rows if row.get("status") != "provided")
+            summaries[key] = {"status": "review", "reason": reason, "source": "arrow",
+                              "universe_scope": "all_symbols", "date_count": len(requested),
+                              "factor_available": True}
+            continue
+        def _mean(name):
+            vals = [row[name] for row in rows if row.get(name) is not None]
+            return float(np.mean(vals)) if vals else None
+        summary = {
+            "status": "provided", "source": "arrow", "universe_scope": "all_symbols",
+            "factor_available": True, "date_count": len(requested),
+            "dates_with_data": len(rows), "symbol_count": int(round(_mean("symbol_count") or 0)),
+            "finite_count": int(sum(row["finite_count"] for row in rows)),
+            "std_mean": _mean("std"), "std_min": min((row["std"] for row in rows if row["std"] is not None), default=None),
+            "unique_count_min": min(row["unique_count"] for row in rows),
+            "nonzero_ratio_mean": _mean("nonzero_ratio"),
+            "effective_rank_count_min": min(row["effective_rank_count"] for row in rows),
+            "readiness_provided": any(row.get("readiness_provided", False) for row in rows),
+        }
+        if summary["readiness_provided"]:
+            summary["ready_count"] = int(sum(row.get("ready_count", 0) for row in rows))
+            summary["ready_false_count"] = int(sum(row.get("ready_false_count", 0) for row in rows))
+            summary["ready_finite_count"] = int(sum(row.get("ready_finite_count", 0) for row in rows))
+            summary["ready_factor_nonfinite_count"] = int(sum(row.get("ready_factor_nonfinite_count", 0) for row in rows))
+        summaries[key] = summary
+    return summaries
+
+
+def build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold=.95,
+                          arrow_root=None, dates=None):
     """Build deterministic factor×event×universe×label×split validity cells."""
     cells = []
     training_dates = set(str(d) for d in split_dates.get("training", []))
     observation_dates = set(str(d) for d in split_dates.get("observation", []))
     if training_dates & observation_dates:
         raise ValueError("training/observation date overlap")
+    arrow_summaries = {}
+    if arrow_root is not None:
+        if dates is None:
+            arrow_dates = {split: list(split_dates.get(split, [])) for split in ("training", "observation")}
+        elif hasattr(dates, "get"):
+            arrow_dates = {split: list(dates.get(split, split_dates.get(split, []))) for split in ("training", "observation")}
+        else:
+            arrow_dates = {split: list(dates) for split in ("training", "observation")}
+        for split in ("training", "observation"):
+            arrow_summaries[split] = _load_arrow_cross_section(arrow_root, arrow_dates[split], factors, events) if arrow_dates[split] else {}
     for split in ("training", "observation"):
         expected_dates = list(split_dates[split])
         if any(str(d) >= "20250101" for d in expected_dates):
@@ -253,15 +391,28 @@ def build_validity_matrix(frames, split_dates, factors, events, labels, universe
                             cell = {"status": "data_error", "reason": "metric_column_missing", "missing_metrics": missing_metrics,
                                     "factor_value_source": "provided" if factor in event_frame else "not_provided",
                                     "split": split, "factor": factor, "event": event, "universe": universe, "label": label}
+                            if arrow_root is not None:
+                                cross = arrow_summaries.get(split, {}).get((factor, event))
+                                if cross is not None:
+                                    cell["cross_sectional"] = cross
                             cells.append(cell)
                             continue
                         metrics = {metric: event_frame[factor + "|" + metric] for metric in METRICS}
+                        cross = arrow_summaries.get(split, {}).get((factor, event)) if arrow_root is not None else None
                         if factor not in event_frame:
                             cell = classify_validity_cell(np.full(len(event_frame), np.nan), metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
                             cell.update(status="review", reason="factor_values_not_provided", factor_value_source="not_provided")
                         else:
                             cell = classify_validity_cell(event_frame[factor], metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
                             cell["factor_value_source"] = "provided"
+                        if cross is not None:
+                            cell["cross_sectional"] = cross
+                            if cross.get("factor_available"):
+                                cell["factor_value_source"] = "arrow_cross_section"
+                            else:
+                                cell["factor_value_source"] = "not_provided"
+                                cell["reason"] = "raw_factor_column_missing"
+                                cell["status"] = "review"
                         cell.update({"split": split, "factor": factor, "event": event, "universe": universe, "label": label})
                         cells.append(cell)
     return cells
@@ -342,7 +493,8 @@ def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]],
     if len(set(factors)) != len(factors): raise ValueError("duplicate factors")
     frames, receipts = _strict_frames(result_root, split_dates, labels, universes, factors, events, coverage_threshold,
                                       allow_partial_metrics=return_validity_matrix)
-    validity_matrix = build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold)
+    validity_matrix = build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold,
+                                            arrow_root=arrow_root, dates=split_dates)
     candidates = _load_candidates(candidates_root, factors)
     all_dates = list(split_dates["training"]) + list(split_dates["observation"])
     value_peers, arrow_hashes = _value_correlations(arrow_root, all_dates, factors, events)

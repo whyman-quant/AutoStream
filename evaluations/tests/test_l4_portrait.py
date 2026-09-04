@@ -186,5 +186,63 @@ class L4PortraitTests(unittest.TestCase):
         cell = classify_validity_cell(np.array([1., np.nan, 2.]), {"IC": [1., 2., 3.]}, readiness=[1, 1, 1])
         self.assertEqual(cell["status"], "data_error")
 
+    def test_arrow_cross_section_stats_are_attached_per_event_without_using_parquet_as_cross_section(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            arrow_path = Path(tmp) / "arrow" / (dates["training"][0] + ".arrow")
+            frame = pd.read_feather(arrow_path)
+            frame["ready_" + self.factors[0]] = True
+            frame.loc[(frame["event"] == self.events[0]) & (frame["symbol"] == "0"), "ready_" + self.factors[0]] = False
+            frame.to_feather(arrow_path)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])
+            frames, _ = mod._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, 0.0)
+            cells = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes,
+                                          arrow_root=Path(tmp) / "arrow", dates=dates["training"])
+            cell = next(c for c in cells if c["split"] == "training" and c["factor"] == self.factors[0] and c["event"] == self.events[0])
+            self.assertEqual(cell["factor_value_source"], "arrow_cross_section")
+            self.assertEqual(cell["cross_sectional"]["source"], "arrow")
+            self.assertEqual(cell["cross_sectional"]["date_count"], len(dates["training"]))
+            self.assertEqual(cell["cross_sectional"]["symbol_count"], 6)
+            self.assertIn("ready_count", cell["cross_sectional"])
+            self.assertEqual(cell["cross_sectional"]["ready_false_count"], 1)
+            # Universe/label panels have no constituent mapping in Arrow, so the
+            # same all-symbols summary is explicitly marked instead of inventing
+            # a Parquet-derived cross section.
+            self.assertEqual(cell["cross_sectional"]["universe_scope"], "all_symbols")
+
+    def test_arrow_loader_rejects_holdout_dates_and_missing_factor_is_explicit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])
+            frames, _ = mod._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, 0.0)
+            with self.assertRaisesRegex(ValueError, "holdout"):
+                build_validity_matrix(frames, {"training": ["20250102"], "observation": []}, self.factors, self.events,
+                                       self.labels, self.universes, arrow_root=Path(tmp) / "arrow", dates=["20250102"])
+            missing = Path(tmp) / "arrow" / (dates["training"][0] + ".arrow")
+            frame = pd.read_feather(missing).drop(columns=[self.factors[0]])
+            frame.to_feather(missing)
+            cells = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes,
+                                          arrow_root=Path(tmp) / "arrow", dates=dates["training"])
+            cell = next(c for c in cells if c["split"] == "training" and c["factor"] == self.factors[0])
+            self.assertEqual(cell["factor_value_source"], "not_provided")
+            self.assertEqual(cell["cross_sectional"]["status"], "review")
+
+    def test_arrow_ready_true_nan_is_review_but_ready_false_nan_is_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            path = Path(tmp) / "arrow" / (dates["training"][0] + ".arrow")
+            frame = pd.read_feather(path)
+            ready_name = "ready_" + self.factors[0]
+            frame[ready_name] = True
+            frame.loc[(frame["event"] == self.events[0]) & (frame["symbol"] == "0"), self.factors[0]] = np.nan
+            frame.loc[(frame["event"] == self.events[0]) & (frame["symbol"] == "0"), ready_name] = False
+            frame.loc[(frame["event"] == self.events[0]) & (frame["symbol"] == "1"), self.factors[0]] = np.nan
+            frame.to_feather(path)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_load_arrow_cross_section"])
+            summary = mod._load_arrow_cross_section(Path(tmp) / "arrow", dates["training"], self.factors, self.events)
+            # A NaN under ready=false is allowed, while ready=true NaN is a review.
+            self.assertEqual(summary[(self.factors[0], self.events[0])]["status"], "review")
+            self.assertEqual(summary[(self.factors[0], self.events[0])]["reason"], "ready_factor_value_not_finite")
+
 
 if __name__ == "__main__": unittest.main()
