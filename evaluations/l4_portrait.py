@@ -98,7 +98,10 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
     Readiness is intentionally explicit: zero-valued factors never imply ``not_ready``.
     ``metric_series`` is a mapping of metric name to a one-dimensional sequence.
     """
-    factor_values = pd.Series(factor_values, dtype="float64")
+    try:
+        factor_values = pd.Series(factor_values, dtype="float64")
+    except (TypeError, ValueError):
+        return {"status": "data_error", "reason": "invalid_factor_values", "readiness_source": "provided" if readiness is not None else "not_provided"}
     n = int(date_count if date_count is not None else len(factor_values))
     result = {"status": None, "readiness_source": "provided" if readiness is not None else "not_provided",
               "date_count": n, "factor_value_count": int(factor_values.notna().sum()),
@@ -111,6 +114,17 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
     if not np.isfinite(factor_values.dropna().to_numpy()).all():
         result.update(status="data_error", reason="non_finite_factor_value")
         return result
+    # Validate metric input before applying readiness so an explicit false mask
+    # cannot hide a malformed/non-finite metric series.
+    for values in metric_series.values():
+        try:
+            probe = pd.Series(values, dtype="float64")
+        except (TypeError, ValueError):
+            result.update(status="data_error", reason="invalid_metric_values")
+            return result
+        if not np.isfinite(probe.dropna().to_numpy()).all():
+            result.update(status="data_error", reason="non_finite_metric")
+            return result
     ready = None
     finite_factor = factor_values.dropna()
     result["factor_std"] = float(finite_factor.std(ddof=1)) if len(finite_factor) > 1 else None
@@ -200,6 +214,10 @@ def _readiness_column(frame, factor):
 def build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold=.95):
     """Build deterministic factor×event×universe×label×split validity cells."""
     cells = []
+    training_dates = set(str(d) for d in split_dates.get("training", []))
+    observation_dates = set(str(d) for d in split_dates.get("observation", []))
+    if training_dates & observation_dates:
+        raise ValueError("training/observation date overlap")
     for split in ("training", "observation"):
         expected_dates = list(split_dates[split])
         if any(str(d) >= "20250101" for d in expected_dates):
@@ -218,12 +236,20 @@ def build_validity_matrix(frames, split_dates, factors, events, labels, universe
                             raise ValueError("missing event {}".format(event))
                         readiness_name = _readiness_column(frame, factor)
                         readiness = event_frame[readiness_name] if readiness_name else None
+                        missing_metrics = [metric for metric in METRICS if factor + "|" + metric not in event_frame]
+                        if missing_metrics:
+                            cell = {"status": "data_error", "reason": "metric_column_missing", "missing_metrics": missing_metrics,
+                                    "factor_value_source": "provided" if factor in event_frame else "not_provided",
+                                    "split": split, "factor": factor, "event": event, "universe": universe, "label": label}
+                            cells.append(cell)
+                            continue
                         metrics = {metric: event_frame[factor + "|" + metric] for metric in METRICS}
                         if factor not in event_frame:
                             cell = classify_validity_cell(np.full(len(event_frame), np.nan), metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
-                            cell.update(status="review", reason="factor_values_not_provided")
+                            cell.update(status="review", reason="factor_values_not_provided", factor_value_source="not_provided")
                         else:
                             cell = classify_validity_cell(event_frame[factor], metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
+                            cell["factor_value_source"] = "provided"
                         cell.update({"split": split, "factor": factor, "event": event, "universe": universe, "label": label})
                         cells.append(cell)
     return cells
@@ -249,16 +275,20 @@ def summarize_validity_matrix(cells, min_pass_events=6):
     for factor in sorted(set(c["factor"] for c in cells)):
         fcells = [c for c in cells if c["factor"] == factor]
         pass_cells = [c for c in fcells if c.get("status") == "pass"]
-        event_pass = {e: sum(c["status"] == "pass" for c in fcells if c["event"] == e) for e in sorted(set(c["event"] for c in fcells))}
-        # An event is "broadly" covered only when at least half of its
-        # universe×label cells pass; a single lucky panel is insufficient.
-        cells_per_event = max(1, len(set(c["universe"] for c in fcells)) * len(set(c["label"] for c in fcells)))
-        broad = sum(v >= int(math.ceil(cells_per_event / 2.0)) for v in event_pass.values())
-        training_pass = any(c["status"] == "pass" and c["split"] == "training" for c in fcells)
-        observation_pass = any(c["status"] == "pass" and c["split"] == "observation" for c in fcells)
-        status = "insufficient_scope" if broad < min_pass_events else ("observation_failure" if training_pass and not observation_pass else "review")
-        factor_summaries[factor] = {"status": status, "cell_count": len(fcells), "pass_count": len(pass_cells), "event_pass_counts": event_pass,
-                                    "pass_cells": [{k: c[k] for k in ("split", "event", "universe", "label")} for c in pass_cells]}
+        split_summaries = {}
+        for split in ("training", "observation"):
+            scoped = [c for c in fcells if c["split"] == split]
+            event_pass = {e: sum(c["status"] == "pass" for c in scoped if c["event"] == e) for e in sorted(set(c["event"] for c in scoped))}
+            cells_per_event = max(1, len(set(c["universe"] for c in scoped)) * len(set(c["label"] for c in scoped)))
+            broad = sum(v >= int(math.ceil(cells_per_event / 2.0)) for v in event_pass.values())
+            split_summaries[split] = {"event_pass_counts": event_pass, "broad_pass_event_count": broad,
+                                      "broad_pass": broad >= min_pass_events, "pass_count": sum(c["status"] == "pass" for c in scoped)}
+        training_broad = split_summaries["training"]["broad_pass"]
+        observation_broad = split_summaries["observation"]["broad_pass"]
+        status = "review" if training_broad and observation_broad else ("observation_failure" if training_broad and not observation_broad else "insufficient_scope")
+        factor_summaries[factor] = {"status": status, "cell_count": len(fcells), "pass_count": len(pass_cells), "split_summaries": split_summaries,
+                                    "event_pass_counts": {e: sum(c["status"] == "pass" for c in fcells if c["event"] == e) for e in sorted(set(c["event"] for c in fcells))},
+                                         "pass_cells": [{k: c[k] for k in ("split", "event", "universe", "label")} for c in pass_cells]}
     result["summaries"]["factor"] = factor_summaries
     return result
 

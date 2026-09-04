@@ -156,5 +156,21 @@ class L4PortraitTests(unittest.TestCase):
             matrix = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes)
             self.assertTrue(any(c["status"] in ("coverage_fail", "review") for c in matrix))
 
+    def test_matrix_missing_metric_column_is_data_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            frames, _ = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, 0.0)
+            frame = frames[("training", self.labels[0], self.universes[0])].drop(columns=[self.factors[0] + "|IC"])
+            frames[("training", self.labels[0], self.universes[0])] = frame
+            cells = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes)
+            bad = [c for c in cells if c["split"] == "training" and c["label"] == self.labels[0] and c["universe"] == self.universes[0] and c["factor"] == self.factors[0]]
+            self.assertTrue(all(c["status"] == "data_error" and c["reason"] == "metric_column_missing" for c in bad))
+
+    def test_invalid_input_and_readiness_do_not_hide_metric_error(self):
+        bad_type = classify_validity_cell(["x"], {"IC": [1.]})
+        self.assertEqual(bad_type["status"], "data_error")
+        bad_metric = classify_validity_cell(np.ones(3), {"IC": [1., np.inf, 2.]}, readiness=[False, False, False])
+        self.assertEqual(bad_metric["status"], "data_error")
+
 
 if __name__ == "__main__": unittest.main()
