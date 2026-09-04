@@ -333,6 +333,7 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
         summary = {
             "status": "provided", "source": "arrow", "universe_scope": "all_symbols",
             "factor_available": True, "date_count": len(requested),
+            "by_date": rows,
             "dates_with_data": len(rows), "symbol_count": int(round(_mean("symbol_count") or 0)),
             "finite_count": int(sum(row["finite_count"] for row in rows)),
             "std_mean": _mean("std"), "std_min": min((row["std"] for row in rows if row["std"] is not None), default=None),
