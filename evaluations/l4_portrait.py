@@ -427,7 +427,15 @@ def build_validity_matrix(frames, split_dates, factors, events, labels, universe
                         cross = arrow_summaries.get(split, {}).get((factor, event)) if arrow_root is not None else None
                         if factor not in event_frame:
                             cell = classify_validity_cell(np.full(len(event_frame), np.nan), metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
-                            cell.update(status="review", reason="factor_values_not_provided", factor_value_source="not_provided")
+                            cell["factor_value_source"] = "not_provided"
+                            # Evaluation Parquet carries date/event metric series,
+                            # not a symbol cross section.  When Arrow supplies the
+                            # raw cross section, retain genuine metric failures;
+                            # only replace the synthetic "all NaN factor" outcome.
+                            if cross is None or not cross.get("factor_available"):
+                                cell.update(status="review", reason="factor_values_not_provided")
+                            elif cell.get("reason") == "insufficient_cross_sectional_variation":
+                                cell.update(status="review", reason="readiness_not_provided")
                         else:
                             cell = classify_validity_cell(event_frame[factor], metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
                             cell["factor_value_source"] = "provided"

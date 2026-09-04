@@ -280,5 +280,36 @@ class L4PortraitTests(unittest.TestCase):
             self.assertTrue(calls)
             self.assertTrue(all("unrelated_payload" not in (columns or []) for columns in calls))
 
+    def test_arrow_values_do_not_mask_metric_coverage_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp, missing_fraction=.06)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])
+            frames, _ = mod._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, .95, allow_partial_metrics=True)
+            cells = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes,
+                                          arrow_root=Path(tmp) / "arrow", dates=dates)
+            target = next(c for c in cells if c["split"] == "training" and c["factor"] == self.factors[0] and c["event"] == self.events[0])
+            self.assertEqual(target["factor_value_source"], "arrow_cross_section")
+            self.assertEqual(target["status"], "coverage_fail")
+
+    def test_arrow_values_do_not_mask_metric_undefined_or_data_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])
+            frames, _ = mod._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, 0.0)
+            key = ("training", self.labels[0], self.universes[0])
+            event_mask = frames[key].index.get_level_values("event") == self.events[0]
+            frames[key].loc[event_mask, self.factors[0] + "|IC"] = 0.0
+            frames[key].loc[event_mask, self.factors[1] + "|IC"] = np.inf
+            cells = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes,
+                                          arrow_root=Path(tmp) / "arrow", dates=dates)
+            undefined = next(c for c in cells if c["split"] == "training" and c["label"] == self.labels[0]
+                             and c["universe"] == self.universes[0] and c["factor"] == self.factors[0]
+                             and c["event"] == self.events[0])
+            bad = next(c for c in cells if c["split"] == "training" and c["label"] == self.labels[0]
+                       and c["universe"] == self.universes[0] and c["factor"] == self.factors[1]
+                       and c["event"] == self.events[0])
+            self.assertEqual(undefined["status"], "metric_undefined")
+            self.assertEqual(bad["status"], "data_error")
+
 
 if __name__ == "__main__": unittest.main()
