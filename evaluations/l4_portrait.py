@@ -283,10 +283,11 @@ def _value_correlations(arrow_root, dates, factors, events):
     return peers, file_hashes
 
 
-def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]], labels: Sequence[str], universes: Sequence[str], expected_factors: Sequence[str], events: Sequence[int], arrow_root: Path, candidates_root: Path, coverage_threshold: float = .95, campaign_id: str = "sfm_stream_001", provenance: Optional[Mapping[str, str]] = None):
+def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]], labels: Sequence[str], universes: Sequence[str], expected_factors: Sequence[str], events: Sequence[int], arrow_root: Path, candidates_root: Path, coverage_threshold: float = .95, campaign_id: str = "sfm_stream_001", provenance: Optional[Mapping[str, str]] = None, return_validity_matrix: bool = False):
     factors, labels, universes, events = list(expected_factors), list(labels), list(universes), list(events)
     if len(set(factors)) != len(factors): raise ValueError("duplicate factors")
     frames, receipts = _strict_frames(result_root, split_dates, labels, universes, factors, events, coverage_threshold)
+    validity_matrix = build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold)
     candidates = _load_candidates(candidates_root, factors)
     all_dates = list(split_dates["training"]) + list(split_dates["observation"])
     value_peers, arrow_hashes = _value_correlations(arrow_root, all_dates, factors, events)
@@ -348,7 +349,7 @@ def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]],
             "anomaly_days": [{"date": str(date), "standardized_rank_ic_contribution": float(standardized.loc[date]), "absolute_standardized_contribution": float(value)} for date, value in top.items()],
             "decision": {"status": "formal_observation", "promotion_allowed": False, "reasons": ["L4 creates portraits and experience evidence only"]}
         })
-    return docs
+    return (docs, validity_matrix) if return_validity_matrix else docs
 
 
 def write_portraits(documents, output_root):
