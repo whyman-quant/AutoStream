@@ -146,5 +146,15 @@ class L4PortraitTests(unittest.TestCase):
             self.assertTrue(all(c["status"] == "review" for c in matrix))
             self.assertTrue(all(c["reason"] == "factor_values_not_provided" for c in matrix))
 
+    def test_relaxed_frames_allow_partial_metrics_only_for_matrix_mode(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp, missing_fraction=.06)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])
+            with self.assertRaisesRegex(ValueError, "coverage"):
+                mod._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, .95)
+            frames, _ = mod._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, .95, allow_partial_metrics=True)
+            matrix = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes)
+            self.assertTrue(any(c["status"] in ("coverage_fail", "review") for c in matrix))
+
 
 if __name__ == "__main__": unittest.main()

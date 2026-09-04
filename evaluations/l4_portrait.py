@@ -55,7 +55,7 @@ def _neighbors(factor, candidates):
     return sorted(result, key=lambda x: x["candidate_id"])
 
 
-def _strict_frames(result_root, split_dates, labels, universes, factors, events, threshold):
+def _strict_frames(result_root, split_dates, labels, universes, factors, events, threshold, allow_partial_metrics=False):
     frames, receipts = {}, {}
     columns = [factor + "|" + metric for factor in factors for metric in METRICS]
     for split in ("training", "observation"):
@@ -80,7 +80,8 @@ def _strict_frames(result_root, split_dates, labels, universes, factors, events,
                     finite = np.isfinite(values.dropna().to_numpy()).all()
                     if not finite: raise ValueError("non-finite {}".format(column))
                     fraction = float(values.notna().mean()); coverage[column] = fraction
-                    if fraction < threshold: raise ValueError("coverage below 95 percent: {}".format(column))
+                    if fraction < threshold and not allow_partial_metrics:
+                        raise ValueError("coverage below 95 percent: {}".format(column))
                 frames[(split, label, universe)] = frame
                 receipts.setdefault(split, []).append({"label": label, "universe": universe, "path": str(path), "sha256": _sha(path), "rows": len(frame), "columns": len(frame.columns), "minimum_column_coverage": min(coverage.values())})
     return frames, receipts
@@ -286,7 +287,8 @@ def _value_correlations(arrow_root, dates, factors, events):
 def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]], labels: Sequence[str], universes: Sequence[str], expected_factors: Sequence[str], events: Sequence[int], arrow_root: Path, candidates_root: Path, coverage_threshold: float = .95, campaign_id: str = "sfm_stream_001", provenance: Optional[Mapping[str, str]] = None, return_validity_matrix: bool = False):
     factors, labels, universes, events = list(expected_factors), list(labels), list(universes), list(events)
     if len(set(factors)) != len(factors): raise ValueError("duplicate factors")
-    frames, receipts = _strict_frames(result_root, split_dates, labels, universes, factors, events, coverage_threshold)
+    frames, receipts = _strict_frames(result_root, split_dates, labels, universes, factors, events, coverage_threshold,
+                                      allow_partial_metrics=return_validity_matrix)
     validity_matrix = build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold)
     candidates = _load_candidates(candidates_root, factors)
     all_dates = list(split_dates["training"]) + list(split_dates["observation"])
