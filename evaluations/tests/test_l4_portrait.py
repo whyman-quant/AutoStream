@@ -96,7 +96,7 @@ class L4PortraitTests(unittest.TestCase):
 
     def test_validity_matrix_classifies_independent_cells(self):
         values = np.arange(1, 7, dtype=float)
-        self.assertEqual(classify_validity_cell(values, {"IC": values})["status"], "pass")
+        self.assertEqual(classify_validity_cell(values, {"IC": values}, readiness=np.ones(6, dtype=bool))["status"], "pass")
         self.assertEqual(classify_validity_cell(values, {"IC": np.zeros(6)})["status"], "metric_undefined")
         self.assertEqual(classify_validity_cell(values, {"IC": np.full(6, np.nan)})["status"], "metric_undefined")
         self.assertEqual(classify_validity_cell(values, {"IC": values}, readiness=np.zeros(6, dtype=bool))["status"], "not_ready")
@@ -114,10 +114,10 @@ class L4PortraitTests(unittest.TestCase):
             frames, _ = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, 0.0)
             matrix = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes)
             self.assertEqual(len(matrix), 2 * 2 * 2 * 3 * 2)
-            self.assertEqual({c["status"] for c in matrix}, {"pass"})
+            self.assertEqual({c["status"] for c in matrix}, {"review"})
             summary = summarize_validity_matrix(matrix)
             self.assertEqual(summary["cell_count"], len(matrix))
-            self.assertEqual(summary["pass_count"], len(matrix))
+            self.assertEqual(summary["pass_count"], 0)
 
 
 if __name__ == "__main__": unittest.main()

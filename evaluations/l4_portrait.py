@@ -86,6 +86,159 @@ def _strict_frames(result_root, split_dates, labels, universes, factors, events,
     return frames, receipts
 
 
+VALIDITY_STATES = ("pass", "not_ready", "metric_undefined", "coverage_fail", "data_error", "review")
+
+
+def classify_validity_cell(factor_values, metric_series, readiness=None, date_count=None,
+                           coverage_threshold=.95, min_unique=2, min_rank_count=2):
+    """Classify one factor/event/universe/label/split cell.
+
+    Readiness is intentionally explicit: zero-valued factors never imply ``not_ready``.
+    ``metric_series`` is a mapping of metric name to a one-dimensional sequence.
+    """
+    factor_values = pd.Series(factor_values, dtype="float64")
+    n = int(date_count if date_count is not None else len(factor_values))
+    result = {"status": None, "readiness_source": "provided" if readiness is not None else "not_provided",
+              "date_count": n, "factor_value_count": int(factor_values.notna().sum()),
+              "factor_finite_count": int(np.isfinite(factor_values.to_numpy()).sum()),
+              "factor_zero_count": int((factor_values == 0).sum()), "not_ready_zero_count": 0,
+              "metric_counts": {}, "metric_finite_count": 0, "metric_coverage": 0.0, "reason": None}
+    if len(factor_values) != n or n <= 0:
+        result.update(status="data_error", reason="invalid_date_count")
+        return result
+    if not np.isfinite(factor_values.dropna().to_numpy()).all():
+        result.update(status="data_error", reason="non_finite_factor_value")
+        return result
+    ready = None
+    if readiness is not None:
+        ready = pd.Series(readiness)
+        if len(ready) != n:
+            result.update(status="data_error", reason="readiness_length_mismatch")
+            return result
+        # Accept bool/numeric masks, but reject missing or non-binary values.
+        if ready.isna().any():
+            result.update(status="data_error", reason="readiness_contains_null")
+            return result
+        try:
+            ready = ready.astype(bool)
+        except (TypeError, ValueError):
+            result.update(status="data_error", reason="invalid_readiness")
+            return result
+        false_mask = ~ready
+        result["not_ready_count"] = int(false_mask.sum())
+        result["not_ready_zero_count"] = int((false_mask & factor_values.eq(0)).sum())
+        if false_mask.any():
+            result.update(status="not_ready", reason="explicit_readiness_false")
+            return result
+
+    metric_ok = True
+    metric_defined = False
+    for name, values in metric_series.items():
+        series = pd.Series(values, dtype="float64")
+        if len(series) != n:
+            result.update(status="data_error", reason="metric_length_mismatch")
+            return result
+        finite = series.dropna()
+        if not np.isfinite(finite.to_numpy()).all():
+            result.update(status="data_error", reason="non_finite_metric")
+            return result
+        count = int(len(finite)); result["metric_counts"][name] = count
+        result["metric_finite_count"] += count
+        if count:
+            metric_defined = True
+            if int(finite.nunique()) < min_unique or int(finite.rank(method="first").nunique()) < min_rank_count:
+                metric_ok = False
+        if count == 0:
+            metric_ok = False
+    if not metric_defined:
+        result.update(status="metric_undefined", reason="no_finite_metric_values")
+        return result
+    # A cell is only as complete as its least-covered metric.  Using the minimum
+    # prevents one populated metric from masking an IC/RankIC (or portfolio metric)
+    # that is unavailable for most dates.
+    best_count = min(result["metric_counts"].values())
+    result["metric_coverage"] = float(best_count / float(n))
+    if result["metric_coverage"] < coverage_threshold:
+        result.update(status="coverage_fail", reason="metric_coverage_below_threshold")
+        return result
+    if not metric_ok:
+        result.update(status="metric_undefined", reason="insufficient_metric_variation")
+        return result
+    # Without an explicit mask, a valid-looking cell requires human review rather than
+    # silently claiming readiness. This preserves the distinction from zero values.
+    if readiness is None:
+        result.update(status="review", reason="readiness_not_provided")
+    else:
+        result.update(status="pass", reason="explicit_readiness_true")
+    return result
+
+
+def _readiness_column(frame, factor):
+    for name in (factor + "|ready", factor + "|readiness", "ready_" + factor, "readiness_" + factor):
+        if name in frame.columns:
+            return name
+    return None
+
+
+def build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold=.95):
+    """Build deterministic factor×event×universe×label×split validity cells."""
+    cells = []
+    for split in ("training", "observation"):
+        expected_dates = list(split_dates[split])
+        if any(str(d) >= "20250101" for d in expected_dates):
+            raise ValueError("holdout dates are forbidden")
+        for factor in factors:
+            for event in events:
+                for universe in universes:
+                    for label in labels:
+                        key = (split, label, universe)
+                        if key not in frames:
+                            raise ValueError("missing frame for {}".format(key))
+                        frame = frames[key]
+                        try:
+                            event_frame = frame.xs(event, level="event")
+                        except KeyError:
+                            raise ValueError("missing event {}".format(event))
+                        readiness_name = _readiness_column(frame, factor)
+                        readiness = event_frame[readiness_name] if readiness_name else None
+                        metrics = {metric: event_frame[factor + "|" + metric] for metric in METRICS}
+                        cell = classify_validity_cell(event_frame[factor] if factor in event_frame else np.ones(len(event_frame)), metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
+                        cell.update({"split": split, "factor": factor, "event": event, "universe": universe, "label": label})
+                        cells.append(cell)
+    return cells
+
+
+def summarize_validity_matrix(cells, min_pass_events=6):
+    """Return pass-only aggregates and deterministic counts for a validity matrix."""
+    if not cells:
+        return {"cell_count": 0, "status_counts": {}, "pass_count": 0, "summaries": {}}
+    status_counts = {state: sum(c.get("status") == state for c in cells) for state in VALIDITY_STATES}
+    result = {"cell_count": len(cells), "status_counts": status_counts, "pass_count": status_counts["pass"], "summaries": {}}
+    for dimension in ("event", "universe", "label", "split"):
+        values = sorted(set(c[dimension] for c in cells), key=str)
+        result["summaries"][dimension] = {}
+        for value in values:
+            subset = [c for c in cells if c[dimension] == value]
+            result["summaries"][dimension][str(value)] = {
+                "cell_count": len(subset),
+                "pass_count": sum(c["status"] == "pass" for c in subset),
+                "status_counts": {state: sum(c["status"] == state for c in subset) for state in VALIDITY_STATES},
+            }
+    factor_summaries = {}
+    for factor in sorted(set(c["factor"] for c in cells)):
+        fcells = [c for c in cells if c["factor"] == factor]
+        pass_cells = [c for c in fcells if c.get("status") == "pass"]
+        event_pass = {e: sum(c["status"] == "pass" for c in fcells if c["event"] == e) for e in sorted(set(c["event"] for c in fcells))}
+        broad = sum(v >= 1 for v in event_pass.values())
+        training_pass = any(c["status"] == "pass" and c["split"] == "training" for c in fcells)
+        observation_pass = any(c["status"] == "pass" and c["split"] == "observation" for c in fcells)
+        status = "insufficient_scope" if broad < min_pass_events else ("observation_failure" if training_pass and not observation_pass else "review")
+        factor_summaries[factor] = {"status": status, "cell_count": len(fcells), "pass_count": len(pass_cells), "event_pass_counts": event_pass,
+                                    "pass_cells": [{k: c[k] for k in ("split", "event", "universe", "label")} for c in pass_cells]}
+    result["summaries"]["factor"] = factor_summaries
+    return result
+
+
 def _value_correlations(arrow_root, dates, factors, events):
     accum = {(a, b): [] for i, a in enumerate(factors) for b in factors[i + 1:]}
     file_hashes = []
