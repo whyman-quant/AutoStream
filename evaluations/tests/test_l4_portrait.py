@@ -119,5 +119,32 @@ class L4PortraitTests(unittest.TestCase):
             self.assertEqual(summary["cell_count"], len(matrix))
             self.assertEqual(summary["pass_count"], 0)
 
+    def test_validity_cell_rejects_invalid_readiness_and_tracks_cross_section(self):
+        values = np.array([0., 1., 2., 3., 4., 5.])
+        cell = classify_validity_cell(values, {"IC": values}, readiness=np.ones(6, dtype=bool))
+        self.assertIn("factor_std", cell)
+        self.assertIn("factor_unique_count", cell)
+        self.assertIn("factor_nonzero_ratio", cell)
+        self.assertIn("effective_rank_count", cell)
+        with self.assertRaisesRegex(ValueError, "readiness"):
+            classify_validity_cell(values, {"IC": values}, readiness=np.array([0, 1, 2, 1, 0, 1]))
+
+    def test_validity_cell_reports_coverage_data_error_review_and_partial_metrics(self):
+        values = np.arange(6, dtype=float)
+        partial = classify_validity_cell(values, {"IC": values, "RankIC": np.array([1., np.nan, np.nan, np.nan, np.nan, np.nan])}, readiness=np.ones(6, dtype=bool), coverage_threshold=.95)
+        self.assertEqual(partial["status"], "coverage_fail")
+        bad = classify_validity_cell(values, {"IC": np.array([1., 2., np.inf, 4., 5., 6.])}, readiness=np.ones(6, dtype=bool))
+        self.assertEqual(bad["status"], "data_error")
+        review = classify_validity_cell(values, {"IC": values})
+        self.assertEqual(review["status"], "review")
+
+    def test_build_matrix_does_not_fabricate_missing_factor_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            frames, _ = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])._strict_frames(Path(tmp) / "results", dates, self.labels, self.universes, self.factors, self.events, 0.0)
+            matrix = build_validity_matrix(frames, dates, self.factors, self.events, self.labels, self.universes)
+            self.assertTrue(all(c["status"] == "review" for c in matrix))
+            self.assertTrue(all(c["reason"] == "factor_values_not_provided" for c in matrix))
+
 
 if __name__ == "__main__": unittest.main()

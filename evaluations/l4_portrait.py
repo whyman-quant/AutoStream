@@ -90,7 +90,8 @@ VALIDITY_STATES = ("pass", "not_ready", "metric_undefined", "coverage_fail", "da
 
 
 def classify_validity_cell(factor_values, metric_series, readiness=None, date_count=None,
-                           coverage_threshold=.95, min_unique=2, min_rank_count=2):
+                           coverage_threshold=.95, min_unique=2, min_rank_count=2,
+                           min_nonzero_ratio=0.0, min_factor_std=0.0):
     """Classify one factor/event/universe/label/split cell.
 
     Readiness is intentionally explicit: zero-valued factors never imply ``not_ready``.
@@ -110,6 +111,11 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
         result.update(status="data_error", reason="non_finite_factor_value")
         return result
     ready = None
+    finite_factor = factor_values.dropna()
+    result["factor_std"] = float(finite_factor.std(ddof=1)) if len(finite_factor) > 1 else None
+    result["factor_unique_count"] = int(finite_factor.nunique())
+    result["factor_nonzero_ratio"] = float((finite_factor != 0).mean()) if len(finite_factor) else 0.0
+    result["effective_rank_count"] = int(finite_factor.rank(method="dense").nunique())
     if readiness is not None:
         ready = pd.Series(readiness)
         if len(ready) != n:
@@ -119,11 +125,15 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
         if ready.isna().any():
             result.update(status="data_error", reason="readiness_contains_null")
             return result
-        try:
+        if pd.api.types.is_bool_dtype(ready):
             ready = ready.astype(bool)
-        except (TypeError, ValueError):
-            result.update(status="data_error", reason="invalid_readiness")
-            return result
+        elif pd.api.types.is_numeric_dtype(ready):
+            numeric = ready.to_numpy(dtype="float64")
+            if not np.isfinite(numeric).all() or not np.isin(numeric, [0.0, 1.0]).all():
+                raise ValueError("readiness must contain only bool/0/1")
+            ready = ready.astype(bool)
+        else:
+            raise ValueError("readiness must contain only bool/0/1")
         false_mask = ~ready
         result["not_ready_count"] = int(false_mask.sum())
         result["not_ready_zero_count"] = int((false_mask & factor_values.eq(0)).sum())
@@ -164,6 +174,12 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
     if not metric_ok:
         result.update(status="metric_undefined", reason="insufficient_metric_variation")
         return result
+    if (result["factor_std"] is None or result["factor_std"] <= min_factor_std or
+            result["factor_unique_count"] < min_unique or
+            result["effective_rank_count"] < min_rank_count or
+            result["factor_nonzero_ratio"] < min_nonzero_ratio):
+        result.update(status="metric_undefined", reason="insufficient_cross_sectional_variation")
+        return result
     # Without an explicit mask, a valid-looking cell requires human review rather than
     # silently claiming readiness. This preserves the distinction from zero values.
     if readiness is None:
@@ -202,7 +218,11 @@ def build_validity_matrix(frames, split_dates, factors, events, labels, universe
                         readiness_name = _readiness_column(frame, factor)
                         readiness = event_frame[readiness_name] if readiness_name else None
                         metrics = {metric: event_frame[factor + "|" + metric] for metric in METRICS}
-                        cell = classify_validity_cell(event_frame[factor] if factor in event_frame else np.ones(len(event_frame)), metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
+                        if factor not in event_frame:
+                            cell = classify_validity_cell(np.full(len(event_frame), np.nan), metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
+                            cell.update(status="review", reason="factor_values_not_provided")
+                        else:
+                            cell = classify_validity_cell(event_frame[factor], metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
                         cell.update({"split": split, "factor": factor, "event": event, "universe": universe, "label": label})
                         cells.append(cell)
     return cells
@@ -229,7 +249,10 @@ def summarize_validity_matrix(cells, min_pass_events=6):
         fcells = [c for c in cells if c["factor"] == factor]
         pass_cells = [c for c in fcells if c.get("status") == "pass"]
         event_pass = {e: sum(c["status"] == "pass" for c in fcells if c["event"] == e) for e in sorted(set(c["event"] for c in fcells))}
-        broad = sum(v >= 1 for v in event_pass.values())
+        # An event is "broadly" covered only when at least half of its
+        # universe×label cells pass; a single lucky panel is insufficient.
+        cells_per_event = max(1, len(set(c["universe"] for c in fcells)) * len(set(c["label"] for c in fcells)))
+        broad = sum(v >= int(math.ceil(cells_per_event / 2.0)) for v in event_pass.values())
         training_pass = any(c["status"] == "pass" and c["split"] == "training" for c in fcells)
         observation_pass = any(c["status"] == "pass" and c["split"] == "observation" for c in fcells)
         status = "insufficient_scope" if broad < min_pass_events else ("observation_failure" if training_pass and not observation_pass else "review")
