@@ -84,6 +84,9 @@ def materialize_date(
     labels_by_key = {}
     for label_name, frame in labels.items():
         value_column = _label_columns(frame)
+        keys = [(_symbol(row["symbol"]), int(row["event"])) for _, row in frame.iterrows()]
+        if len(keys) != len(set(keys)):
+            raise ValueError("duplicate symbol,event keys in label {}".format(label_name))
         labels_by_key[label_name] = {
             (_symbol(row["symbol"]), int(row["event"])): row[value_column]
             for _, row in frame.iterrows()

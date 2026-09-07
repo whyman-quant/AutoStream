@@ -49,6 +49,16 @@ class L4UniverseMaterializationTests(unittest.TestCase):
         self.assertEqual({row["event"] for row in rows}, set(EXPECTED_EVENTS))
         self.assertEqual(len(rows), 8 * 1 * 2)
 
+    def test_rejects_duplicate_label_keys(self):
+        universe = pd.DataFrame({"000985": [1]}, index=["000001.SZ"])
+        tradability = pd.DataFrame({"isdt1": [0], "iszt1": [0]}, index=universe.index)
+        duplicate = pd.DataFrame(
+            [("000001", 92600000, 1.0), ("000001", 92600000, 2.0)],
+            columns=["symbol", "event", "label"],
+        )
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            materialize_date("20210104", universe, tradability, {"raw926": duplicate, "ease926": duplicate}, universes=("000985",))
+
 
 if __name__ == "__main__":
     unittest.main()
