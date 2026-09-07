@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "dataset_id": "sfm_stream_001_formal_history_v2",
+  "scope": "l4_evaluation_universe_source_contract",
+  "status": "source_frozen_final_tradable_sets_not_materialized",
+  "production_date_list": "campaigns/sfm_stream_001/manifests/formal-history-production-dates-v2.txt",
+  "production_date_list_sha256": "sha256:4dcbe56f13aa2d3318d48af2e27c47beed322aa4a45a4b8d6a18083e3ed9b63c",
+  "date_count": 969,
+  "universe_source": {
+    "root": "/mnt/beegfs_dev/storage_r/706_wgh/app_working_dir/data/AlphaFW/fwm01/basedata/{YYYYMMDD}/universe.parquet",
+    "loader": "/home/fangwei/mnt-ssd/fwm/calculation/data/utils_data.py:get_universe_data",
+    "columns": ["000985", "003800", "000906"],
+    "index_format": "exchange-suffixed symbol, e.g. 000001.SZ",
+    "verified_date_files": 969,
+    "missing_date_files": 0
+  },
+  "tradability_filter": {
+    "source": "/home/fangwei/mnt-ssd/fwm/calculation/data/utils_data.py:get_dbar_data",
+    "fields": ["isdt1", "iszt1"],
+    "rule": "universe_membership - (isdt1 + iszt1) == 1",
+    "symbol_normalization": "strip exchange suffix before factor/label join"
+  },
+  "label_join": {
+    "labels": ["raw926", "ease926"],
+    "join_keys": ["symbol", "event"],
+    "missing_label_policy": "drop missing label rows; never impute",
+    "minimum_rows_per_date_universe_label": 100
+  },
+  "materialization_contract": {
+    "key": "date × event × universe × label",
+    "required_fields": ["date", "event", "universe", "label", "symbol", "symbol_count", "symbols_sha256", "label_nonnull_count", "non_limit_exclusion_count"],
+    "evaluation_source_of_truth": "materialized final tradable-and-labeled symbols, not all_symbols Arrow summaries",
+    "must_be_generated_before": "formal-history-v3-readiness L4 evaluation"
+  },
+  "holdout_policy": {
+    "holdout_date_range": ["20250102", "20251210"],
+    "holdout_access": [],
+    "holdout_materialization": false
+  },
+  "promotion_allowed": false,
+  "note": "This manifest freezes the source paths and filtering semantics. Final date/event/universe/label symbol sets remain a required materialization step and are not inferred from the legacy v2 outputs."
+}
