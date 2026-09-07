@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "kind": "readiness_preflight",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "status": "passed",
+  "scope": "direct_legacy_family_readiness_migration",
+  "dates": ["20210104", "20230103", "20241231"],
+  "events": [92700000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000],
+  "factor_names": [
+    "liquidity_resilience_spread_adjusted_depth_recovery_w16",
+    "liquidity_resilience_spread_adjusted_depth_recovery_w32_lag0",
+    "liquidity_resilience_spread_adjusted_depth_recovery_w64_lag1",
+    "liquidity_resilience_spread_adjusted_depth_recovery_w128_lag2",
+    "liquidity_resilience_multi_level_depth_recovery_w16_lag0",
+    "liquidity_resilience_multi_level_depth_recovery_w32_lag0",
+    "liquidity_resilience_multi_level_depth_recovery_w64_lag1",
+    "liquidity_resilience_multi_level_depth_recovery_w128_lag2",
+    "liquidity_resilience_shock_recovery_speed_w16_lag0",
+    "liquidity_resilience_shock_recovery_speed_w32_lag0",
+    "liquidity_resilience_shock_recovery_speed_w64_lag1",
+    "liquidity_resilience_shock_recovery_speed_w128_lag2"
+  ],
+  "implementation": {
+    "source_path": "base/hf-open5m-factor-demo/factors/liquidity_resilience/factor_entry.cpp",
+    "binary_path": "base/hf-open5m-factor-demo/build-flow-pressure/app_factor/main",
+    "binary_sha256": "sha256:9a33fc47efb7f1d6a3e739cdc590bee87b606dfb02f5d6ea9c65bf6211bdc98e",
+    "config_path": "/tmp/l4-v3-preflight-config.json",
+    "config_sha256": "sha256:b34abb44988efe729d9e0a67ba8c57c94e06e18604715eeeb77d1e7f13d785e3",
+    "converter": {"path": "evaluations/convert_production_hdf5.py", "sha256": "sha256:c9daa109eeb9650b7819bbf67aff8c2552b1fb25dfb8c733e61a3710f93a069e"},
+    "postprocessor": {"path": "evaluations/pilot_postprocess.py", "sha256": "sha256:a03d9406b1645dd6899319d02571c57d6f4fc707018f9a8e5d63af104f19e873"}
+  },
+  "output": {
+    "hdf5_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-v3-readiness-legacy-lr",
+    "arrow_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-v3-readiness-legacy-lr/arrow",
+    "artifacts": {
+      "20210104": {"hdf5": "sha256:98eefea8c9296e2271dda5e745f64d00ac8c16afe1c96cf90296bb8ec39bc37d", "arrow": "sha256:f586fc47213c46cfc53cff34cb4848bba98b31139ccb8dda0e8a91ea079afeef", "rows": 31048, "stocks": 3881},
+      "20230103": {"hdf5": "sha256:987f047f68bf05be951596ee39c94a9ec56cf5cc79777afce0dcf179913eadc8", "arrow": "sha256:3471e4175db235ae8c6305fa25fcaf949f5e167d4d30e5c23af2136f24bc40e6", "rows": 37976, "stocks": 4747},
+      "20241231": {"hdf5": "sha256:1c0cc1a1aedf2e0877808ebf49848868453905929db037dfcc6914c02dd62d23", "arrow": "sha256:45b90c139866dfa9a4eaf9d17e35967669bf59167f30f6912f68d93f2218fe91", "rows": 39800, "stocks": 4975}
+    }
+  },
+  "strict_checks": {
+    "hdf5_dates": 3,
+    "arrow_dates": 3,
+    "factor_count": 48,
+    "liquidity_resilience_factor_count": 12,
+    "events_per_day": 8,
+    "all_factor_names_match_batch": true,
+    "readiness_matrices_present": true,
+    "ready_true_all_finite": true,
+    "ready_false_nan_or_finite_allowed": true,
+    "symbol_event_keys_unique": true,
+    "opening_event_all_liquidity_resilience_not_ready": true
+  },
+  "decision": "preflight_only_do_not_submit_bulk",
+  "promotion_allowed": false,
+  "notes": "The original liquidity_resilience registration now points to the readiness-aware implementation. Existing v2 production outputs are immutable historical evidence; no 969-day replay or L4 promotion is authorized by this preflight."
+}

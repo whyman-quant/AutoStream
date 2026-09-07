@@ -10,6 +10,12 @@ namespace liquidity_resilience {
 
 static const std::string kFactorSetName = "liquidity_resilience";
 static const size_t kFactorSize = 12;
+// Recovery windows require a full window; lagged variants also require their
+// lag observations. Shock-speed outputs remain unavailable until a drawdown
+// of at least 20% followed by one recovery quote is observed.
+static const size_t kRecoveryWarmupEvents[4] = {16, 32, 65, 130};
+static const size_t kRecoveryLagEvents[4] = {0, 0, 1, 2};
+static const double kShockThreshold = 0.8;
 static const std::vector<std::string> kFactorNames = {
     "liquidity_resilience_spread_adjusted_depth_recovery_w16",
     "liquidity_resilience_spread_adjusted_depth_recovery_w32_lag0",

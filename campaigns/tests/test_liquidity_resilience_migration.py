@@ -78,8 +78,18 @@ class LiquidityResilienceMigrationTests(unittest.TestCase):
         )
 
         evidence = {item["candidate_id"]: item["evidence_level"] for item in candidates}
-        self.assertEqual(evidence[representative_id], "L3")
-        self.assertEqual({level for key, level in evidence.items() if key != representative_id}, {"L3"})
+        self.assertEqual(evidence[representative_id], "L2")
+        self.assertEqual({level for key, level in evidence.items() if key != representative_id}, {"L2"})
+        for item in candidates:
+            self.assertEqual(item["availability"]["invalid_policy"], "unavailable")
+            expected_warmup = item["state"]["window_events"] + item["availability"]["lag_events"]
+            self.assertEqual(item["state"]["warmup_events"], expected_warmup)
+            expected_policy = (
+                "nan_until_shock_and_rebound"
+                if item["operator_id"] == "shock_recovery_speed"
+                else "nan_until_full_window"
+            )
+            self.assertEqual(item["availability"]["readiness_policy"], expected_policy)
 
     def test_candidate_name_matches_cpp_metadata(self):
         candidate = load_json(CANDIDATE_PATH)

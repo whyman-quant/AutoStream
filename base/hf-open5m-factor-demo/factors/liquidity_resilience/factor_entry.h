@@ -11,17 +11,18 @@ namespace liquidity_resilience {
 
 class FactorEntry : public comm::FactorEntryBase {
 public:
-    FactorEntry(const std::string& asset, const comm::FactorMetadata& metadata, const comm::FactorEntryConfig& config);
+    FactorEntry(const std::string& asset, const comm::FactorMetadata& metadata,
+                const comm::FactorEntryConfig& config);
+    std::vector<bool> GetReadinessMask(int64_t timestamp) const override;
 
 private:
     void DoOnAddQuote(const Stock_Internal_Book& quote) override;
-    void DoOnAddTrans(const Stock_Transaction_Internal_Book_New& trade) override;
-    void DoOnAddOrder(const Stock_Order_Internal_Book_New& order) override;
-    void DoOnUpdateFactors(int64_t timestamp) override;
+    void DoOnAddTrans(const Stock_Transaction_Internal_Book_New&) override {}
+    void DoOnAddOrder(const Stock_Order_Internal_Book_New&) override {}
+    void DoOnUpdateFactors(int64_t) override;
 
     static const size_t kMaxHistoryEvents = 130;
-    std::deque<double> l1_liquidity_history_;
-    std::deque<double> l5_liquidity_history_;
+    std::deque<double> l1_, l5_;
     bool current_valid_{false};
 };
 

@@ -15,7 +15,9 @@ double Value(factors::liquidity_resilience::FactorEntry& entry) {
 std::vector<double> Values(factors::liquidity_resilience::FactorEntry& entry) {
     return entry.UpdateFactors(100000000);
 }
-bool Near(double actual, double expected) { return std::abs(actual - expected) <= 1e-12; }
+bool Near(double actual, double expected) {
+    return (std::isnan(actual) && std::isnan(expected)) || std::abs(actual - expected) <= 1e-12;
+}
 }
 int main() {
     factors::comm::FactorEntryConfig config;
@@ -34,27 +36,32 @@ int main() {
         "liquidity_resilience_shock_recovery_speed_w128_lag2",
     };
     if (factors::liquidity_resilience::GetMetadata().factor_names != expected_names) return 1;
-    factors::liquidity_resilience::FactorEntry entry("000001", factors::liquidity_resilience::GetMetadata(), config);
-    entry.AddQuote(Quote(10000, 10100, 100, 100));
-    if (!Near(Value(entry), 1.0)) return 1;
-    const auto recovered = Values(entry);
-    if (recovered.size() != 12 || !std::isfinite(recovered.at(8))) return 1;
 
-    factors::liquidity_resilience::FactorEntry lagged("000001", factors::liquidity_resilience::GetMetadata(), config);
-    lagged.AddQuote(Quote(10000, 10100, 100, 100));
-    lagged.AddQuote(Quote(10000, 10300, 20, 20));
-    const auto lagged_values = Values(lagged);
-    if (!(lagged_values.at(0) < 0.5) || !Near(lagged_values.at(2), 1.0) || !Near(lagged_values.at(3), 0.0)) return 1;
-    for (const double value : lagged_values) if (!std::isfinite(value)) return 1;
-    entry.AddQuote(Quote(10000, 10300, 20, 20));
-    const double shock = Value(entry);
-    if (!(shock > 0.0 && shock < 0.5)) return 1;
+    factors::liquidity_resilience::FactorEntry entry("000001", factors::liquidity_resilience::GetMetadata(), config);
+    // Values before the declared warmup are unavailable, not zero.
     entry.AddQuote(Quote(10000, 10100, 100, 100));
-    if (!Near(Value(entry), 1.0)) return 1;
+    const auto cold = Values(entry);
+    if (cold.size() != 12 || !std::isnan(cold.at(0)) || !std::isnan(cold.at(8))) return 1;
+    const auto cold_ready = entry.GetReadinessMask(92700000);
+    if (cold_ready.size() != 12 || cold_ready.at(0) || cold_ready.at(8)) return 1;
+
+    // A rising-only window has no drawdown and must not be classified as shock recovery.
+    factors::liquidity_resilience::FactorEntry rising("000001", factors::liquidity_resilience::GetMetadata(), config);
+    for (uint32_t volume = 10; volume <= 160; volume += 10) rising.AddQuote(Quote(10000, 10100, volume, volume));
+    if (!std::isnan(Values(rising).at(8))) return 1;
+
+    // A large drop establishes a shock, but speed remains unavailable until recovery.
+    for (int i = 0; i < 16; ++i) entry.AddQuote(Quote(10000, 10100, 100, 100));
+    entry.AddQuote(Quote(10000, 10100, 10, 10));
+    if (!std::isnan(Values(entry).at(8))) return 1;
+    entry.AddQuote(Quote(10000, 10100, 60, 60));
+    const auto recovering = Values(entry);
+    if (!(std::isfinite(recovering.at(8)) && recovering.at(8) > 0.0)) return 1;
+    if (!entry.GetReadinessMask(100000000).at(8)) return 1;
     factors::liquidity_resilience::FactorEntry invalid("000001", factors::liquidity_resilience::GetMetadata(), config);
     invalid.AddQuote(Quote(20000, 10000, 100, 100));
     const double invalid_value = Value(invalid);
-    if (!Near(invalid_value, 0.0) || !std::isfinite(invalid_value)) return 1;
+    if (!std::isnan(invalid_value) || invalid.GetReadinessMask(100000000).at(0)) return 1;
     factors::liquidity_resilience::FactorEntry left("000001", factors::liquidity_resilience::GetMetadata(), config);
     factors::liquidity_resilience::FactorEntry right("000001", factors::liquidity_resilience::GetMetadata(), config);
     for (int index = 0; index < 4; ++index) {
@@ -63,6 +70,6 @@ int main() {
         if (!Near(Value(left), Value(right))) return 1;
     }
     right.AddQuote(Quote(10000, 11000, 1, 1));
-    if (!Near(Value(left), 1.0)) return 1;
+    if (!std::isnan(Value(left))) return 1;
     return 0;
 }
