@@ -70,6 +70,10 @@ def materialize_date(
     for name in EXPECTED_LABELS:
         if name not in labels:
             raise ValueError("label missing: {}".format(name))
+        if "date" in labels[name].columns:
+            label_dates = {str(value) for value in labels[name]["date"].dropna().unique()}
+            if label_dates and label_dates != {date}:
+                raise ValueError("label date mismatch for {}: {}".format(name, sorted(label_dates)))
         _label_columns(labels[name])
     if "isdt1" not in tradability.columns or "iszt1" not in tradability.columns:
         raise ValueError("tradability must contain isdt1 and iszt1")
