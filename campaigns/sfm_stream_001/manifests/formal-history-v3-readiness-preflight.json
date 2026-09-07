@@ -30,5 +30,11 @@
   "holdout_read": false,
   "decision": "preflight_only_do_not_submit_bulk",
   "promotion_allowed": false,
+  "registration_check": {
+    "status": "blocked_for_version_freeze",
+    "config_liquidity_family": "liquidity_resilience",
+    "readiness_implementation_family": "liquidity_resilience_v2",
+    "action_required": "freeze Candidate/Batch/config registration names before bulk replay"
+  },
   "notes": "This receipt certifies only three local preflight dates. It does not authorize 969-day production; v3 release/runner and all-family readiness coverage must be frozen separately."
 }
