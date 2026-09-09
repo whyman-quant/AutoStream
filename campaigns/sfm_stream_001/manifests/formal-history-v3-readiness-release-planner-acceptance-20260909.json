@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "l4_release_planner_acceptance",
+  "campaign_id": "sfm_stream_001",
+  "decision_date": "2026-09-09",
+  "dataset_id": "sfm_stream_001_formal_history_v2",
+  "release": {
+    "release_id": "formal-history-v2-090ce65122a269a1747794e817c201e86c80b62c",
+    "source_commit": "090ce65122a269a1747794e817c201e86c80b62c",
+    "release_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-releases/formal-history-v2-090ce65122a269a1747794e817c201e86c80b62c",
+    "release_json_sha256": "sha256:414a47578a13c2aa90d10828e8c39d85e848d7cb1991b4252572490e3fb4e764",
+    "binary_sha256": "sha256:32ffa17c71fc29c033f41b1830bf321ded7d5fcadff19fb0dde2422c1fed0f16",
+    "config_sha256": "sha256:0a2022f1ed3e13580df941e1c80a98f1197b7936fd516a06183da0a8e9cb771b",
+    "immutable": true,
+    "holdout_data_included": false,
+    "holdout_date_list_included": false
+  },
+  "planner": {
+    "plan_path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v3-090ce65122a269a1747794e817c201e86c80b62c/plan.json",
+    "plan_sha256": "sha256:bcf6af1e466c221575bf2b7bed335d5b88e93a9384190e00a212d4d1d2bc82dc",
+    "output_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-formal-history-v3-readiness",
+    "date_count": 969,
+    "date_start": "20210104",
+    "date_end": "20241231",
+    "chunk_size": 5,
+    "chunk_count": 194,
+    "lane_count": 4,
+    "reject_existing_output": true,
+    "slurm_submission_performed": false,
+    "holdout_dates_read": false
+  },
+  "checks": {
+    "production_dates_are_969": true,
+    "production_dates_exclude_2025_holdout": true,
+    "lane_dependency_chain_valid": true,
+    "all_chunk_commands_include_reject_existing_output": true,
+    "output_root_did_not_exist_at_acceptance": true,
+    "release_runner_provenance_frozen": true,
+    "binary_and_config_hashes_verified": true
+  },
+  "holdout_policy": {
+    "holdout_date_count": 228,
+    "known_pilot_date_count": 17,
+    "retain_all_holdout_dates": true,
+    "blind_holdout_claim_allowed": false,
+    "pilot_metrics_may_change_l4_candidates_or_parameters": false,
+    "pilot_metrics_may_change_promotion_or_elimination": false,
+    "l6_must_report_pilot_subset_separately": true
+  },
+  "decision": "release_and_planner_accepted",
+  "bulk_submission_allowed": false,
+  "next_gate": "explicit_user_approval_before_969_slurm_submission",
+  "notes": "This receipt freezes the readiness-aware v3 output target and the deterministic 969-day plan. It does not submit or start production jobs. The 228-day holdout remains intact; 17 engineering Pilot dates are known and are not clean unseen evidence."
+}
