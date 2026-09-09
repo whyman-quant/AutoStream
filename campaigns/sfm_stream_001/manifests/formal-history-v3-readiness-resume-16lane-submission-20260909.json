@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "kind": "l4_readiness_resume_submission",
+  "campaign_id": "sfm_stream_001",
+  "dataset_id": "sfm_stream_001_formal_history_v2",
+  "decision_date": "2026-09-09",
+  "old_submission": {
+    "submission_id": "68621d18c6a7ce601f0f22ef",
+    "job_count": 194,
+    "completed_job_count_before_cancel": 40,
+    "cancelled_or_unfinished_job_count": 154,
+    "cancel_action": "cancelled_all_noncompleted_jobs",
+    "completed_hdf5_validated_date_count": 206,
+    "old_output_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-formal-history-v3-readiness"
+  },
+  "resume_release": {
+    "release_id": "formal-history-v2-2617eacc7dbca0fddc337f7b6ef779299e36c58d",
+    "source_commit": "2617eacc7dbca0fddc337f7b6ef779299e36c58d",
+    "release_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-releases/formal-history-v2-2617eacc7dbca0fddc337f7b6ef779299e36c58d",
+    "release_json_sha256": "sha256:b7bd9ca932f0a024c1f4580535af24a50a75cbdd49cf60b175edb6429be174b8",
+    "binary_sha256": "sha256:32ffa17c71fc29c033f41b1830bf321ded7d5fcadff19fb0dde2422c1fed0f16",
+    "config_sha256": "sha256:0a2022f1ed3e13580df941e1c80a98f1197b7936fd516a06183da0a8e9cb771b",
+    "immutable": true,
+    "holdout_data_included": false
+  },
+  "resume_submission": {
+    "submission_id": "815c780b16b08877165adab1",
+    "plan_path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v3-resume-2617eacc7dbca0fddc337f7b6ef779299e36c58d/plan.json",
+    "plan_sha256": "sha256:c76248dcb4e1c637568613923dca115949241a5f3654afa4f459306766966698",
+    "receipt_path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v3-resume-2617eacc7dbca0fddc337f7b6ef779299e36c58d/plan-submission.json",
+    "receipt_sha256": "sha256:b2ba3ddfc3e9e4077c79675bfd9796a0d0a9e87a4f2419ea12a49f19a89f623e",
+    "requested_date_count": 763,
+    "chunk_count": 153,
+    "chunk_size": 5,
+    "lane_count": 16,
+    "memory_gb": 80,
+    "job_count": 153,
+    "output_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-formal-history-v3-readiness",
+    "reject_existing_output": true,
+    "slurm_submission_performed": true
+  },
+  "safety_checks": {
+    "existing_hdf5_count_at_planning": 206,
+    "existing_hdf5_strictly_validated": true,
+    "resume_dates_exclude_valid_existing_dates": true,
+    "resume_dates_exclude_2025_holdout": true,
+    "all_resume_commands_use_80G": true,
+    "all_resume_commands_reject_existing_output": true,
+    "all_resume_job_ids_unique": true,
+    "lane_dependencies_verified": true,
+    "holdout_market_data_read": false,
+    "holdout_factor_data_read": false,
+    "holdout_labels_read": false
+  },
+  "initial_scheduler_state": {
+    "running": 16,
+    "pending_dependency": 137,
+    "scheduler_rows": 153
+  },
+  "status": "submitted",
+  "completion_certified": false,
+  "promotion_allowed": false,
+  "elimination_allowed": false,
+  "note": "The original four-lane submission was stopped after preserving 206 strictly valid HDF5 dates. The resume submission covers only the remaining 763 dates and never overwrites an existing output."
+}
