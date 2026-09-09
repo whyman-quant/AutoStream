@@ -78,8 +78,8 @@ class LiquidityResilienceMigrationTests(unittest.TestCase):
         )
 
         evidence = {item["candidate_id"]: item["evidence_level"] for item in candidates}
-        self.assertEqual(evidence[representative_id], "L2")
-        self.assertEqual({level for key, level in evidence.items() if key != representative_id}, {"L2"})
+        self.assertEqual(evidence[representative_id], "L3")
+        self.assertEqual({level for key, level in evidence.items() if key != representative_id}, {"L3"})
         for item in candidates:
             self.assertEqual(item["availability"]["invalid_policy"], "unavailable")
             expected_warmup = item["state"]["window_events"] + item["availability"]["lag_events"]

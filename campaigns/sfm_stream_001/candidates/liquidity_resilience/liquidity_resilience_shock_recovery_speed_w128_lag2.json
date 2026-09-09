@@ -44,6 +44,6 @@
     "implementation_path": "base/hf-open5m-factor-demo/factors/liquidity_resilience/factor_entry.cpp",
     "source_commit": "de89430"
   },
-  "evidence_level": "L2",
+  "evidence_level": "L3",
   "canonical_hash": "sha256:f3794e9197606b099a891958a15d5d271edbaaf1baa4c86c1a483b458b665470"
 }

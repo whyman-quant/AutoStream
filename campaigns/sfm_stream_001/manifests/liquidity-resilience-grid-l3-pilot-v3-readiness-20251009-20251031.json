@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "kind": "l3_pilot_receipt",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "batch_id": "liquidity_resilience_seed_v1",
+  "scope": "seventeen_day_readiness_aware_observation_only",
+  "dates": [
+    "20251009",
+    "20251010",
+    "20251013",
+    "20251014",
+    "20251015",
+    "20251016",
+    "20251017",
+    "20251020",
+    "20251021",
+    "20251022",
+    "20251023",
+    "20251024",
+    "20251027",
+    "20251028",
+    "20251029",
+    "20251030",
+    "20251031"
+  ],
+  "events": [
+    92700000,
+    100000000,
+    103000000,
+    110000000,
+    113000000,
+    133000000,
+    140000000,
+    143000000
+  ],
+  "factor_count": 12,
+  "factor_names_source": "campaigns/sfm_stream_001/batches/liquidity_resilience_seed_v1.json",
+  "factor_source_commit": "d8b4996",
+  "binary_path": "/home/fangwei/mnt-ssd/AutoStream/.worktrees/l4-recent-history/base/hf-open5m-factor-demo/build-flow-pressure/app_factor/main",
+  "binary_sha256": "sha256:cbb72e7de3298b75e1974cfa2cc5577f6c63e956dec8d65c23f51bd84f2524b1",
+  "config_path": "/home/fangwei/mnt-ssd/AutoStream/.worktrees/l4-recent-history/base/hf-open5m-factor-demo/config_factor_sfm_stream_001_liquidity_resilience_grid_pilot_v2_readiness.json",
+  "config_sha256": "sha256:cd2fb98e17a5326a5184b8ebcf0371091afed1d1eff6e0aa873fcf6670bee559",
+  "converter": {
+    "path": "evaluations/convert_production_hdf5.py",
+    "sha256": "sha256:c9daa109eeb9650b7819bbf67aff8c2552b1fb25dfb8c733e61a3710f93a069e"
+  },
+  "postprocessor": {
+    "path": "evaluations/pilot_postprocess.py",
+    "sha256": "sha256:a03d9406b1645dd6899319d02571c57d6f4fc707018f9a8e5d63af104f19e873"
+  },
+  "observation_generator": {
+    "path": "evaluations/multi_day_observation.py",
+    "sha256": "sha256:0282966811117224e4e4b98c3336f4f405558e9163bece27a96cbe4d16c92ff4"
+  },
+  "evaluator": {
+    "path": "/home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py",
+    "sha256": "sha256:d000deea18d4207fe2b2af89a95827626bd2dc504531483e08451965e3518189"
+  },
+  "job_ids": [
+    18595884,
+    18595886,
+    18595889,
+    18595891,
+    18595894,
+    18595896,
+    18595898,
+    18595900,
+    18595902,
+    18595905,
+    18595907,
+    18595909,
+    18595911,
+    18595914,
+    18595916,
+    18595917,
+    18595919
+  ],
+  "hdf5_root": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/liquidity-resilience-grid-pilot-v3-readiness",
+  "arrow_root": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/liquidity-resilience-grid-pilot-v3-readiness-arrow",
+  "evaluation_root": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_grid_pilot_v3_readiness_20251009_20251031",
+  "artifacts": {
+    "20251009": {
+      "hdf5": "sha256:4f74eef3318d3c992b9738f9e93f52979628910b10afeb08e506904bf4382a31",
+      "arrow": "sha256:34f6ec41c13989892717e6c7b3f6eaeabcd97d2d3774de226f6eb5bed999c1a8"
+    },
+    "20251010": {
+      "hdf5": "sha256:f47c3ab9ec68708aaf3fafbdb0daabe376547d419d7928eb0c60eb99ffdf1d26",
+      "arrow": "sha256:7baec8da712921297d03c71f37bdf79c267fd89c41545dd1d12bee2ce20cd67a"
+    },
+    "20251013": {
+      "hdf5": "sha256:f5f988088cd00055399a7899d76fb1420636dbfe6b8ed5e7a8dc14d1f0a09965",
+      "arrow": "sha256:af80f314abb8ede107d5ed45fbfc008eaf23f32c5ae83ffe30c43927d1c12f4e"
+    },
+    "20251014": {
+      "hdf5": "sha256:ccb1102f326823d3d6d60f324297b173ed6d3d8237afa5ed18c7e147e2e2597d",
+      "arrow": "sha256:7c93c69f5c1f91525109c781d2ba42eecd49e762a84eccb25688a517046c94d0"
+    },
+    "20251015": {
+      "hdf5": "sha256:3092508b0219a85ebb64ded559f9f6a031a78b1e5ccaae0378a8aba0d1b23180",
+      "arrow": "sha256:77eb5e03b0d73f9f391da65f2b2766d0ee6ceed3f0bafeb48d0fe949de10367b"
+    },
+    "20251016": {
+      "hdf5": "sha256:a568100eec4acbe2ddd0846a44a9315cd103974828c217b62d86988d4b40fa65",
+      "arrow": "sha256:0ecabe9fb22c710dea773496ef7da36e10ca33a19b63b7c659e1a34252c832ca"
+    },
+    "20251017": {
+      "hdf5": "sha256:25d280b0cc82ee1b0192467ddffd31fef1ba62bb31bf982c30c2739ca2295023",
+      "arrow": "sha256:ed2b53203d4285a37edf722fd8207e024508cbac51d68aae6d25c1ee085c41ae"
+    },
+    "20251020": {
+      "hdf5": "sha256:15829c7391f24a0e1c1afd54c2c1e9b71351c392a3f40d0d6d5ebf83bb8cbbcf",
+      "arrow": "sha256:d024e113d6b672a265bafdc8bbd908f82f0fcdf4482498102ede02496d467f93"
+    },
+    "20251021": {
+      "hdf5": "sha256:a3aa1ce4448a96edb1a120415caa2bdfe525d2ba4cef9cb8138c948387587917",
+      "arrow": "sha256:4ffaf4cadabbe75779d187ced545d5c864b3395b3746cb89872b76f2edcc703e"
+    },
+    "20251022": {
+      "hdf5": "sha256:eb392f5505f36c81d672e912b7e1de334b8c4f3ef639acafc1a2cd674763388a",
+      "arrow": "sha256:8ba2b05f0113b1ab734e84d735c70b88f28af6847a539fae01941b724c1a4e09"
+    },
+    "20251023": {
+      "hdf5": "sha256:4e48982e1e885113fda7ab7374f30d39e933e9967d77930dd26c92be3000d4b5",
+      "arrow": "sha256:f354ce03df0e20799a909eebfe34e66d030a3ce5bcc7e2f3e2919d53f0060514"
+    },
+    "20251024": {
+      "hdf5": "sha256:da135ae67b48e0e65b98a7fef7fecc4511128cc2d5b0098075fba3a916fee9c4",
+      "arrow": "sha256:e1c392b09f0a54394d3908886dfb25e0398d4d7617065932312ed046747f4d16"
+    },
+    "20251027": {
+      "hdf5": "sha256:ffe8b4c1135e40d6c93a1b02540db76bbb01d0370b68e883938b69b12b856644",
+      "arrow": "sha256:129569705256160c2f785c2fc18b90723eaf7123ee27db6dfe60156794fc0cc2"
+    },
+    "20251028": {
+      "hdf5": "sha256:a80a72c2b78bf9f7b2c360d18c1df81213b91be1ee65ab0724d40775dc23a238",
+      "arrow": "sha256:09e76869597a569a5c161879c945988ab1674ec53f8f3490bb78143ef53b3107"
+    },
+    "20251029": {
+      "hdf5": "sha256:ca1ed5b4abeb5c6ccc1975b697a1af4802135edf73d46e66a27d8d50b726ac3f",
+      "arrow": "sha256:7917184d9764fab2343060fec161eb6c3a46f7159e153dcd90423fc298a7f236"
+    },
+    "20251030": {
+      "hdf5": "sha256:36034ad8a5d062f3ca5f0f34e9a3bdf61c82a91a9725cfd477bf591548782e00",
+      "arrow": "sha256:d411d3c71bf3213546879e49b0b073aec0216262a4433a794925b14d2ea60843"
+    },
+    "20251031": {
+      "hdf5": "sha256:8556d232cff88e81092f38a385f15bdac1d65f45a320a2c31bf50ad10de0c568",
+      "arrow": "sha256:67a009de836d88124b43dfd87316a08cd81c29390837a3e0af1dd3beeb0c2bf7"
+    }
+  },
+  "evaluations": {
+    "raw926/000985": {
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_grid_pilot_v3_readiness_20251009_20251031/raw926/000985/res_full.parquet",
+      "sha256": "sha256:c1eeeea8b5d626ac832765f71b5c87c02a21a481a183723f11d9f265d2edfb03",
+      "rows": 136
+    },
+    "raw926/003800": {
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_grid_pilot_v3_readiness_20251009_20251031/raw926/003800/res_full.parquet",
+      "sha256": "sha256:fbc32d84c57c4b6ebee19e8a7ae9d7a29118d8f38f5cbb37e3490ad4e9bee2c4",
+      "rows": 136
+    },
+    "raw926/000906": {
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_grid_pilot_v3_readiness_20251009_20251031/raw926/000906/res_full.parquet",
+      "sha256": "sha256:565e94df7a964c4f9ddd66a8562e00d6185c7d26f70055595270b9d52a48f64c",
+      "rows": 136
+    },
+    "ease926/000985": {
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_grid_pilot_v3_readiness_20251009_20251031/ease926/000985/res_full.parquet",
+      "sha256": "sha256:3c248d41d7b9963b5ff0a31adc7ecb5aabec730b5fd90b8feab5f738bdf192d4",
+      "rows": 136
+    },
+    "ease926/003800": {
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_grid_pilot_v3_readiness_20251009_20251031/ease926/003800/res_full.parquet",
+      "sha256": "sha256:a8ae82b5ee256fb5104dbd96acc22ce28711b7b1f9634cdbf008ccffc105e70b",
+      "rows": 136
+    },
+    "ease926/000906": {
+      "path": "/home/fangwei/mnt-ssd/AutoStream/data/sfm_autoresearch_001/evaluation/liquidity_resilience_grid_pilot_v3_readiness_20251009_20251031/ease926/000906/res_full.parquet",
+      "sha256": "sha256:c5845752f8567a5b729dabc1171ea732ef9c982d9635e029548ec99c94065fe0",
+      "rows": 136
+    }
+  },
+  "strict_checks": {
+    "production_jobs": 17,
+    "production_success": 17,
+    "hdf5_dates": 17,
+    "arrow_dates": 17,
+    "hdf5_total_rows": 676240,
+    "arrow_total_rows": 676240,
+    "events_per_day": 8,
+    "factor_names_match_batch": true,
+    "readiness_matrices_valid": true,
+    "ready_true_positions": 6608201,
+    "ready_false_positions": 1506679,
+    "ready_true_all_finite": true,
+    "ready_false_nan_or_finite_allowed": true,
+    "symbol_event_keys_unique": true,
+    "evaluation_groups": 6,
+    "evaluation_rows_each": 136,
+    "opening_event_metrics_suppressed": true
+  },
+  "decision": "observation_only",
+  "promotion_allowed": false,
+  "status": "l3_pilot_complete"
+}
