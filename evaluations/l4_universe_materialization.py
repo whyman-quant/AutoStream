@@ -18,6 +18,10 @@ import pandas as pd
 EXPECTED_EVENTS = (92600000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000)
 EXPECTED_UNIVERSES = ("000985", "003800", "000906")
 EXPECTED_LABELS = ("raw926", "ease926")
+EXPECTED_LABEL_COLUMNS = {
+    "raw926": "v_1D_v_demean",
+    "ease926": "v_1D_v_neuted",
+}
 PRODUCTION_START = "20210104"
 PRODUCTION_END = "20241231"
 HOLDOUT_START = "20250102"
@@ -34,9 +38,16 @@ def _symbols_hash(symbols: Sequence[str]) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
-def _label_columns(frame: pd.DataFrame):
+def _label_columns(frame: pd.DataFrame, label_name: str = None):
     if "symbol" not in frame.columns or "event" not in frame.columns:
         raise ValueError("label frame must contain symbol and event columns")
+    expected = EXPECTED_LABEL_COLUMNS.get(label_name)
+    if expected is not None:
+        if expected not in frame.columns:
+            raise ValueError(
+                "exact label column missing for {}: {}".format(label_name, expected)
+            )
+        return expected
     value_columns = [c for c in frame.columns if c not in ("symbol", "event", "date")]
     if not value_columns:
         raise ValueError("label frame must contain a label value column")
@@ -74,7 +85,7 @@ def materialize_date(
             label_dates = {str(value) for value in labels[name]["date"].dropna().unique()}
             if label_dates and label_dates != {date}:
                 raise ValueError("label date mismatch for {}: {}".format(name, sorted(label_dates)))
-        _label_columns(labels[name])
+        _label_columns(labels[name], name)
     if "isdt1" not in tradability.columns or "iszt1" not in tradability.columns:
         raise ValueError("tradability must contain isdt1 and iszt1")
 
@@ -87,7 +98,7 @@ def materialize_date(
     }
     labels_by_key = {}
     for label_name, frame in labels.items():
-        value_column = _label_columns(frame)
+        value_column = _label_columns(frame, label_name)
         keys = [(_symbol(row["symbol"]), int(row["event"])) for _, row in frame.iterrows()]
         if len(keys) != len(set(keys)):
             raise ValueError("duplicate symbol,event keys in label {}".format(label_name))
@@ -129,7 +140,13 @@ def load_date_inputs(date: str, *, universe_root: str, label_roots: Mapping[str,
         tradability = get_dbar_data(date)
     else:
         tradability = tradability_loader(date)
-    labels = {name: pd.read_feather(Path(root) / (date + ".arrow")) for name, root in label_roots.items()}
+    labels = {}
+    for name, root in label_roots.items():
+        value_column = EXPECTED_LABEL_COLUMNS[name]
+        labels[name] = pd.read_feather(
+            Path(root) / (date + ".arrow"),
+            columns=["symbol", "date", "event", value_column],
+        )
     return universe, tradability, labels
 
 

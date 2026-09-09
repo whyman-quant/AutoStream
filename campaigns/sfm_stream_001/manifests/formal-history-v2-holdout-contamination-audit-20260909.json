@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "holdout_contamination_audit",
+  "campaign_id": "sfm_stream_001",
+  "dataset_id": "sfm_stream_001_formal_history_v2",
+  "detected_at": "2026-09-09",
+  "frozen_contract": {
+    "manifest": "campaigns/sfm_stream_001/manifests/formal-history-dataset-v2.json",
+    "frozen_at": "2026-08-31",
+    "holdout_start": "20250102",
+    "holdout_end": "20251210",
+    "holdout_date_count": 228,
+    "access_policy": "sealed_until_l6"
+  },
+  "known_pilot_dates": [
+    "20251009", "20251010", "20251013", "20251014", "20251015", "20251016",
+    "20251017", "20251020", "20251021", "20251022", "20251023", "20251024",
+    "20251027", "20251028", "20251029", "20251030", "20251031"
+  ],
+  "known_pilot_date_count": 17,
+  "remaining_unread_holdout_date_count_if_excluded": 211,
+  "evidence": {
+    "pilot_before_freeze": "campaigns/sfm_stream_001/manifests/liquidity-resilience-grid-l3-pilot-20251009-20251031.json",
+    "readiness_pilot_after_freeze": "campaigns/sfm_stream_001/manifests/liquidity-resilience-grid-l3-pilot-v3-readiness-20251009-20251031.json",
+    "safety_guard": "evaluations/l4_universe_materialization.py rejected 20251009 as a holdout date before denominator materialization"
+  },
+  "finding": "The 17 October 2025 Pilot dates have known factor and label metrics and therefore cannot remain part of an unbiased final holdout. Calling the entire 228-day 2025 interval sealed would be incorrect.",
+  "recommended_remediation": {
+    "action": "refreeze_holdout_excluding_known_pilot_dates",
+    "holdout_date_count_after_exclusion": 211,
+    "minimum_holdout_days_contract": 200,
+    "minimum_still_satisfied": true,
+    "known_pilot_dates_role": "engineering_pilot_excluded_from_training_observation_and_holdout"
+  },
+  "status": "blocked_pending_user_approval_to_refreeze",
+  "bulk_replay_allowed": false,
+  "promotion_allowed": false,
+  "elimination_allowed": false,
+  "additional_holdout_materialization_performed": false
+}

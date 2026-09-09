@@ -53,6 +53,8 @@
     "path": "evaluations/multi_day_observation.py",
     "sha256": "sha256:0282966811117224e4e4b98c3336f4f405558e9163bece27a96cbe4d16c92ff4"
   },
+  "observation_report": "campaigns/sfm_stream_001/manifests/liquidity-resilience-grid-multi-day-observation-v3-readiness-20251009-20251031.json",
+  "observation_report_sha256": "sha256:275f59ae998bc860b2a56a17be21ca96ee75b6d86ea1367dddf21171ee206c7b",
   "evaluator": {
     "path": "/home/fangwei/mnt-ssd/factor_eval_toolkit/scripts/evaluate_factors.py",
     "sha256": "sha256:d000deea18d4207fe2b2af89a95827626bd2dc504531483e08451965e3518189"
