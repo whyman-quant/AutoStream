@@ -10,6 +10,7 @@ DATE_LIST_PATH = ROOT / "campaigns" / "sfm_stream_001" / "manifests" / "formal-h
 V2_MANIFEST_PATH = ROOT / "campaigns" / "sfm_stream_001" / "manifests" / "formal-history-dataset-v2.json"
 V2_PRODUCTION_PATH = ROOT / "campaigns" / "sfm_stream_001" / "manifests" / "formal-history-production-dates-v2.txt"
 V2_HOLDOUT_PATH = ROOT / "campaigns" / "sfm_stream_001" / "manifests" / "formal-history-holdout-dates-v2.txt"
+V2_HOLDOUT_POLICY_PATH = ROOT / "campaigns" / "sfm_stream_001" / "manifests" / "formal-history-v2-holdout-policy-decision-20260909.json"
 CAMPAIGN_PATH = ROOT / "campaigns" / "sfm_stream_001" / "campaign.json"
 MARKET_ROOT = Path("/mnt/beegfs_ssd_raid91/706_wgh_new/stock_open/basedata")
 LABEL_ROOT = Path("/home/fangwei/beta_team_share/sfutils/factor_zoo/data/arrow_label_zoo/huyifan/atan_day_myrisk_neuted_ease_926")
@@ -24,6 +25,19 @@ def load_v2_manifest():
 
 
 class FormalHistoryDatasetTests(unittest.TestCase):
+    def test_v2_holdout_policy_retains_all_dates_without_subdivision(self):
+        policy = json.loads(V2_HOLDOUT_POLICY_PATH.read_text(encoding="utf-8"))
+        holdout_dates = V2_HOLDOUT_PATH.read_text(encoding="utf-8").splitlines()
+
+        self.assertEqual(policy["decision"], "retain_all_228_holdout_dates_without_subdivision")
+        self.assertEqual(policy["holdout_date_count"], 228)
+        self.assertEqual(len(holdout_dates), 228)
+        self.assertLess(set(policy["known_pilot_dates"]), set(holdout_dates))
+        self.assertFalse(policy["l4_policy"]["holdout_dates_read"])
+        self.assertFalse(policy["l4_policy"]["promotion_allowed"])
+        self.assertFalse(policy["l4_policy"]["elimination_allowed"])
+        self.assertFalse(policy["l6_policy"]["use_known_pilot_dates_as_clean_unseen_evidence"])
+
     def test_v2_is_strict_recent_history_subset_with_frozen_split_hashes(self):
         v1 = load_manifest()
         v2 = load_v2_manifest()

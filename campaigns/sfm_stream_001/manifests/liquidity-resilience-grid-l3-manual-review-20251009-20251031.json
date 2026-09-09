@@ -1074,9 +1074,9 @@
     "redundancy": "No raw-value pair exceeded absolute Spearman 0.98 in the pooled Arrow values. However, the daily RankIC series of the eight ordinary depth-recovery variants are highly synchronized (mostly 0.97-0.995); this must remain a separate L4 redundancy diagnostic and does not justify automatic deletion from a 17-day Pilot.",
     "label_consistency": "For the same universe and factor, raw926 versus ease926 correlations are 0.858-0.950 for RankIC, 0.872-0.972 for IC and 0.890-0.948 for Long-Short. Directions are broadly consistent, but the labels are not numerically interchangeable.",
     "shock_sample_coverage": "Average non-opening readiness is 64.45% for shock w16, 78.70% for w32, 87.82% for w64 and 93.46% for w128. These metrics use readiness-selected samples and must not be compared naively with ordinary recovery factors.",
-    "denominator_status": "Not materialized for these 17 dates because they fall inside the currently frozen 2025 holdout range. The safety guard rejected the operation; the holdout contract must be repaired before a formal denominator receipt can be created.",
+    "denominator_status": "Not materialized for these 17 dates because they fall inside the frozen 2025 holdout range. The project retained all 228 dates as one holdout set and recorded the prior Pilot access without creating a separate denominator subset.",
     "decision": "observation_only_manual_review_complete",
-    "l4_authorization": "blocked_until_holdout_contract_is_refrozen_then_denominators_and_release_gate_are_reviewed",
+    "l4_authorization": "eligible_for_release_and_planner_gate; no bulk submission until that gate passes",
     "promotion_allowed": false,
     "elimination_allowed": false
   }

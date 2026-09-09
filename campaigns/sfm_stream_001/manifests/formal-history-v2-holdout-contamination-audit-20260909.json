@@ -24,16 +24,19 @@
     "readiness_pilot_after_freeze": "campaigns/sfm_stream_001/manifests/liquidity-resilience-grid-l3-pilot-v3-readiness-20251009-20251031.json",
     "safety_guard": "evaluations/l4_universe_materialization.py rejected 20251009 as a holdout date before denominator materialization"
   },
-  "finding": "The 17 October 2025 Pilot dates have known factor and label metrics and therefore cannot remain part of an unbiased final holdout. Calling the entire 228-day 2025 interval sealed would be incorrect.",
-  "recommended_remediation": {
-    "action": "refreeze_holdout_excluding_known_pilot_dates",
-    "holdout_date_count_after_exclusion": 211,
+  "finding": "The 17 October 2025 Pilot dates have known factor and label metrics. The project decision is to retain the complete 228-day holdout date set without subdividing it, while explicitly recording that the holdout is not fully blind.",
+  "policy_decision": {
+    "action": "retain_full_holdout_without_subdivision",
+    "holdout_date_count": 228,
+    "known_pilot_dates_remain_in_holdout": true,
+    "blind_holdout_claim_allowed": false,
     "minimum_holdout_days_contract": 200,
     "minimum_still_satisfied": true,
-    "known_pilot_dates_role": "engineering_pilot_excluded_from_training_observation_and_holdout"
+    "known_pilot_dates_role": "engineering_pilot_accessed_but_retained_in_holdout_date_set",
+    "restriction": "The 17 Pilot dates cannot be used to choose candidates, tune parameters, change factor direction, promote or eliminate factors during L4."
   },
-  "status": "blocked_pending_user_approval_to_refreeze",
-  "bulk_replay_allowed": false,
+  "status": "accepted_with_methodological_caveat",
+  "bulk_replay_allowed": "after_l4_release_gate",
   "promotion_allowed": false,
   "elimination_allowed": false,
   "additional_holdout_materialization_performed": false

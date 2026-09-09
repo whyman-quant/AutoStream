@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "holdout_policy_decision",
+  "campaign_id": "sfm_stream_001",
+  "dataset_id": "sfm_stream_001_formal_history_v2",
+  "decision_date": "2026-09-09",
+  "decision": "retain_all_228_holdout_dates_without_subdivision",
+  "holdout_manifest": "campaigns/sfm_stream_001/manifests/formal-history-dataset-v2.json",
+  "holdout_date_range": ["20250102", "20251210"],
+  "holdout_date_count": 228,
+  "known_pilot_dates": [
+    "20251009", "20251010", "20251013", "20251014", "20251015", "20251016",
+    "20251017", "20251020", "20251021", "20251022", "20251023", "20251024",
+    "20251027", "20251028", "20251029", "20251030", "20251031"
+  ],
+  "known_pilot_date_count": 17,
+  "blindness_statement": "The date set remains the formal holdout set, but it must not be described as completely unseen because 17 dates have engineering Pilot factor and label metrics.",
+  "l4_policy": {
+    "training_dates_read": true,
+    "observation_dates_read": true,
+    "holdout_dates_read": false,
+    "known_pilot_metrics_may_change_candidate_or_parameter": false,
+    "known_pilot_metrics_may_change_direction": false,
+    "promotion_allowed": false,
+    "elimination_allowed": false
+  },
+  "l6_policy": {
+    "evaluate_all_228_dates": true,
+    "report_known_pilot_dates_separately_for_transparency": true,
+    "use_known_pilot_dates_as_clean_unseen_evidence": false
+  },
+  "status": "approved_by_user",
+  "bulk_replay_allowed": "after_l4_release_gate",
+  "notes": "This records the user's explicit choice not to exclude or subdivide the 17 Pilot dates. It changes the methodological wording, not the date list."
+}
