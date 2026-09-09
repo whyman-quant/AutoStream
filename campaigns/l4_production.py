@@ -513,6 +513,7 @@ def build_plan(
         "lane_count": lane_count,
         "date_count": len(contract["production_dates"]),
         "chunk_count": len(planned_chunks),
+        "reject_existing_output": True,
         "chunks": planned_chunks,
     }
     validate_runner_provenance(
@@ -661,6 +662,8 @@ def _chunk_run_command(plan, chunk):
         "--runner-provenance-json",
         json.dumps(plan["runner_provenance"], separators=(",", ":")),
     ]
+    if plan.get("reject_existing_output") is True:
+        arguments.append("--reject-existing-output")
     return shlex.join(arguments)
 
 
@@ -1001,6 +1004,7 @@ def run_chunk(
     date_list_sha256,
     runner_root,
     runner_provenance,
+    reject_existing_output=False,
 ):
     """Produce and HDF5-only validate one frozen five-date chunk."""
     binary_path = _require_absolute_file(binary, "binary")
@@ -1029,6 +1033,12 @@ def run_chunk(
         )
         target = output_path / date / "all_families" / "factors.h5"
         if target.exists():
+            if reject_existing_output:
+                raise ValueError(
+                    "existing output is forbidden for readiness-aware replay: {}".format(
+                        target
+                    )
+                )
             inspection = validate_hdf5_only(target, campaign_root)
             _verify_frozen_inputs(
                 binary_path, config_path, binary_sha256, config_sha256
@@ -1097,6 +1107,7 @@ def _parser():
     chunk_parser.add_argument("--date-list-sha256", required=True)
     chunk_parser.add_argument("--runner-root", type=Path, required=True)
     chunk_parser.add_argument("--runner-provenance-json", required=True)
+    chunk_parser.add_argument("--reject-existing-output", action="store_true")
     return parser
 
 
@@ -1134,6 +1145,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.date_list_sha256,
         args.runner_root,
         json.loads(args.runner_provenance_json),
+        reject_existing_output=args.reject_existing_output,
     )
     print(json.dumps(results, ensure_ascii=False))
     return 0

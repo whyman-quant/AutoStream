@@ -705,6 +705,29 @@ class L4ProductionTests(unittest.TestCase):
                 run.assert_not_called()
                 self.assertEqual(target.read_bytes(), before)
 
+    def test_run_chunk_reject_existing_output_never_reuses_old_hdf5(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            campaign_root = root / "campaign"
+            output_root = (root / "outputs").resolve()
+            manifest, production, _, _ = _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            target = output_root / production[0] / "all_families" / "factors.h5"
+            _write_placeholder(target)
+
+            with mock.patch("campaigns.l4_production.subprocess.run") as run, mock.patch(
+                "evaluations.l4_preflight.validate_hdf5_only"
+            ) as validate:
+                with self.assertRaisesRegex(ValueError, "existing output is forbidden"):
+                    l4_production.run_chunk(
+                        [production[0]], campaign_root, binary, config, output_root,
+                        _sha256(binary), _sha256(config), manifest["production_date_list_sha256"],
+                        *_runner_args(root, campaign_root), reject_existing_output=True,
+                    )
+
+            run.assert_not_called()
+            validate.assert_not_called()
+
     def test_run_chunk_missing_calls_fixed_binary_then_validates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
