@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "kind": "l4_readiness_production_completion",
+  "campaign_id": "sfm_stream_001",
+  "dataset_id": "sfm_stream_001_formal_history_v2",
+  "completion_date": "2026-09-09",
+  "release_id": "formal-history-v2-2617eacc7dbca0fddc337f7b6ef779299e36c58d",
+  "source_commit": "2617eacc7dbca0fddc337f7b6ef779299e36c58d",
+  "submission": {
+    "submission_id": "815c780b16b08877165adab1",
+    "job_count": 153,
+    "job_states": {
+      "COMPLETED": 153,
+      "FAILED": 0,
+      "CANCELLED": 0,
+      "RUNNING": 0,
+      "PENDING": 0
+    },
+    "exit_codes": {
+      "0:0": 153
+    },
+    "plan_path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v3-resume-2617eacc7dbca0fddc337f7b6ef779299e36c58d/plan.json",
+    "plan_sha256": "sha256:c76248dcb4e1c637568613923dca115949241a5f3654afa4f459306766966698",
+    "receipt_path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-l4-submissions/formal-history-v3-resume-2617eacc7dbca0fddc337f7b6ef779299e36c58d/plan-submission.json",
+    "receipt_sha256": "sha256:b2ba3ddfc3e9e4077c79675bfd9796a0d0a9e87a4f2419ea12a49f19a89f623e"
+  },
+  "production": {
+    "hdf5_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-formal-history-v3-readiness",
+    "expected_date_count": 969,
+    "hdf5_file_count": 969,
+    "valid_date_count": 969,
+    "invalid_date_count": 0,
+    "factor_count": 48,
+    "event_count": 8,
+    "total_rows": 35810320,
+    "stock_count_min": 3881,
+    "stock_count_max": 4994,
+    "strict_validation": "passed",
+    "strict_validator": "evaluations.l4_preflight.validate_hdf5_only"
+  },
+  "safety": {
+    "holdout_market_data_read": false,
+    "holdout_factor_data_read": false,
+    "holdout_labels_read": false,
+    "existing_output_overwritten": false,
+    "promotion_allowed": false,
+    "elimination_allowed": false
+  },
+  "status": "production_complete_hdf5_validated",
+  "next_step": "convert_hdf5_to_arrow_then_run_training_observation_evaluation",
+  "note": "The 969-day readiness-aware HDF5 production is complete and strictly validated. This receipt does not certify Arrow conversion, evaluation, Factor Portrait, promotion, or elimination."
+}
