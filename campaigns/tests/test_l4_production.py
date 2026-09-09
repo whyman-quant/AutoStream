@@ -191,8 +191,40 @@ class L4ProductionTests(unittest.TestCase):
             l4_production.assign_lanes([], lane_count=4)
         with self.assertRaises(ValueError):
             l4_production.assign_lanes(chunks, lane_count=0)
+        lanes16 = l4_production.assign_lanes(chunks, lane_count=16)
+        self.assertEqual(len(lanes16), 10)
         with self.assertRaises(ValueError):
-            l4_production.assign_lanes(chunks, lane_count=5)
+            l4_production.assign_lanes(chunks, lane_count=17)
+
+    def test_build_resume_plan_accepts_partial_dates_16_lanes_and_custom_memory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            campaign_root = root / "campaign"
+            output_root = (root / "outputs").resolve()
+            manifest, production, _, _ = _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            dates = production[:17]
+
+            plan = l4_production.build_resume_plan(
+                campaign_root,
+                binary,
+                config,
+                output_root,
+                root.resolve(),
+                dates,
+                submission_workdir=root / "slurm",
+                lane_count=16,
+                memory_gb=80,
+            )
+
+            self.assertEqual(plan["plan_kind"], "resume")
+            self.assertEqual(plan["requested_dates"], dates)
+            self.assertEqual(plan["date_count"], 17)
+            self.assertEqual(plan["lane_count"], 16)
+            self.assertEqual(plan["submission_resources"]["mybatch_input_memory_gb"], 80)
+            self.assertEqual(len(plan["chunks"]), 4)
+            self.assertTrue(all("--reject-existing-output" in l4_production._chunk_run_command(plan, chunk) for chunk in plan["chunks"]))
+            self.assertIn("-m80G", l4_production._submission_command(plan, plan["chunks"][0], "job", None)[1])
 
     def test_load_active_v2_contract_accepts_only_frozen_sealed_lists(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -27,6 +27,7 @@ FAMILIES = (
 )
 CHUNK_SIZE = 5
 LANE_COUNT = 4
+MAX_LANE_COUNT = 16
 DATE_COUNT = 969
 HOLDOUT_COUNT = 228
 PYTHON38 = "/usr/local/python3.8.10/bin/python3"
@@ -246,8 +247,8 @@ def assign_lanes(chunks, lane_count=4):
         raise ValueError("chunks must not be empty")
     if lane_count <= 0:
         raise ValueError("lane_count must be positive")
-    if lane_count > LANE_COUNT:
-        raise ValueError("lane_count must not exceed four")
+    if lane_count > MAX_LANE_COUNT:
+        raise ValueError("lane_count must not exceed sixteen")
     lanes = [[] for _ in range(min(lane_count, len(values)))]
     for index, chunk in enumerate(values):
         lanes[index % len(lanes)].append(chunk)
@@ -522,6 +523,115 @@ def build_plan(
     return plan
 
 
+def build_resume_plan(
+    campaign_root,
+    binary,
+    config,
+    output_root,
+    runner_root,
+    requested_dates,
+    submission_workdir=None,
+    *,
+    chunk_size=CHUNK_SIZE,
+    lane_count=16,
+    memory_gb=80,
+    expected_binary_sha256=None,
+    expected_config_sha256=None,
+    _verified_contract=None,
+):
+    """Build a deterministic partial-production plan for missing dates.
+
+    The active v2 date-list remains the source of truth; ``requested_dates``
+    is only a validated subset.  This mode is used after an interrupted
+    production run and always forbids replacing an existing HDF5.
+    """
+    if chunk_size != CHUNK_SIZE:
+        raise ValueError("resume production requires chunk_size=5")
+    if lane_count <= 0 or lane_count > MAX_LANE_COUNT:
+        raise ValueError("resume production lane_count must be between 1 and 16")
+    if not isinstance(memory_gb, int) or memory_gb <= 0:
+        raise ValueError("resume production memory_gb must be a positive integer")
+    binary_path = _require_absolute_file(binary, "binary")
+    config_path = _require_absolute_file(config, "config")
+    output_path = _require_absolute_directory_path(output_root, "output_root")
+    runner_path = _validate_runner_root(runner_root, campaign_root)
+    submission_path = _validate_submission_workdir(
+        runner_path / "slurm" if submission_workdir is None else submission_workdir,
+        runner_path,
+    )
+    binary_hash_before = _sha256(binary_path)
+    config_hash_before = _sha256(config_path)
+    if expected_binary_sha256 is not None and binary_hash_before != expected_binary_sha256:
+        raise ValueError("binary hash changed from frozen input")
+    if expected_config_sha256 is not None and config_hash_before != expected_config_sha256:
+        raise ValueError("config hash changed from frozen input")
+    _load_and_validate_config(config_path, output_path)
+    contract = (
+        _load_active_v2_production_contract(campaign_root)
+        if _verified_contract is None else _verified_contract
+    )
+    dates = validate_dates_against_frozen_list(requested_dates, contract["production_dates"])
+    runner_provenance = collect_runner_provenance(runner_path, contract["campaign_root"])
+    chunks = chunk_dates(dates, size=chunk_size)
+    lanes = assign_lanes(chunks, lane_count=lane_count)
+    lane_by_identity = {}
+    for lane_index, lane in enumerate(lanes):
+        for chunk in lane:
+            lane_by_identity[id(chunk)] = lane_index
+    previous_by_lane = {}
+    planned_chunks = []
+    for index, dates_chunk in enumerate(chunks):
+        lane = lane_by_identity[id(dates_chunk)]
+        chunk_id = "l4-resume-v3-{:04d}".format(index)
+        planned_chunks.append({
+            "chunk_id": chunk_id,
+            "lane": lane,
+            "dates": list(dates_chunk),
+            "job_name": "l4-resume-v3-{:04d}".format(index),
+            "depends_on_chunk_id": previous_by_lane.get(lane),
+        })
+        previous_by_lane[lane] = chunk_id
+    binary_hash_after = _sha256(binary_path)
+    config_hash_after = _sha256(config_path)
+    if binary_hash_after != binary_hash_before:
+        raise ValueError("binary changed while building resume plan")
+    if config_hash_after != config_hash_before:
+        raise ValueError("config changed while building resume plan")
+    plan = {
+        "schema_version": 1,
+        "plan_kind": "resume",
+        "dataset_id": contract["dataset_id"],
+        "campaign_root": contract["campaign_root"],
+        "date_list_path": contract["production_date_list_path"],
+        "date_list_sha256": contract["production_date_list_sha256"],
+        "binary": str(binary_path),
+        "binary_sha256": binary_hash_before,
+        "config": str(config_path),
+        "config_sha256": config_hash_before,
+        "output_root": str(output_path),
+        "runner_root": str(runner_path),
+        "runner_provenance": runner_provenance,
+        "submission_workdir": str(submission_path),
+        "submission_resources": {
+            "cpus": 12,
+            "mybatch_input_memory_gb": memory_gb,
+            "effective_slurm_memory_gb": memory_gb - 1,
+            "partition": "cpu_wgh",
+            "time": "2:00:00",
+        },
+        "chunk_size": chunk_size,
+        "lane_count": lane_count,
+        "memory_gb": memory_gb,
+        "requested_dates": dates,
+        "date_count": len(dates),
+        "chunk_count": len(planned_chunks),
+        "reject_existing_output": True,
+        "chunks": planned_chunks,
+    }
+    validate_runner_provenance(runner_path, contract["campaign_root"], runner_provenance)
+    return plan
+
+
 def _write_json_atomic(path, payload):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -736,19 +846,23 @@ def _submission_job_name(submission_id, chunk_id):
 
 def _submission_command(plan, chunk, job_name, dependency_job):
     run_command = _chunk_run_command(plan, chunk)
-    command = ["mybatch"] + list(SLURM_RESOURCES) + ["-J", job_name]
+    memory_gb = plan.get("memory_gb", MYBATCH_INPUT_MEMORY_GB)
+    resources = ("-c12", "-m{}G".format(memory_gb), "-p", "cpu_wgh", "-t2:00:00")
+    command = ["mybatch"] + list(resources) + ["-J", job_name]
     if dependency_job is not None:
         command.extend(["-d", "afterok:" + dependency_job])
     command.extend(["-s", run_command])
     return run_command, command
 
 
-def _job_resources():
+def _job_resources(plan=None):
+    plan = {} if plan is None else plan
+    memory_gb = plan.get("memory_gb", MYBATCH_INPUT_MEMORY_GB)
     return {
         "cpus": 12,
-        "memory": "243G",
-        "mybatch_input_memory_gb": MYBATCH_INPUT_MEMORY_GB,
-        "effective_slurm_memory_gb": EFFECTIVE_SLURM_MEMORY_GB,
+        "memory": "{}G".format(plan.get("submission_resources", {}).get("effective_slurm_memory_gb", EFFECTIVE_SLURM_MEMORY_GB)),
+        "mybatch_input_memory_gb": memory_gb,
+        "effective_slurm_memory_gb": plan.get("submission_resources", {}).get("effective_slurm_memory_gb", EFFECTIVE_SLURM_MEMORY_GB),
         "partition": "cpu_wgh",
         "time": "2:00:00",
     }
@@ -792,7 +906,7 @@ def _validate_receipt_jobs(plan, receipt):
             "depends_on_job_id": dependency_job,
             "command": command,
             "run_command": run_command,
-            "resources": _job_resources(),
+            "resources": _job_resources(plan),
         }
         for key, value in expected.items():
             if record.get(key) != value:
@@ -837,17 +951,34 @@ def submit_plan(
             if _verified_contract is None
             else _verified_contract
         )
-        expected_plan = build_plan(
-            plan["campaign_root"],
-            plan["binary"],
-            plan["config"],
-            plan["output_root"],
-            plan["runner_root"],
-            plan["submission_workdir"],
-            expected_binary_sha256=plan["binary_sha256"],
-            expected_config_sha256=plan["config_sha256"],
-            _verified_contract=contract,
-        )
+        if plan.get("plan_kind") == "resume":
+            expected_plan = build_resume_plan(
+                plan["campaign_root"],
+                plan["binary"],
+                plan["config"],
+                plan["output_root"],
+                plan["runner_root"],
+                plan["requested_dates"],
+                plan["submission_workdir"],
+                chunk_size=plan["chunk_size"],
+                lane_count=plan["lane_count"],
+                memory_gb=plan["memory_gb"],
+                expected_binary_sha256=plan["binary_sha256"],
+                expected_config_sha256=plan["config_sha256"],
+                _verified_contract=contract,
+            )
+        else:
+            expected_plan = build_plan(
+                plan["campaign_root"],
+                plan["binary"],
+                plan["config"],
+                plan["output_root"],
+                plan["runner_root"],
+                plan["submission_workdir"],
+                expected_binary_sha256=plan["binary_sha256"],
+                expected_config_sha256=plan["config_sha256"],
+                _verified_contract=contract,
+            )
         if expected_plan != plan:
             raise ValueError("plan does not match deterministic active v2 production")
         validate_runner_provenance(
@@ -920,7 +1051,7 @@ def submit_plan(
                 record.update({
                     "command": command,
                     "run_command": run_command,
-                    "resources": _job_resources(),
+                    "resources": _job_resources(plan),
                 })
                 receipt["jobs"].append(record)
                 jobs_by_chunk[chunk_id] = record
@@ -933,7 +1064,7 @@ def submit_plan(
                 )
                 record["command"] = command
                 record["run_command"] = run_command
-                record["resources"] = _job_resources()
+                record["resources"] = _job_resources(plan)
                 recovered = recover(
                     record["job_name"], receipt["submitted_at"]
                 )
@@ -1155,6 +1286,7 @@ __all__ = [
     "FAMILIES",
     "assign_lanes",
     "build_plan",
+    "build_resume_plan",
     "chunk_dates",
     "collect_runner_provenance",
     "load_active_v2_contract",
