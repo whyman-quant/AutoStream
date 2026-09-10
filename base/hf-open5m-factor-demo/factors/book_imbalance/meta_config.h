@@ -9,7 +9,7 @@ namespace factors {
 namespace book_imbalance {
 
 static const std::string kFactorSetName = "book_imbalance";
-static const size_t kFactorSize = 12;
+static const size_t kFactorSize = 16;
 static const std::vector<std::string> kFactorNames = {
     "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
     "book_imbalance_microprice_displacement_w32_v0_lag1",
@@ -23,6 +23,10 @@ static const std::vector<std::string> kFactorNames = {
     "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
     "book_imbalance_microprice_displacement_w64_v3_lag1",
     "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+    "book_imbalance_l4g1_param_a",
+    "book_imbalance_l4g1_param_b",
+    "book_imbalance_l4g1_mechanism_a",
+    "book_imbalance_l4g1_mechanism_b",
 };
 
 static const comm::FactorMetadata kFactorMetadata = {

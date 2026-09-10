@@ -76,6 +76,11 @@ FactorEntry::FactorEntry(
     const comm::FactorEntryConfig& config)
     : comm::FactorEntryBase(asset, metadata, config) {}
 
+std::vector<bool> FactorEntry::GetReadinessMask(int64_t timestamp) const {
+    (void)timestamp;
+    return std::vector<bool>(kFactorSize, !signed_volumes_.empty());
+}
+
 void FactorEntry::DoOnAddQuote(const Stock_Internal_Book& quote) { (void)quote; }
 
 void FactorEntry::DoOnAddTrans(
@@ -113,6 +118,10 @@ void FactorEntry::DoOnUpdateFactors(int64_t timestamp) {
     fvals_[9] = FiniteOrZero(DecayedFlow(signed_volumes_, 32, 0, 8.0));
     fvals_[10] = FiniteOrZero(DecayedFlow(signed_volumes_, 64, 1, 16.0));
     fvals_[11] = FiniteOrZero(DecayedFlow(signed_volumes_, 128, 2, 32.0));
+    fvals_[12] = FiniteOrZero(DecayedFlow(signed_volumes_, 24, 0, 6.0));
+    fvals_[13] = FiniteOrZero(DecayedFlow(signed_volumes_, 48, 0, 12.0));
+    fvals_[14] = FiniteOrZero(ZScoreFlow(signed_volumes_, 24, 0));
+    fvals_[15] = FiniteOrZero(SignedRatio(signed_volumes_, 96, 1));
 }
 
 }  // namespace flow_pressure

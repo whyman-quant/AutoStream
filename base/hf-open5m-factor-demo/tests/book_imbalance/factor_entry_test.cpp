@@ -3,12 +3,17 @@
 #include <iostream>
 
 int main() {
+    if (factors::book_imbalance::GetMetadata().factor_size != 16 ||
+        factors::book_imbalance::GetMetadata().factor_names.size() != 16) return 1;
     factors::comm::FactorEntryConfig config;
+    factors::book_imbalance::FactorEntry cold("000001", factors::book_imbalance::GetMetadata(), config);
+    if (cold.GetReadinessMask(92700000).at(0)) return 1;
     factors::book_imbalance::FactorEntry entry(
         "000001", factors::book_imbalance::GetMetadata(), config);
     Stock_Internal_Book invalid_quote{};
     entry.AddQuote(invalid_quote);
     const auto& values = entry.UpdateFactors(92700000);
+    if (entry.GetReadinessMask(92700000).at(0)) return 1;
     const size_t invalid_microprice_factors[] = {1, 4, 7, 10};
     for (size_t index : invalid_microprice_factors) {
         if (values[index] != 0.0) {

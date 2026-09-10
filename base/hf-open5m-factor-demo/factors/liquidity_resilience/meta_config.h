@@ -9,7 +9,7 @@ namespace factors {
 namespace liquidity_resilience {
 
 static const std::string kFactorSetName = "liquidity_resilience";
-static const size_t kFactorSize = 12;
+static const size_t kFactorSize = 16;
 // Recovery windows require a full window; lagged variants also require their
 // lag observations. Shock-speed outputs remain unavailable until a drawdown
 // of at least 20% followed by one recovery quote is observed.
@@ -29,6 +29,10 @@ static const std::vector<std::string> kFactorNames = {
     "liquidity_resilience_shock_recovery_speed_w32_lag0",
     "liquidity_resilience_shock_recovery_speed_w64_lag1",
     "liquidity_resilience_shock_recovery_speed_w128_lag2",
+    "liquidity_resilience_l4g1_param_a",
+    "liquidity_resilience_l4g1_param_b",
+    "liquidity_resilience_l4g1_mechanism_a",
+    "liquidity_resilience_l4g1_mechanism_b",
 };
 static const comm::FactorMetadata kFactorMetadata = {
     kFactorSetName, kFactorSize, kFactorNames};

@@ -20,6 +20,8 @@ bool Near(double actual, double expected) {
 }
 }
 int main() {
+    if (factors::liquidity_resilience::GetMetadata().factor_size != 16 ||
+        factors::liquidity_resilience::GetMetadata().factor_names.size() != 16) return 1;
     factors::comm::FactorEntryConfig config;
     const std::vector<std::string> expected_names = {
         "liquidity_resilience_spread_adjusted_depth_recovery_w16",
@@ -34,6 +36,10 @@ int main() {
         "liquidity_resilience_shock_recovery_speed_w32_lag0",
         "liquidity_resilience_shock_recovery_speed_w64_lag1",
         "liquidity_resilience_shock_recovery_speed_w128_lag2",
+        "liquidity_resilience_l4g1_param_a",
+        "liquidity_resilience_l4g1_param_b",
+        "liquidity_resilience_l4g1_mechanism_a",
+        "liquidity_resilience_l4g1_mechanism_b",
     };
     if (factors::liquidity_resilience::GetMetadata().factor_names != expected_names) return 1;
 
@@ -41,14 +47,16 @@ int main() {
     // Values before the declared warmup are unavailable, not zero.
     entry.AddQuote(Quote(10000, 10100, 100, 100));
     const auto cold = Values(entry);
-    if (cold.size() != 12 || !std::isnan(cold.at(0)) || !std::isnan(cold.at(8))) return 1;
+    if (cold.size() != 16 || !std::isnan(cold.at(0)) || !std::isnan(cold.at(8))) return 1;
     const auto cold_ready = entry.GetReadinessMask(92700000);
-    if (cold_ready.size() != 12 || cold_ready.at(0) || cold_ready.at(8)) return 1;
+    if (cold_ready.size() != 16 || cold_ready.at(0) || cold_ready.at(8)) return 1;
 
     // A rising-only window has no drawdown and must not be classified as shock recovery.
     factors::liquidity_resilience::FactorEntry rising("000001", factors::liquidity_resilience::GetMetadata(), config);
     for (uint32_t volume = 10; volume <= 160; volume += 10) rising.AddQuote(Quote(10000, 10100, volume, volume));
-    if (!std::isnan(Values(rising).at(8))) return 1;
+    const auto rising_values = Values(rising);
+    if (!std::isnan(rising_values.at(8)) || !std::isnan(rising_values.at(12)) ||
+        rising.GetReadinessMask(100000000).at(12)) return 1;
 
     // A large drop establishes a shock, but speed remains unavailable until recovery.
     for (int i = 0; i < 16; ++i) entry.AddQuote(Quote(10000, 10100, 100, 100));

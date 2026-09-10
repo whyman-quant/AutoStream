@@ -12,10 +12,14 @@ std::vector<bool> FactorEntry::GetReadinessMask(int64_t timestamp) const {
  const bool opening_auction = timestamp == 92700000;
  if (!opening_auction && enough_trades) {
   for (size_t i = 0; i < 10; ++i) ready[i] = true;
+  ready[12] = true;
+  ready[13] = true;
+  ready[14] = true;
  }
  if (enough_trades) {
   ready[10] = true;
   ready[11] = true;
+  ready[15] = true;
  }
  return ready;
 }
@@ -33,5 +37,5 @@ double MidResponse(const std::deque<FactorEntry::TradeState>& history,size_t win
 double OfiResponse(const std::deque<FactorEntry::TradeState>& history,size_t window,size_t lag){auto b=WindowBounds(history.size(),window,lag);if(b.end-b.begin<2)return 0.0;double net=0,absvol=0;for(size_t i=b.begin;i<b.end;++i){net+=history[i].signed_volume;absvol+=std::abs(history[i].signed_volume);}double imbalance=net/std::max(absvol,1.0);if(std::abs(imbalance)<=1e-12)return 0.0;double first=history[b.begin].price,last=history[b.end-1].price,mid=std::max(1.0,0.5*(first+last));double v=((last-first)/mid)/imbalance;return std::isfinite(v)?v:0.0;}
 double Absorption(const std::deque<FactorEntry::TradeState>& history,size_t window,size_t lag){auto b=WindowBounds(history.size(),window,lag);if(b.end-b.begin<2)return 0.0;double net=0,absvol=0;for(size_t i=b.begin;i<b.end;++i){net+=history[i].signed_volume;absvol+=std::abs(history[i].signed_volume);}double first=history[b.begin].price,last=history[b.end-1].price,mid=std::max(1.0,0.5*(first+last));double response=std::abs(last-first)/mid;double v=(net/std::max(absvol,1.0))*(1.0-response);return std::isfinite(v)?v:0.0;}
 }
-void FactorEntry::DoOnUpdateFactors(int64_t timestamp){(void)timestamp;fvals_[0]=SignedImpact(trades_,16,0);fvals_[1]=SignedImpact(trades_,32,0);fvals_[2]=SignedImpact(trades_,64,1);fvals_[3]=SignedImpact(trades_,128,2);fvals_[4]=MidResponse(trades_,16,0);fvals_[5]=MidResponse(trades_,32,0);fvals_[6]=MidResponse(trades_,64,1);fvals_[7]=MidResponse(trades_,128,2);fvals_[8]=OfiResponse(trades_,16,0);fvals_[9]=OfiResponse(trades_,32,0);fvals_[10]=Absorption(trades_,16,0);fvals_[11]=Absorption(trades_,32,0);}
+void FactorEntry::DoOnUpdateFactors(int64_t timestamp){(void)timestamp;fvals_[0]=SignedImpact(trades_,16,0);fvals_[1]=SignedImpact(trades_,32,0);fvals_[2]=SignedImpact(trades_,64,1);fvals_[3]=SignedImpact(trades_,128,2);fvals_[4]=MidResponse(trades_,16,0);fvals_[5]=MidResponse(trades_,32,0);fvals_[6]=MidResponse(trades_,64,1);fvals_[7]=MidResponse(trades_,128,2);fvals_[8]=OfiResponse(trades_,16,0);fvals_[9]=OfiResponse(trades_,32,0);fvals_[10]=Absorption(trades_,16,0);fvals_[11]=Absorption(trades_,32,0);fvals_[12]=SignedImpact(trades_,96,0);fvals_[13]=MidResponse(trades_,96,0);fvals_[14]=OfiResponse(trades_,64,1);fvals_[15]=Absorption(trades_,64,1);}
 } }

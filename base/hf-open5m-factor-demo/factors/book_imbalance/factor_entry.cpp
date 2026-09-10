@@ -14,6 +14,7 @@ enum FactorIndex : size_t {
     kWeightedW128V1Lag0, kMicropriceW16V1Lag1, kSpreadW32V1Lag2,
     kWeightedW64V2Lag0, kMicropriceW128V2Lag1, kSpreadW16V2Lag2,
     kWeightedW32V3Lag0, kMicropriceW64V3Lag1, kSpreadW128V3Lag2,
+    kL4G1ParamA, kL4G1ParamB, kL4G1MechanismA, kL4G1MechanismB,
 };
 
 double FiniteOrZero(double value) { return std::isfinite(value) ? value : 0.0; }
@@ -101,6 +102,17 @@ double Spread(const Stock_Internal_Book& quote, int window, int variant, int lag
 FactorEntry::FactorEntry(const std::string& asset, const comm::FactorMetadata& metadata, const comm::FactorEntryConfig& config)
     : comm::FactorEntryBase(asset, metadata, config) {}
 
+std::vector<bool> FactorEntry::GetReadinessMask(int64_t timestamp) const {
+    (void)timestamp;
+    std::vector<bool> ready(kFactorSize, false);
+    if (!has_quote_) return ready;
+    const double bid = static_cast<double>(last_quote_.bp_array[0]);
+    const double ask = static_cast<double>(last_quote_.ap_array[0]);
+    if (!(std::isfinite(bid) && std::isfinite(ask) && bid > 0.0 && ask > bid)) return ready;
+    std::fill(ready.begin(), ready.end(), true);
+    return ready;
+}
+
 void FactorEntry::DoOnAddQuote(const Stock_Internal_Book& quote) {
     last_quote_ = quote;
     ++quote_count_;
@@ -128,6 +140,12 @@ void FactorEntry::DoOnUpdateFactors(int64_t timestamp) {
     fvals_[kWeightedW32V3Lag0] = Weighted(last_quote_, 32, 3, 0, 0, quote_count_);
     fvals_[kMicropriceW64V3Lag1] = Microprice(last_quote_, 64, 3, 1, 2, quote_count_);
     fvals_[kSpreadW128V3Lag2] = Spread(last_quote_, 128, 3, 2, 3, quote_count_);
+    // L4G1 variants keep the same quote-only contract while changing one
+    // controlled window/mechanism dimension from the frozen 12-column set.
+    fvals_[kL4G1ParamA] = Microprice(last_quote_, 32, 3, 0, 1, quote_count_);
+    fvals_[kL4G1ParamB] = Spread(last_quote_, 96, 3, 2, 2, quote_count_);
+    fvals_[kL4G1MechanismA] = Weighted(last_quote_, 48, 4, 0, 2, quote_count_);
+    fvals_[kL4G1MechanismB] = Microprice(last_quote_, 96, 4, 1, 3, quote_count_);
 }
 
 }  // namespace book_imbalance

@@ -124,6 +124,12 @@ void FactorEntry::DoOnUpdateFactors(int64_t) {
     fvals_[9] = RecoverySpeed(l1_, 32, 0);
     fvals_[10] = RecoverySpeed(l1_, 64, 1);
     fvals_[11] = RecoverySpeed(l1_, 128, 2);
+    // L4G1 candidates are explicitly post-shock variants.  A calm/rising
+    // window is unavailable (NaN + readiness=false), never a numeric zero.
+    fvals_[12] = RecoverySpeed(l1_, 96, 1);
+    fvals_[13] = RecoverySpeed(l5_, 96, 1);
+    fvals_[14] = RecoverySpeed(l1_, 96, 1);
+    fvals_[15] = RecoverySpeed(l5_, 96, 1);
 }
 
 }  // namespace liquidity_resilience

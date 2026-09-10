@@ -32,7 +32,7 @@ std::vector<double> Values(
 
 int main() {
     factors::comm::FactorEntryConfig config;
-    const std::vector<std::string> expected_names = {
+    std::vector<std::string> expected_names = {
         "flow_pressure_signed_trade_flow_w16",
         "flow_pressure_signed_trade_flow_w32_lag0",
         "flow_pressure_signed_trade_flow_w64_lag1",
@@ -46,10 +46,16 @@ int main() {
         "flow_pressure_decayed_trade_flow_w64_lag1",
         "flow_pressure_decayed_trade_flow_w128_lag2",
     };
-    if (factors::flow_pressure::GetMetadata().factor_names != expected_names) {
+    expected_names.insert(expected_names.end(), {
+        "flow_pressure_l4g1_param_a", "flow_pressure_l4g1_param_b",
+        "flow_pressure_l4g1_mechanism_a", "flow_pressure_l4g1_mechanism_b"});
+    if (factors::flow_pressure::GetMetadata().factor_names != expected_names ||
+        factors::flow_pressure::GetMetadata().factor_size != 16) {
         std::cerr << "metadata must expose the frozen twelve-candidate order" << std::endl;
         return 1;
     }
+    factors::flow_pressure::FactorEntry empty("000001", factors::flow_pressure::GetMetadata(), config);
+    if (empty.GetReadinessMask(92700000).at(0)) return 1;
 
     factors::flow_pressure::FactorEntry buy(
         "000001", factors::flow_pressure::GetMetadata(), config);
@@ -58,6 +64,7 @@ int main() {
         std::cerr << "one buy must produce +1" << std::endl;
         return 1;
     }
+    if (!buy.GetReadinessMask(92700000).at(0)) return 1;
 
     factors::flow_pressure::FactorEntry sell(
         "000001", factors::flow_pressure::GetMetadata(), config);
