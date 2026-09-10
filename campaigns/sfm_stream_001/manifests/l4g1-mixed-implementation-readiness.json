@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "mixed_candidate_implementation_readiness",
+  "round_id": "l4g1_mixed_v1",
+  "dataset_id": "sfm_stream_001_formal_history_v3_readiness",
+  "candidate_count": 16,
+  "factor_count": 64,
+  "status": "implementation_complete",
+  "l2_allowed": true,
+  "cpp_metadata": {
+    "families": 4,
+    "columns_per_family": 16,
+    "new_candidates_per_family": 4,
+    "readiness_policy": "explicit_only",
+    "zero_is_not_unavailable": true,
+    "opening_price_response_not_ready": true,
+    "liquidity_shock_required": true
+  },
+  "candidate_ids": [
+    "book_imbalance_l4g1_param_a", "book_imbalance_l4g1_param_b", "book_imbalance_l4g1_mechanism_a", "book_imbalance_l4g1_mechanism_b",
+    "flow_pressure_l4g1_param_a", "flow_pressure_l4g1_param_b", "flow_pressure_l4g1_mechanism_a", "flow_pressure_l4g1_mechanism_b",
+    "impact_efficiency_l4g1_param_a", "impact_efficiency_l4g1_param_b", "impact_efficiency_l4g1_mechanism_a", "impact_efficiency_l4g1_mechanism_b",
+    "liquidity_resilience_l4g1_param_a", "liquidity_resilience_l4g1_param_b", "liquidity_resilience_l4g1_mechanism_a", "liquidity_resilience_l4g1_mechanism_b"
+  ],
+  "holdout_read": false,
+  "promotion_allowed": false,
+  "next_gate": "L2_technical_validation"
+}
