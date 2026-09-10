@@ -166,6 +166,7 @@ def advance(current: Any, target: str, *, input_data: Any = None, output_data: A
 
 def validate_receipt(receipt: Mapping[str, Any], *, expected_input_hash: Optional[str] = None,
                      expected_output_hash: Optional[str] = None,
+                     input_data: Any = None, output_data: Any = None,
                      round_data: Optional[Mapping[str, Any]] = None) -> None:
     """Fail closed on malformed, tampered, or unauthorized stage evidence."""
     if not isinstance(receipt, Mapping):
@@ -182,6 +183,10 @@ def validate_receipt(receipt: Mapping[str, Any], *, expected_input_hash: Optiona
     if expected_input_hash is not None and receipt["input_hash"] != expected_input_hash:
         raise ValueError("receipt input hash drift")
     if expected_output_hash is not None and receipt["output_hash"] != expected_output_hash:
+        raise ValueError("receipt output hash drift")
+    if input_data is not None and receipt["input_hash"] != sha256(input_data):
+        raise ValueError("receipt input hash drift")
+    if output_data is not None and receipt["output_hash"] != sha256(output_data):
         raise ValueError("receipt output hash drift")
     if not isinstance(receipt["job_ids"], list) or len(set(map(str, receipt["job_ids"]))) != len(receipt["job_ids"]):
         raise ValueError("receipt Job IDs must be a unique list")

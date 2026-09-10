@@ -15,6 +15,7 @@ CONTRACT_FILES = {
     "batch": "batch.schema.json",
     "factor_portrait": "factor_portrait.schema.json",
     "experience_record": "experience_record.schema.json",
+    "research_round": "research_round.schema.json",
 }
 
 

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "holdout_authorization",
+  "authorization_id": "l4g1-mixed-holdout-display-20260910",
+  "round_id": "l4g1_mixed_v1",
+  "campaign_id": "sfm_stream_001",
+  "confirmed_at": "2026-09-10",
+  "confirmed_by": "user",
+  "confirmation": "用户确认冻结入选名单、raw_signed 方向和每个 universe×label 的 best event 后，允许读取 2025 仅用于样本外效果图展示。",
+  "selection_frozen": true,
+  "best_event_frozen": true,
+  "readable_split": "holdout",
+  "holdout_year": 2025,
+  "allowed_use": "display_only",
+  "feedback_allowed": false,
+  "forbidden_feedback": ["selection", "direction", "parameter", "candidate", "batch", "promotion"],
+  "selection_receipt_required": true,
+  "best_event_receipt_required": true,
+  "access_scope": {"events": 8, "universes": ["000906", "003800", "000985"], "labels": ["raw926", "ease926"], "factors": "selected_for_holdout_display_only"},
+  "audit_requirements": ["record input and output hashes", "record every 2025 read", "prove no holdout metric entered selection or experience facts", "retain display artifact links"],
+  "expires_after": "l4g1_mixed_v1"
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whyman-quant.github.io/AutoStream/contracts/research-round-v1.schema.json",
+  "title": "AutoStream mixed research round v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "round_id", "campaign_id", "status", "counts", "batch_ids", "candidate_ids", "parent_candidate_ids", "parent_portrait_ids", "stages", "stages_readable_splits", "events", "universes", "labels", "date_lists", "families", "success_conditions", "rejection_conditions", "stop_conditions", "selection", "stop_after", "recursive", "promotion_allowed", "forbidden_behaviors"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "research_round"},
+    "round_id": {"const": "l4g1_mixed_v1"},
+    "campaign_id": {"const": "sfm_stream_001"},
+    "status": {"const": "frozen"},
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["batch_count", "candidate_count", "control_count"],
+      "properties": {
+        "batch_count": {"const": 4}, "candidate_count": {"const": 16}, "control_count": {"const": 48}
+      }
+    },
+    "batch_ids": {"type": "array", "const": ["l4_formal_history_next_v1_book_imbalance", "l4_formal_history_next_v1_flow_pressure", "l4_formal_history_next_v1_impact_efficiency", "l4_formal_history_next_v1_liquidity_resilience"]},
+    "candidate_ids": {"type": "array", "minItems": 16, "maxItems": 16, "uniqueItems": true, "items": {"$ref": "#/definitions/id"}},
+    "parent_candidate_ids": {"type": "array", "minItems": 48, "maxItems": 48, "uniqueItems": true, "items": {"$ref": "#/definitions/id"}},
+    "parent_portrait_ids": {"type": "array", "minItems": 48, "maxItems": 48, "uniqueItems": true, "items": {"$ref": "#/definitions/id"}},
+    "stages": {"type": "array", "const": ["L2", "L3", "L4", "L6-display"]},
+    "stages_readable_splits": {
+      "type": "object", "additionalProperties": false, "required": ["L2", "L3", "L4", "L6-display"],
+      "properties": {
+        "L2": {"type": "array", "items": {"enum": ["training", "observation"]}},
+        "L3": {"type": "array", "items": {"enum": ["training", "observation"]}},
+        "L4": {"type": "array", "items": {"enum": ["training", "observation"]}, "not": {"contains": {"const": "holdout"}}},
+        "L6-display": {"type": "array", "items": {"enum": ["holdout"]}, "const": ["holdout"]}
+      }
+    },
+    "events": {"type": "array", "const": [92600000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000]},
+    "universes": {"type": "array", "const": ["000906", "003800", "000985"]},
+    "labels": {"type": "array", "const": ["raw926", "ease926"]},
+    "date_lists": {
+      "type": "object", "additionalProperties": false, "required": ["training", "observation", "holdout"],
+      "properties": {
+        "training": {"$ref": "#/definitions/date_list"},
+        "observation": {"$ref": "#/definitions/date_list"},
+        "holdout": {"$ref": "#/definitions/date_list"}
+      }
+    },
+    "families": {"type": "object", "additionalProperties": false, "required": ["book_imbalance", "flow_pressure", "impact_efficiency", "liquidity_resilience"], "properties": {"book_imbalance": {"$ref": "#/definitions/family"}, "flow_pressure": {"$ref": "#/definitions/family"}, "impact_efficiency": {"$ref": "#/definitions/family"}, "liquidity_resilience": {"$ref": "#/definitions/family"}}},
+    "success_conditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "rejection_conditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "stop_conditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "selection": {
+      "type": "object", "additionalProperties": false, "required": ["allowed_years", "forbidden_years", "direction_policy", "best_event_policy"],
+      "properties": {"allowed_years": {"type": "array", "minItems": 1, "items": {"type": "integer", "maximum": 2024}}, "forbidden_years": {"type": "array", "contains": {"const": 2025}}, "direction_policy": {"const": "raw_signed"}, "best_event_policy": {"type": "string", "minLength": 1}}
+    },
+    "stop_after": {"const": "next_batch_generated"},
+    "recursive": {"const": false},
+    "promotion_allowed": {"const": false},
+    "forbidden_behaviors": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 1}}
+  },
+  "definitions": {
+    "id": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]*$"},
+    "date_list": {"type": "object", "additionalProperties": false, "required": ["path", "sha256", "date_start", "date_end", "purpose"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "date_start": {"type": "string", "pattern": "^[0-9]{8}$"}, "date_end": {"type": "string", "pattern": "^[0-9]{8}$"}, "purpose": {"type": "string", "minLength": 1}}},
+    "family": {"type": "object", "additionalProperties": false, "required": ["research_question", "single_variable_control", "parent_candidate_ids", "expected_supported_events", "judgement_rules", "hypothesis", "success_condition", "rejection_condition", "stop_condition"], "properties": {"research_question": {"type": "string", "minLength": 1}, "single_variable_control": {"type": "string", "minLength": 1}, "parent_candidate_ids": {"type": "array", "minItems": 12, "maxItems": 12, "uniqueItems": true, "items": {"$ref": "#/definitions/id"}}, "expected_supported_events": {"type": "array", "minItems": 1, "items": {"type": "integer"}}, "judgement_rules": {"type": "object", "additionalProperties": false, "required": ["supported", "promising", "unsupported", "not_evaluable", "error"], "properties": {"supported": {"type": "string", "minLength": 1}, "promising": {"type": "string", "minLength": 1}, "unsupported": {"type": "string", "minLength": 1}, "not_evaluable": {"type": "string", "minLength": 1}, "error": {"type": "string", "minLength": 1}}}, "hypothesis": {"type": "string", "minLength": 1}, "success_condition": {"type": "string", "minLength": 1}, "rejection_condition": {"type": "string", "minLength": 1}, "stop_condition": {"type": "string", "minLength": 1}}}
+  }
+}
