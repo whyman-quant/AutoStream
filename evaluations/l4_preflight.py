@@ -175,13 +175,17 @@ def validate_hdf5_only(
     source_events = [int(event) for event in expected_events]
     if source_events != list(DEFAULT_SOURCE_EVENTS):
         raise ValueError("HDF5-only production validation requires frozen events")
+    provided_names = expected_factor_names is not None
     factor_names = (
         load_expected_factor_names(campaign_root=campaign_root)
         if expected_factor_names is None
         else [str(name) for name in expected_factor_names]
     )
-    if len(factor_names) != 48 or len(set(factor_names)) != 48:
-        raise ValueError("HDF5-only production validation requires 48 unique names")
+    expected_count = len(factor_names)
+    if expected_count == 0 or len(set(factor_names)) != expected_count:
+        raise ValueError("HDF5-only production validation requires {} unique names".format(48 if not provided_names else expected_count))
+    if not provided_names and expected_count != 48:
+        raise ValueError("frozen seed validation requires exactly 48 names")
     hdf5_path = Path(path)
     _validate_exact_hdf5_event_keys(hdf5_path, source_events)
     inspection = inspect_hdf5(hdf5_path, expected_events=source_events)
