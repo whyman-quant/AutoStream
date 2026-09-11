@@ -29,11 +29,12 @@ def _sha(value) -> str:
 
 class ResearchHarness:
     def __init__(self, round_data: Mapping[str, object], *, runner: Optional[Callable] = None,
-                 receipt_dir: Optional[Path] = None):
+                 receipt_dir: Optional[Path] = None, round_root: Optional[Path] = None):
         self.round = dict(round_data)
         self.runner = runner or self._unconfigured_runner
         root = self.round.get("artifacts_root") or ".autostream-research"
         self.receipt_dir = Path(receipt_dir or Path(root) / "receipts")
+        self.round_root = Path(round_root or self.round.get("round_root") or ".").resolve()
 
     @staticmethod
     def _unconfigured_runner(stage, context):
@@ -54,6 +55,44 @@ class ResearchHarness:
     def _receipt_path(self, stage):
         return self.receipt_dir / (stage.replace("-", "_") + ".json")
 
+    def _dates(self, split):
+        """Read an inline date list or the frozen path used by a release contract."""
+        entry = self.round.get("date_lists", {}).get(split, {}) or {}
+        inline = entry.get("dates")
+        if inline is not None:
+            return [str(value) for value in inline]
+        recorded = entry.get("path")
+        if not isinstance(recorded, str) or not recorded:
+            return []
+        candidates = [Path(recorded)]
+        if not candidates[0].is_absolute():
+            candidates.extend((self.round_root / recorded, Path.cwd() / recorded))
+        for path in candidates:
+            if path.is_file():
+                values = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+                if len(values) != len(set(values)):
+                    raise HarnessError("{} date list contains duplicates".format(split))
+                return values
+        raise HarnessError("{} date list not found: {}".format(split, recorded))
+
+    def _holdout_authorization(self):
+        authorization = self.round.get("holdout_authorization")
+        if authorization:
+            return authorization
+        recorded = self.round.get("holdout_authorization_path")
+        if not recorded and self.round.get("round_id") == "l4g1_mixed_v1":
+            recorded = "campaigns/sfm_stream_001/manifests/l4g1-mixed-holdout-authorization.json"
+        if isinstance(recorded, str):
+            path = Path(recorded)
+            if not path.is_absolute():
+                path = self.round_root / path
+            if path.is_file():
+                try:
+                    return json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, ValueError) as exc:
+                    raise HarnessError("invalid holdout authorization") from exc
+        return None
+
     def _completed(self):
         result = []
         for stage in ORDER:
@@ -72,21 +111,21 @@ class ResearchHarness:
     def _context(self, stage):
         lists = self.round.get("date_lists", {})
         if stage == "L6-display":
-            authorization = self.round.get("holdout_authorization")
+            authorization = self._holdout_authorization()
             if not authorization:
                 raise HarnessError("holdout display requires explicit authorization")
             if not authorization.get("selection_frozen") or not authorization.get("best_event_frozen"):
                 raise HarnessError("holdout display requires frozen selection and best event")
-            return {"holdout_dates": lists.get("holdout", {}).get("dates", []),
+            return {"holdout_dates": self._dates("holdout"),
                     "authorization": authorization, "selection_receipt": str(self._receipt_path("selection"))}
         if stage == "selection":
             # Selection is deliberately limited to pre-holdout dates.
-            dates = list(lists.get("training", {}).get("dates", [])) + list(lists.get("observation", {}).get("dates", []))
+            dates = self._dates("training") + self._dates("observation")
             if any(str(date) >= "20250101" for date in dates):
                 raise HarnessError("selection input contains holdout date")
             return {"selection_input": dates, "holdout_dates": []}
-        return {"training_dates": lists.get("training", {}).get("dates", []),
-                "observation_dates": lists.get("observation", {}).get("dates", []),
+        return {"training_dates": self._dates("training"),
+                "observation_dates": self._dates("observation"),
                 "holdout_dates": []}
 
     def _run_stage(self, stage):
@@ -139,7 +178,8 @@ def main(argv=None):
     parser.add_argument("--receipt-dir", type=Path)
     parser.add_argument("--stop-after", choices=ORDER)
     args = parser.parse_args(argv)
-    harness = ResearchHarness(_load_round(args.round_path), receipt_dir=args.receipt_dir)
+    harness = ResearchHarness(_load_round(args.round_path), receipt_dir=args.receipt_dir,
+                              round_root=Path(args.round_path).resolve().parents[3])
     if args.command == "plan":
         result = harness.plan()
     elif args.command == "status":

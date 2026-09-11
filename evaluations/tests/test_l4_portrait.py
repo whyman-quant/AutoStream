@@ -101,6 +101,22 @@ class L4PortraitTests(unittest.TestCase):
         self.assertEqual(classify_validity_cell(values, {"IC": np.full(6, np.nan)})["status"], "metric_undefined")
         self.assertEqual(classify_validity_cell(values, {"IC": values}, readiness=np.zeros(6, dtype=bool))["status"], "not_ready")
 
+    def test_partial_readiness_is_evaluated_by_cell_coverage(self):
+        values = np.arange(1, 21, dtype=float)
+        metrics = {"IC": values.copy()}
+        ready = np.ones(20, dtype=bool)
+        ready[0] = False
+        metrics["IC"][0] = np.nan
+        cell = classify_validity_cell(
+            values,
+            metrics,
+            readiness=ready,
+            coverage_threshold=.95,
+        )
+        self.assertEqual(cell["status"], "pass")
+        self.assertEqual(cell["not_ready_count"], 1)
+        self.assertEqual(cell["readiness_coverage"], .95)
+
     def test_zero_values_are_not_inferred_as_not_ready(self):
         cell = classify_validity_cell(np.zeros(6), {"IC": np.arange(6, dtype=float)})
         self.assertNotEqual(cell["status"], "not_ready")
@@ -209,6 +225,42 @@ class L4PortraitTests(unittest.TestCase):
             # same all-symbols summary is explicitly marked instead of inventing
             # a Parquet-derived cross section.
             self.assertEqual(cell["cross_sectional"]["universe_scope"], "all_symbols")
+
+    def test_arrow_readiness_drives_cell_status_without_global_event_rejection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            for split_dates in dates.values():
+                for date in split_dates:
+                    path = Path(tmp) / "arrow" / (date + ".arrow")
+                    frame = pd.read_feather(path)
+                    for factor in self.factors:
+                        frame["ready_" + factor] = True
+                    frame.to_feather(path)
+            mod = __import__("evaluations.l4_portrait", fromlist=["_strict_frames"])
+            frames, _ = mod._strict_frames(
+                Path(tmp) / "results", dates, self.labels, self.universes,
+                self.factors, self.events, 0.0,
+            )
+            cells = build_validity_matrix(
+                frames, dates, self.factors, self.events, self.labels,
+                self.universes, coverage_threshold=.95,
+                arrow_root=Path(tmp) / "arrow", dates=dates,
+            )
+            self.assertEqual({cell["status"] for cell in cells}, {"pass"})
+            self.assertEqual(len(cells), 2 * 2 * 2 * 3 * 2)
+
+    def test_portrait_uses_runtime_dataset_identity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dates = self._fixture(tmp)
+            docs = build_portraits(
+                Path(tmp) / "results", dates, self.labels, self.universes,
+                self.factors, self.events, Path(tmp) / "arrow",
+                Path(tmp) / "candidates",
+                dataset_id="dataset_v3_readiness",
+                portrait_suffix="formal_history_v3_readiness",
+            )
+            self.assertEqual(docs[0]["dataset"]["dataset_id"], "dataset_v3_readiness")
+            self.assertTrue(docs[0]["portrait_id"].endswith("__formal_history_v3_readiness"))
 
     def test_arrow_loader_rejects_holdout_dates_and_missing_factor_is_explicit(self):
         with tempfile.TemporaryDirectory() as tmp:

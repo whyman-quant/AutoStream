@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import json
 from pathlib import Path
 
 from campaigns.research_harness import ResearchHarness, HarnessError
@@ -61,6 +62,36 @@ class ResearchHarnessTests(unittest.TestCase):
             self.assertNotIn("L2", calls)
             self.assertNotIn("L3", calls)
             self.assertIn("selection", calls)
+
+    def test_date_list_paths_are_resolved_for_real_round_contract(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            lists = root / "campaigns/sfm_stream_001/manifests"
+            lists.mkdir(parents=True)
+            (lists / "training.txt").write_text("20210104\n20210105\n")
+            (lists / "observation.txt").write_text("20230103\n")
+            (lists / "holdout.txt").write_text("20250102\n")
+            round_data = self._round(root)
+            round_data["date_lists"] = {
+                "training": {"path": "campaigns/sfm_stream_001/manifests/training.txt"},
+                "observation": {"path": "campaigns/sfm_stream_001/manifests/observation.txt"},
+                "holdout": {"path": "campaigns/sfm_stream_001/manifests/holdout.txt"},
+            }
+            harness = ResearchHarness(round_data, receipt_dir=root / "receipts", round_root=root)
+            self.assertEqual(harness._context("L4")["training_dates"], ["20210104", "20210105"])
+            self.assertEqual(harness._context("L6-display")["holdout_dates"], ["20250102"])
+
+    def test_mixed_round_loads_sealed_authorization_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            auth = root / "campaigns/sfm_stream_001/manifests/l4g1-mixed-holdout-authorization.json"
+            auth.parent.mkdir(parents=True)
+            auth.write_text(json.dumps({"selection_frozen": True, "best_event_frozen": True}))
+            data = self._round(root)
+            data["round_id"] = "l4g1_mixed_v1"
+            data["date_lists"]["holdout"] = {"dates": ["20250102"]}
+            harness = ResearchHarness(data, round_root=root)
+            self.assertTrue(harness._context("L6-display")["authorization"]["selection_frozen"])
 
 
 if __name__ == "__main__":
