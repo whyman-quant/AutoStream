@@ -36,7 +36,9 @@ public:
 	    std::shared_ptr<std::vector<std::vector<char>>> result_cache,
 	    std::shared_ptr<std::vector<std::vector<factors::fval_t>>> result_data,
 	    std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_cache,
-	    std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_data)
+	    std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_data,
+	    std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_reason_cache = nullptr,
+	    std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_reason_data = nullptr)
 	    : queue_count_(queue_count),
 	      factor_size_(factor_size),
 	      asset_codes_(std::move(asset_codes)),
@@ -47,6 +49,8 @@ public:
 	      result_data_(std::move(result_data)),
 	      readiness_cache_(std::move(readiness_cache)),
 	      readiness_data_(std::move(readiness_data)),
+	      readiness_reason_cache_(std::move(readiness_reason_cache)),
+	      readiness_reason_data_(std::move(readiness_reason_data)),
 	      single_asset_raw_data_size_(factor_size * sizeof(factors::fval_t)),
 	      single_asset_send_data_size_(sizeof(my_factor_double_v2) + single_asset_raw_data_size_),
 	      collect_flags_(queue_count_, false),
@@ -148,6 +152,12 @@ private:
 					    i * factor_size_, static_cast<size_t>(factor_size_));
 					readiness_data_->emplace_back(std::move(row_readiness));
 				}
+				if (readiness_reason_data_ != nullptr && readiness_reason_cache_ != nullptr) {
+					std::vector<unsigned char> row_reasons(factor_size_);
+					std::memcpy(row_reasons.data(), readiness_reason_cache_->at(send_time_point_idx).data() +
+					    i * factor_size_, static_cast<size_t>(factor_size_));
+					readiness_reason_data_->emplace_back(std::move(row_reasons));
+				}
 			}
 			TriggerTimePointInfo& tpi = iter->second;
 			tpi.saved_to_cache = true;
@@ -169,6 +179,8 @@ private:
 	std::shared_ptr<std::vector<std::vector<factors::fval_t>>> result_data_;
 	std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_cache_;
 	std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_data_;
+	std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_reason_cache_;
+	std::shared_ptr<std::vector<std::vector<unsigned char>>> readiness_reason_data_;
 
 	int single_asset_raw_data_size_;
 	int single_asset_send_data_size_;

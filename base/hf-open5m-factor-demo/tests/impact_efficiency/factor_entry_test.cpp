@@ -15,5 +15,7 @@ int main(){
  writer.AddTrans(T('B', 10000, 100)); writer.AddTrans(T('B', 10100, 100));
  std::vector<unsigned char> readiness(16, 0); writer.WriteAllReadinessInto(92700000, readiness.data(), readiness.size());
  for(size_t i=0;i<10;++i)if(readiness[i])return 1; if(!readiness[10]||!readiness[11]||readiness[12]||readiness[13]||readiness[14]||!readiness[15])return 1;
+ std::vector<unsigned char> reasons(16, 0); writer.WriteAllReadinessReasonsInto(92700000, reasons.data(), reasons.size());
+ for(size_t i=0;i<16;++i)if((readiness[i]&&reasons[i]!=0)||(!readiness[i]&&reasons[i]==0))return 1;
  auto regular_mask=buy.GetReadinessMask(93000000); for(bool ready:regular_mask)if(!ready)return 1;
  factors::impact_efficiency::FactorEntry sell("000001",factors::impact_efficiency::GetMetadata(),c); sell.AddTrans(T('S',10100,100)); sell.AddTrans(T('S',10000,100)); if(!(V(sell)>0.0))return 1; factors::impact_efficiency::FactorEntry flat("000001",factors::impact_efficiency::GetMetadata(),c); flat.AddTrans(T('B',10000,100)); flat.AddTrans(T('S',10000,100)); if(std::abs(V(flat))>1e-12)return 1; factors::impact_efficiency::FactorEntry bad("000001",factors::impact_efficiency::GetMetadata(),c); bad.AddTrans(T('B',10000,100,'C')); bad.AddTrans(T('B',0,0)); if(!std::isfinite(V(bad))||V(bad)!=0.0)return 1; return 0;}

@@ -28,6 +28,23 @@ using Timer = timer::RdtscTimer;
 
 namespace comm {
 
+// Stable on-disk readiness reason codebook.  Zero is reserved for ready;
+// every unavailable factor cell must use a non-zero code.
+enum class ReadinessReason : unsigned char {
+	Ready = 0,
+	NoInput = 1,
+	InsufficientBookDepth = 2,
+	InsufficientHistory = 3,
+	UnsupportedEvent = 4,
+	InsufficientExactOrders = 5,
+	InsufficientExactTradePairs = 6,
+	NoMaturedShock = 7,
+	InvalidDenominator = 8,
+	DataQuality = 9,
+	ImplementationPending = 10,
+	UnspecifiedNotReady = 255,
+};
+
 struct FactorEntryConfig {
 	// 预处理等 OpenMP 段允许使用的最大线程数（上界，默认 16）。
 	// <=0 表示不施加该上界、按各模型原逻辑（环境变量等）解析。
@@ -173,6 +190,14 @@ public:
 	virtual std::vector<bool> GetReadinessMask(int64_t timestamp) const {
 		(void)timestamp;
 		return std::vector<bool>(factor_size_, true);
+	}
+	virtual std::vector<unsigned char> GetReadinessReasonCodes(int64_t timestamp) const {
+		const auto mask = GetReadinessMask(timestamp);
+		std::vector<unsigned char> reasons(mask.size(), 0);
+		for (size_t i = 0; i < mask.size(); ++i) {
+			if (!mask[i]) reasons[i] = static_cast<unsigned char>(ReadinessReason::UnspecifiedNotReady);
+		}
+		return reasons;
 	}
 	std::vector<std::string> GetFactorNames() const override { return factor_names_; }
 	std::string GetAsset() const { return asset_; }

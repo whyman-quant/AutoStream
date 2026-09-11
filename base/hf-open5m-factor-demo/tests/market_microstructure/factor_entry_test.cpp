@@ -11,6 +11,8 @@ int main() {
     for (bool value : entry.GetReadinessMask(92600000)) {
         if (value) return 3;
     }
+    const auto cold_reasons = entry.GetReadinessReasonCodes(92600000);
+    if (cold_reasons.size() != 12 || cold_reasons[0] != 1) return 5;
     FactorEntry shallow("600001", GetMetadata(), config);
     Stock_Internal_Book shallow_quote{};
     shallow_quote.bp_array[0] = 999900;
@@ -21,6 +23,7 @@ int main() {
     shallow.UpdateFactors(92600000);
     if (shallow.GetReadinessMask(92600000)[0] ||
         !std::isnan(shallow.GetFactorValues()[0])) return 4;
+    if (shallow.GetReadinessReasonCodes(92600000)[0] != 2) return 6;
     Stock_Internal_Book quote{};
     quote.bp_array[0] = 999900;
     quote.ap_array[0] = 1000100;
@@ -38,10 +41,12 @@ int main() {
     entry.UpdateFactors(92600000);
     const auto& values = entry.GetFactorValues();
     const auto ready = entry.GetReadinessMask(92600000);
+    const auto reasons = entry.GetReadinessReasonCodes(92600000);
     if (values.size() != 12 || !ready[0] || !ready[1] ||
         !std::isfinite(values[0]) || !std::isfinite(values[1])) return 1;
+    if (reasons[0] != 0 || reasons[1] != 0) return 7;
     for (size_t i = 2; i < values.size(); ++i) {
-        if (ready[i] || !std::isnan(values[i])) return 2;
+        if (ready[i] || !std::isnan(values[i]) || reasons[i] != 4) return 2;
     }
     return 0;
 }

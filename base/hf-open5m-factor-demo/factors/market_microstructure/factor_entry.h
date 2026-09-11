@@ -15,6 +15,7 @@ public:
     FactorEntry(const std::string& asset, const comm::FactorMetadata& metadata,
                 const comm::FactorEntryConfig& config);
     std::vector<bool> GetReadinessMask(int64_t timestamp) const override;
+    std::vector<unsigned char> GetReadinessReasonCodes(int64_t timestamp) const override;
 
 private:
     void DoOnAddQuote(const Stock_Internal_Book& quote) override;

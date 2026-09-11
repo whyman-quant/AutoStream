@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "kind": "readiness_reason_codebook",
+  "codes": [
+    {"cpp_name": "Ready", "code": 0, "name": "ready"},
+    {"cpp_name": "NoInput", "code": 1, "name": "no_input"},
+    {"cpp_name": "InsufficientBookDepth", "code": 2, "name": "insufficient_book_depth"},
+    {"cpp_name": "InsufficientHistory", "code": 3, "name": "insufficient_history"},
+    {"cpp_name": "UnsupportedEvent", "code": 4, "name": "unsupported_event"},
+    {"cpp_name": "InsufficientExactOrders", "code": 5, "name": "insufficient_exact_orders"},
+    {"cpp_name": "InsufficientExactTradePairs", "code": 6, "name": "insufficient_exact_trade_pairs"},
+    {"cpp_name": "NoMaturedShock", "code": 7, "name": "no_matured_shock"},
+    {"cpp_name": "InvalidDenominator", "code": 8, "name": "invalid_denominator"},
+    {"cpp_name": "DataQuality", "code": 9, "name": "data_quality"},
+    {"cpp_name": "ImplementationPending", "code": 10, "name": "implementation_pending"},
+    {"cpp_name": "UnspecifiedNotReady", "code": 255, "name": "unspecified_not_ready"}
+  ]
+}

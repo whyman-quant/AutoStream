@@ -527,6 +527,20 @@ public:
         }
     }
 
+    // Write the stable per-factor explanation code using the same global
+    // column layout as values and readiness. Code 0 means ready.
+    void WriteAllReadinessReasonsInto(int64_t timestamp, unsigned char* row,
+        size_t row_capacity) const {
+        if (unlikely(row == nullptr)) return;
+        for (const auto& pair : records_) {
+            const auto& record = pair.second;
+            if (unlikely(record.output_start + record.factor_count > row_capacity)) continue;
+            const auto reasons = record.entry->GetReadinessReasonCodes(timestamp);
+            if (reasons.size() != record.factor_count) continue;
+            std::memcpy(row + record.output_start, reasons.data(), record.factor_count);
+        }
+    }
+
 private:
     size_t row_factor_capacity_ = 0;  // 单行因子区可容纳的列数（= 引擎 factor_size_）
 };

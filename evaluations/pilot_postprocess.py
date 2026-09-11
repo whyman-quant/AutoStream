@@ -59,7 +59,8 @@ def validate_arrow(path: Path, *, expected_stock_count: int, expected_events: Se
     with ipc.open_file(str(path)) as reader:
         table = reader.read_all()
     names = list(table.column_names)
-    factors = [name for name in names if name not in {"symbol", "date", "event"} and not name.startswith("ready_")]
+    factors = [name for name in names if name not in {"symbol", "date", "event"}
+               and not name.startswith("ready_") and not name.startswith("reason_")]
     if factors != list(expected_factor_names):
         raise ValueError("factor names mismatch")
     rows = table.num_rows
@@ -82,9 +83,19 @@ def validate_arrow(path: Path, *, expected_stock_count: int, expected_events: Se
             ready = np.ones(values.shape, dtype=bool)
         if np.any(ready & ~np.isfinite(values)):
             raise ValueError("non-finite ready factor values")
+        reason_name = "reason_" + name
+        if reason_name in names:
+            reasons = np.asarray(table[reason_name].to_numpy(zero_copy_only=False))
+            if reasons.dtype.kind not in "ui" or np.any(reasons < 0) or np.any(reasons > 255):
+                raise ValueError("readiness reason values must be uint8 integers")
+            if np.any(ready != (reasons == 0)):
+                raise ValueError("readiness reason disagrees with ready mask")
     readiness_columns = {name for name in names if name.startswith("ready_")}
     if readiness_columns and readiness_columns != {"ready_" + name for name in factors}:
         raise ValueError("readiness column set mismatch")
+    reason_columns = {name for name in names if name.startswith("reason_")}
+    if reason_columns and reason_columns != {"reason_" + name for name in factors}:
+        raise ValueError("readiness reason column set mismatch")
     return {"path": str(path), "rows": rows, "events": events, "factor_count": len(factors), "factor_names": factors}
 
 

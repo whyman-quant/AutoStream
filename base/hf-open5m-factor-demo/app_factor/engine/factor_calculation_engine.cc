@@ -183,13 +183,16 @@ void FactorCalculationEngine::Init(
 	WLOG(TO_STRING("[FactorCalculationEngine] Single send data size (bytes):", single_asset_send_data_size));
 	result_cache_ = std::make_shared<std::vector<std::vector<char>>>();
 	readiness_cache_ = std::make_shared<std::vector<std::vector<unsigned char>>>();
+	readiness_reason_cache_ = std::make_shared<std::vector<std::vector<unsigned char>>>();
 	result_cache_->resize(send_time_points_vector_.size());
 	readiness_cache_->resize(send_time_points_vector_.size());
+	readiness_reason_cache_->resize(send_time_points_vector_.size());
 	// 分配所有需要的内存
 	for (size_t i = 0; i < send_time_points_vector_.size(); i++) {
 		// 统一为所有股票分配内存，即使某些时刻某些股票没有值，也预留空间
 		result_cache_->at(i).resize(asset_codes_.size() * single_asset_send_data_size, 0);
 		readiness_cache_->at(i).assign(asset_codes_.size() * static_cast<size_t>(factor_size_), 1);
+		readiness_reason_cache_->at(i).assign(asset_codes_.size() * static_cast<size_t>(factor_size_), 0);
 		// 预热内存，避免第一次访问时，发生缺页中断，导致性能下降
 		velapex::memory_utils::TouchMemory(result_cache_->at(i).data(), result_cache_->at(i).size());
 	}
@@ -228,6 +231,7 @@ void FactorCalculationEngine::Init(
 	// 创建结果保存的容器，用于方便地使用现有接口保存结果到H5文件中
 	result_data_ = std::make_shared<std::vector<std::vector<factors::fval_t>>>();
 	readiness_data_ = std::make_shared<std::vector<std::vector<unsigned char>>>();
+	readiness_reason_data_ = std::make_shared<std::vector<std::vector<unsigned char>>>();
 	result_data_->reserve(send_time_points_vector_.size() * asset_codes_.size());
 	WLOG("[FactorCalculationEngine] Result save pool created.");
 
@@ -239,7 +243,7 @@ void FactorCalculationEngine::Init(
 		    new FactorCalculationThread(i, factor_size_, asset_group_off_set_[i], codes_in_asset_group_[i],
 		        ts_factor_entry_names_, ts_factor_config, factor_set_column_layout_, factor_compute_time_points_map_,
 			        send_time_points_vector_, trigger_time_points_map_, data_queues_[i], ts_result_queues_[i],
-			        result_cache_, readiness_cache_)));
+			        result_cache_, readiness_cache_, readiness_reason_cache_)));
 		WLOG(TO_STRING("[FactorCalculationEngine] Time-series calculation thread created: thread id", i));
 	}
 
@@ -263,7 +267,7 @@ void FactorCalculationEngine::Init(
 	factor_result_scan_thread_ = std::unique_ptr<FactorResultScanThread>(
 	new FactorResultScanThread(ts_calc_thread_num_ + cs_calc_thread_num_, factor_size_, asset_codes_,
 	        send_time_points_vector_, trigger_time_points_map_, all_result_queues, result_cache_, result_data_,
-	        readiness_cache_, readiness_data_));
+	        readiness_cache_, readiness_data_, readiness_reason_cache_, readiness_reason_data_));
 	WLOG("[FactorCalculationEngine] Scan thread created.");
 }
 
@@ -1154,15 +1158,19 @@ void FactorCalculationEngine::SaveResultsToH5CollectTimestamp() {
 		// 保存因子输出值
 		std::vector<std::vector<factors::fval_t>> tmp_data;
 		std::vector<std::vector<unsigned char>> tmp_readiness;
+		std::vector<std::vector<unsigned char>> tmp_readiness_reasons;
 		tmp_data.reserve(tpi.valid_row_num);
 		tmp_readiness.reserve(tpi.valid_row_num);
+		tmp_readiness_reasons.reserve(tpi.valid_row_num);
 		for (size_t j = 0; j < tpi.valid_row_num; ++j) {
 			tmp_data.push_back(result_data_->at(pos));
 			if (readiness_data_ != nullptr && pos < readiness_data_->size()) tmp_readiness.push_back(readiness_data_->at(pos));
+			if (readiness_reason_data_ != nullptr && pos < readiness_reason_data_->size()) tmp_readiness_reasons.push_back(readiness_reason_data_->at(pos));
 			pos++;
 		}
 		hdf5_utils::Save2DNumericVectorToH5(file_id, std::to_string(ts), tmp_data);
 		if (!tmp_readiness.empty()) hdf5_utils::Save2DNumericVectorToH5(file_id, "readiness_" + std::to_string(ts), tmp_readiness);
+		if (!tmp_readiness_reasons.empty()) hdf5_utils::Save2DNumericVectorToH5(file_id, "readiness_reason_" + std::to_string(ts), tmp_readiness_reasons);
 	}
 
 	// 如果第一个时间戳和最后一个时间戳之间没有跨越92500000，则代表所有时刻的codelist相同，可以保存一个codelist
@@ -1243,15 +1251,19 @@ void FactorCalculationEngine::SaveResultsToH5SplitTimestamp() {
 		// 保存因子输出值
 		std::vector<std::vector<factors::fval_t>> tmp_data;
 		std::vector<std::vector<unsigned char>> tmp_readiness;
+		std::vector<std::vector<unsigned char>> tmp_readiness_reasons;
 		tmp_data.reserve(tpi.valid_row_num);
 		tmp_readiness.reserve(tpi.valid_row_num);
+		tmp_readiness_reasons.reserve(tpi.valid_row_num);
 		for (size_t j = 0; j < tpi.valid_row_num; ++j) {
 			tmp_data.push_back(result_data_->at(pos));
 			if (readiness_data_ != nullptr && pos < readiness_data_->size()) tmp_readiness.push_back(readiness_data_->at(pos));
+			if (readiness_reason_data_ != nullptr && pos < readiness_reason_data_->size()) tmp_readiness_reasons.push_back(readiness_reason_data_->at(pos));
 			pos++;
 		}
 		hdf5_utils::Save2DNumericVectorToH5(file_id, factor_data_dataset_name_, tmp_data);
 		if (!tmp_readiness.empty()) hdf5_utils::Save2DNumericVectorToH5(file_id, "readiness", tmp_readiness);
+		if (!tmp_readiness_reasons.empty()) hdf5_utils::Save2DNumericVectorToH5(file_id, "readiness_reason", tmp_readiness_reasons);
 		// 保存因子输出列名
 		hdf5_utils::Save1DStringVectorToH5(file_id, "factorlist", factor_column_names_);
 		if (H5Fclose(file_id) < 0) {

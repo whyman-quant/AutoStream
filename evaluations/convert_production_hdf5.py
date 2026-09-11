@@ -10,6 +10,8 @@ from typing import Iterable, Optional, Sequence
 
 
 EVALUATION_EVENT_BY_SOURCE_EVENT = {92700000: 92600000}
+READINESS_REASON_READY = 0
+READINESS_REASON_UNSPECIFIED = 255
 
 
 def _decode(value: object) -> str:
@@ -30,6 +32,7 @@ def convert_hdf5(
     expected_rows: int,
     expected_events: Sequence[int],
     expected_factor_count: int,
+    require_explicit_reason: bool = False,
 ) -> dict:
     try:
         import h5py
@@ -52,6 +55,7 @@ def convert_hdf5(
         event_values = []
         factor_values = []
         readiness_values = []
+        reason_values = []
         date = _infer_date(input_path)
         for event in events:
             matrix = np.asarray(source[str(event)][:], dtype=np.float64)
@@ -75,22 +79,46 @@ def convert_hdf5(
             # the factor unavailable.  Ready values must remain finite.
             if np.any((readiness != 0) & ~np.isfinite(matrix)):
                 raise ValueError("event {} contains non-finite ready values".format(event))
+            reason_key = "readiness_reason_" + str(event)
+            if reason_key in source or "readiness_reason" in source:
+                raw_reasons = np.asarray(source[reason_key if reason_key in source else "readiness_reason"][:])
+                if raw_reasons.dtype.kind not in "ui" or np.any(raw_reasons < 0) or np.any(raw_reasons > 255):
+                    raise ValueError("event {} readiness reason values must be uint8 integers".format(event))
+                reasons = raw_reasons.astype(np.uint8)
+                if reasons.shape != matrix.shape:
+                    raise ValueError("event {} readiness reason shape {} does not match {}".format(event, reasons.shape, matrix.shape))
+                if np.any((readiness != 0) & (reasons != READINESS_REASON_READY)):
+                    raise ValueError("event {} readiness reason must be zero for ready values".format(event))
+                if np.any((readiness == 0) & (reasons == READINESS_REASON_READY)):
+                    raise ValueError("event {} readiness reason must be nonzero for not-ready values".format(event))
+            else:
+                if require_explicit_reason:
+                    raise ValueError("event {} requires explicit readiness reason".format(event))
+                # Preserve compatibility with historical readiness-only HDF5
+                # while making the missing explanation explicit in Arrow.
+                reasons = np.where(
+                    readiness != 0, READINESS_REASON_READY,
+                    READINESS_REASON_UNSPECIFIED,
+                ).astype(np.uint8)
             symbols.extend(event_symbols)
             dates.extend([date] * expected_rows)
             evaluation_event = EVALUATION_EVENT_BY_SOURCE_EVENT.get(event, event)
             event_values.extend([evaluation_event] * expected_rows)
             factor_values.append(matrix)
             readiness_values.append(readiness)
+            reason_values.append(reasons)
         if len(set(zip(symbols, event_values))) != expected_rows * len(events):
             raise ValueError("duplicate (symbol,event) rows")
         matrix = np.concatenate(factor_values, axis=0)
         readiness_matrix = np.concatenate(readiness_values, axis=0)
+        reason_matrix = np.concatenate(reason_values, axis=0)
         table = pa.table({
             "symbol": pa.array(symbols, type=pa.string()),
             "date": pa.array(dates, type=pa.string()),
             "event": pa.array(event_values, type=pa.int64()),
             **{name: pa.array(matrix[:, index], type=pa.float64()) for index, name in enumerate(names)},
             **{"ready_" + name: pa.array(readiness_matrix[:, index].astype(bool), type=pa.bool_()) for index, name in enumerate(names)},
+            **{"reason_" + name: pa.array(reason_matrix[:, index], type=pa.uint8()) for index, name in enumerate(names)},
         })
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = output_path.with_name("." + output_path.name + ".tmp")

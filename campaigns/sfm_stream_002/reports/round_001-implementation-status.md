@@ -19,6 +19,8 @@
 - 新建独立 `market_microstructure` 因子集。
 - 盘口反事实脆弱度的两个因子已经实现；有效双边三档盘口下输出有限值。
 - 其余 10 个因子尚未接完状态机，当前明确输出 `NaN` 且 `readiness=false`，不会用 0 冒充信号。
+- readiness reason codebook 已固定为机器可读 JSON，并已接通 `FactorEntry → RowWriter → CalculationThread → ScanThread → HDF5 → Arrow`；Arrow 辅助列为 `reason_<factor>`。
+- 已完成 20251014 单股票真实数据 smoke：HDF5 8 个事件、12 列，reason 矩阵与 readiness 同形；Arrow 8 行、39 列，逐格满足 `ready == (reason == 0)`。
 
 ## 09:26 规则
 
@@ -26,7 +28,6 @@
 
 ## 尚未完成
 
-- readiness 原因码的 HDF5/Arrow 独立通道；现有链路只有逐因子布尔 readiness。
 - 其余 10 个因子的因果状态机和质量覆盖计数。
 - 12 因子 L2、17 日 L3、回测、经验总结和下一批逻辑。
 

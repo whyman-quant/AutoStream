@@ -132,6 +132,7 @@ class PilotPostprocessTests(unittest.TestCase):
                 "event": [92600000, 92600000, 100000000, 100000000],
                 "factor": [math.nan, 1.0, 2.0, 3.0],
                 "ready_factor": [False, True, True, True],
+                "reason_factor": [4, 0, 0, 0],
             })
             with pa.OSFile(str(path), "wb") as sink:
                 with ipc.RecordBatchFileWriter(sink, table.schema) as writer:

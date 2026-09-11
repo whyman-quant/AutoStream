@@ -303,6 +303,23 @@ class AgentHarnessTests(unittest.TestCase):
         factor_names = re.findall(r'^\s+"([a-z0-9_]+)",$', metadata, re.MULTILINE)
         self.assertEqual(factor_names, proposal_ids)
 
+    def test_readiness_reason_codebook_matches_cpp_enum(self):
+        import json
+        import re
+        from pathlib import Path
+
+        codebook = json.loads(
+            Path("campaigns/contracts/readiness_reason_codebook_v1.json").read_text()
+        )
+        header = Path(
+            "base/hf-open5m-factor-demo/factors/_comm/factor_entry_base.h"
+        ).read_text()
+        cpp_codes = dict(
+            (name, int(value))
+            for name, value in re.findall(r'^\s*([A-Za-z]+) = ([0-9]+),$', header, re.MULTILINE)
+        )
+        self.assertEqual(cpp_codes, dict((item["cpp_name"], item["code"]) for item in codebook["codes"]))
+
 
 if __name__ == "__main__":
     unittest.main()

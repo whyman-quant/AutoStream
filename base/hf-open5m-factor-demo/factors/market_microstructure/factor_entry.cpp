@@ -75,6 +75,28 @@ std::vector<bool> FactorEntry::GetReadinessMask(int64_t timestamp) const {
     return ready;
 }
 
+std::vector<unsigned char> FactorEntry::GetReadinessReasonCodes(int64_t timestamp) const {
+    using comm::ReadinessReason;
+    std::vector<unsigned char> reasons(
+        kFactorSize, static_cast<unsigned char>(ReadinessReason::ImplementationPending));
+    if (!has_computed_ || !has_quote_) {
+        std::fill(reasons.begin(), reasons.end(),
+                  static_cast<unsigned char>(ReadinessReason::NoInput));
+        return reasons;
+    }
+    for (size_t i = 0; i < 2; ++i) {
+        reasons[i] = std::isfinite(fvals_[i])
+            ? static_cast<unsigned char>(ReadinessReason::Ready)
+            : static_cast<unsigned char>(ReadinessReason::InsufficientBookDepth);
+    }
+    if (timestamp == 92600000 || timestamp == 92700000) {
+        for (size_t i = 2; i < reasons.size(); ++i) {
+            reasons[i] = static_cast<unsigned char>(ReadinessReason::UnsupportedEvent);
+        }
+    }
+    return reasons;
+}
+
 void FactorEntry::DoOnAddQuote(const Stock_Internal_Book& quote) {
     last_quote_ = quote;
     has_quote_ = true;
