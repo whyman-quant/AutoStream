@@ -377,8 +377,8 @@ def _load_and_validate_config(config, output_root):
         raise ValueError("config output directory does not match output_root")
 
 
-def collect_runner_provenance(runner_root, campaign_root):
-    """Freeze runner modules and four Batch JSON files by absolute path/hash."""
+def collect_runner_provenance(runner_root, campaign_root, factor_manifest_path=None):
+    """Freeze runner modules and the exact Batch set selected by a release."""
     root = _validate_runner_root(runner_root, campaign_root)
     campaign = Path(campaign_root).resolve()
     entries = []
@@ -392,24 +392,61 @@ def collect_runner_provenance(runner_root, campaign_root):
             "path": str(path),
             "sha256": _sha256(path),
         })
-    for family in FAMILIES:
-        path = _require_provenance_file(
-            campaign / "batches" / (family + "_seed_v1.json"),
-            root,
-            "Batch JSON",
+    if factor_manifest_path is None:
+        batches = [
+            (family, campaign / "batches" / (family + "_seed_v1.json"))
+            for family in FAMILIES
+        ]
+    else:
+        manifest_path = _require_provenance_file(
+            Path(factor_manifest_path).resolve(), root, "factor manifest"
         )
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            factor_names = manifest["factor_names"]
+            batch_records = manifest["batches"]
+        except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
+            raise ValueError("invalid release factor manifest") from error
+        if (
+            manifest.get("kind") != "release_factor_manifest"
+            or not isinstance(factor_names, list)
+            or not factor_names
+            or len(factor_names) != len(set(factor_names))
+            or manifest.get("factor_count") != len(factor_names)
+            or not isinstance(batch_records, list)
+            or not batch_records
+        ):
+            raise ValueError("invalid release factor manifest")
+        entries.append({
+            "kind": "factor_manifest", "name": manifest_path.name,
+            "path": str(manifest_path), "sha256": _sha256(manifest_path),
+        })
+        batches = []
+        for record in batch_records:
+            try:
+                name = str(record["batch_id"])
+                path = _resolve_recorded_path(record["path"], campaign)
+            except (KeyError, TypeError, ValueError) as error:
+                raise ValueError("invalid Batch record in factor manifest") from error
+            batches.append((name, path))
+        if len({str(path) for _, path in batches}) != len(batches):
+            raise ValueError("release factor manifest contains duplicate Batch paths")
+    for name, batch_path in batches:
+        path = _require_provenance_file(batch_path, root, "Batch JSON")
         entries.append({
             "kind": "batch",
-            "name": family,
+            "name": name,
             "path": str(path),
             "sha256": _sha256(path),
         })
     return entries
 
 
-def validate_runner_provenance(runner_root, campaign_root, provenance):
+def validate_runner_provenance(runner_root, campaign_root, provenance, factor_manifest_path=None):
     """Recompute the complete runner provenance before run-chunk work."""
-    expected = collect_runner_provenance(runner_root, campaign_root)
+    expected = collect_runner_provenance(
+        runner_root, campaign_root, factor_manifest_path=factor_manifest_path
+    )
     if provenance != expected:
         raise ValueError("runner or Batch provenance hash changed")
     return expected
@@ -434,6 +471,7 @@ def build_plan(
     lane_count=LANE_COUNT,
     expected_binary_sha256=None,
     expected_config_sha256=None,
+    factor_manifest_path=None,
     _verified_contract=None,
 ):
     """Build a deterministic JSON-serializable plan from the active v2 list."""
@@ -461,8 +499,12 @@ def build_plan(
         if _verified_contract is None
         else _verified_contract
     )
+    resolved_factor_manifest = (
+        None if factor_manifest_path is None else Path(factor_manifest_path).resolve()
+    )
     runner_provenance = collect_runner_provenance(
-        runner_path, contract["campaign_root"]
+        runner_path, contract["campaign_root"],
+        factor_manifest_path=resolved_factor_manifest,
     )
     chunks = chunk_dates(contract["production_dates"], size=chunk_size)
     lanes = assign_lanes(chunks, lane_count=lane_count)
@@ -517,8 +559,11 @@ def build_plan(
         "reject_existing_output": True,
         "chunks": planned_chunks,
     }
+    if resolved_factor_manifest is not None:
+        plan["factor_manifest_path"] = str(resolved_factor_manifest)
     validate_runner_provenance(
-        runner_path, contract["campaign_root"], runner_provenance
+        runner_path, contract["campaign_root"], runner_provenance,
+        factor_manifest_path=resolved_factor_manifest,
     )
     return plan
 
@@ -537,6 +582,7 @@ def build_resume_plan(
     memory_gb=80,
     expected_binary_sha256=None,
     expected_config_sha256=None,
+    factor_manifest_path=None,
     _verified_contract=None,
 ):
     """Build a deterministic partial-production plan for missing dates.
@@ -571,7 +617,13 @@ def build_resume_plan(
         if _verified_contract is None else _verified_contract
     )
     dates = validate_dates_against_frozen_list(requested_dates, contract["production_dates"])
-    runner_provenance = collect_runner_provenance(runner_path, contract["campaign_root"])
+    resolved_factor_manifest = (
+        None if factor_manifest_path is None else Path(factor_manifest_path).resolve()
+    )
+    runner_provenance = collect_runner_provenance(
+        runner_path, contract["campaign_root"],
+        factor_manifest_path=resolved_factor_manifest,
+    )
     chunks = chunk_dates(dates, size=chunk_size)
     lanes = assign_lanes(chunks, lane_count=lane_count)
     lane_by_identity = {}
@@ -628,7 +680,12 @@ def build_resume_plan(
         "reject_existing_output": True,
         "chunks": planned_chunks,
     }
-    validate_runner_provenance(runner_path, contract["campaign_root"], runner_provenance)
+    if resolved_factor_manifest is not None:
+        plan["factor_manifest_path"] = str(resolved_factor_manifest)
+    validate_runner_provenance(
+        runner_path, contract["campaign_root"], runner_provenance,
+        factor_manifest_path=resolved_factor_manifest,
+    )
     return plan
 
 
@@ -730,7 +787,7 @@ def _submission_lock(receipt_path):
 
 
 def plan_provenance(plan):
-    return {
+    value = {
         "dataset_id": plan["dataset_id"],
         "date_list_sha256": plan["date_list_sha256"],
         "binary": plan["binary"],
@@ -743,6 +800,9 @@ def plan_provenance(plan):
         "submission_workdir": plan["submission_workdir"],
         "submission_resources": plan["submission_resources"],
     }
+    if plan.get("factor_manifest_path"):
+        value["factor_manifest_path"] = plan["factor_manifest_path"]
+    return value
 
 
 def _chunk_run_command(plan, chunk):
@@ -774,6 +834,8 @@ def _chunk_run_command(plan, chunk):
     ]
     if plan.get("reject_existing_output") is True:
         arguments.append("--reject-existing-output")
+    if plan.get("factor_manifest_path"):
+        arguments.extend(("--factor-manifest", plan["factor_manifest_path"]))
     return shlex.join(arguments)
 
 
@@ -965,6 +1027,7 @@ def submit_plan(
                 memory_gb=plan["memory_gb"],
                 expected_binary_sha256=plan["binary_sha256"],
                 expected_config_sha256=plan["config_sha256"],
+                factor_manifest_path=plan.get("factor_manifest_path"),
                 _verified_contract=contract,
             )
         else:
@@ -977,12 +1040,14 @@ def submit_plan(
                 plan["submission_workdir"],
                 expected_binary_sha256=plan["binary_sha256"],
                 expected_config_sha256=plan["config_sha256"],
+                factor_manifest_path=plan.get("factor_manifest_path"),
                 _verified_contract=contract,
             )
         if expected_plan != plan:
             raise ValueError("plan does not match deterministic active v2 production")
         validate_runner_provenance(
-            plan["runner_root"], plan["campaign_root"], plan["runner_provenance"]
+            plan["runner_root"], plan["campaign_root"], plan["runner_provenance"],
+            factor_manifest_path=plan.get("factor_manifest_path"),
         )
         _verify_frozen_inputs(
             Path(plan["binary"]),
@@ -1136,13 +1201,20 @@ def run_chunk(
     runner_root,
     runner_provenance,
     reject_existing_output=False,
+    factor_manifest_path=None,
 ):
     """Produce and HDF5-only validate one frozen five-date chunk."""
     binary_path = _require_absolute_file(binary, "binary")
     config_path = _require_absolute_file(config, "config")
     output_path = _require_absolute_directory_path(output_root, "output_root")
     runner_path = _require_absolute_directory_path(runner_root, "runner_root")
-    validate_runner_provenance(runner_path, campaign_root, runner_provenance)
+    resolved_factor_manifest = (
+        None if factor_manifest_path is None else Path(factor_manifest_path).resolve()
+    )
+    validate_runner_provenance(
+        runner_path, campaign_root, runner_provenance,
+        factor_manifest_path=resolved_factor_manifest,
+    )
     from evaluations.l4_preflight import validate_hdf5_only
 
     contract = _load_active_v2_production_contract(campaign_root)
@@ -1170,7 +1242,10 @@ def run_chunk(
                         target
                     )
                 )
-            inspection = validate_hdf5_only(target, campaign_root)
+            inspection = validate_hdf5_only(
+                target, campaign_root,
+                factor_manifest_path=resolved_factor_manifest,
+            )
             _verify_frozen_inputs(
                 binary_path, config_path, binary_sha256, config_sha256
             )
@@ -1196,7 +1271,10 @@ def run_chunk(
             )
             if not target.is_file():
                 raise RuntimeError("factor binary did not create {}".format(target))
-            inspection = validate_hdf5_only(target, campaign_root)
+            inspection = validate_hdf5_only(
+                target, campaign_root,
+                factor_manifest_path=resolved_factor_manifest,
+            )
             _verify_frozen_inputs(
                 binary_path, config_path, binary_sha256, config_sha256
             )
@@ -1227,6 +1305,7 @@ def _parser():
     plan_parser.add_argument("--submission-workdir", type=Path, required=True)
     plan_parser.add_argument("--plan-output", type=Path, required=True)
     plan_parser.add_argument("--submit", action="store_true")
+    plan_parser.add_argument("--factor-manifest", type=Path)
     chunk_parser = subparsers.add_parser("run-chunk")
     chunk_parser.add_argument("--dates", required=True)
     chunk_parser.add_argument("--campaign-root", type=Path, required=True)
@@ -1239,6 +1318,7 @@ def _parser():
     chunk_parser.add_argument("--runner-root", type=Path, required=True)
     chunk_parser.add_argument("--runner-provenance-json", required=True)
     chunk_parser.add_argument("--reject-existing-output", action="store_true")
+    chunk_parser.add_argument("--factor-manifest", type=Path)
     return parser
 
 
@@ -1253,6 +1333,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             args.output_root,
             args.runner_root,
             args.submission_workdir,
+            factor_manifest_path=args.factor_manifest,
             _verified_contract=contract,
         )
         write_plan_once(args.plan_output, plan)
@@ -1277,6 +1358,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.runner_root,
         json.loads(args.runner_provenance_json),
         reject_existing_output=args.reject_existing_output,
+        factor_manifest_path=args.factor_manifest,
     )
     print(json.dumps(results, ensure_ascii=False))
     return 0

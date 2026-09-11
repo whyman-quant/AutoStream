@@ -4,10 +4,55 @@ import unittest
 from unittest import mock
 from pathlib import Path
 
-from campaigns.l4_release import PREFLIGHT_DATES, build_preflight_plan, freeze_release
+from campaigns.l4_release import (
+    PREFLIGHT_DATES, build_preflight_plan, freeze_release, freeze_mixed_release,
+)
 
 
 class L4ReleaseTests(unittest.TestCase):
+    def test_freeze_mixed_release_copies_manifest_batches_and_excludes_holdout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for relative in (
+                "l4_runner_bootstrap.py", "campaigns/__init__.py",
+                "campaigns/l4_production.py", "campaigns/l4_release.py",
+                "campaigns/release_factor_manifest.py", "evaluations/__init__.py",
+                "evaluations/l4_preflight.py", "evaluations/pilot_postprocess.py",
+                "evaluations/convert_production_hdf5.py",
+            ):
+                path = root / relative; path.parent.mkdir(parents=True, exist_ok=True); path.write_text(relative)
+            campaign = root / "campaigns/sfm_stream_001"
+            (campaign / "batches").mkdir(parents=True)
+            (campaign / "manifests").mkdir(parents=True)
+            (campaign / "campaign.json").write_text("{}")
+            for name in ("formal-history-production-dates-v2.txt", "formal-history-parent-dates-v1.txt"):
+                (campaign / "manifests" / name).write_text("20210104\n")
+            (campaign / "manifests/formal-history-dataset-v2.json").write_text(json.dumps({
+                "production_date_list_path": "campaigns/sfm_stream_001/manifests/formal-history-production-dates-v2.txt",
+                "parent_date_list_path": "campaigns/sfm_stream_001/manifests/formal-history-parent-dates-v1.txt",
+                "holdout_date_list_path": "campaigns/sfm_stream_001/manifests/formal-history-holdout-dates-v2.txt",
+            }))
+            (campaign / "manifests/formal-history-holdout-dates-v2.txt").write_text("20250102\n")
+            batch = campaign / "batches/mixed.json"; batch.write_text("{}")
+            factor_manifest = campaign / "manifests/release-factors.json"
+            factor_manifest.write_text(json.dumps({
+                "kind": "release_factor_manifest", "factor_count": 1,
+                "factor_names": ["factor_a"],
+                "batches": [{"batch_id": "mixed", "path": "campaigns/sfm_stream_001/batches/mixed.json"}],
+            }))
+            binary = root / "main"; binary.write_bytes(b"bin")
+            config = root / "config.json"; config.write_text("{}")
+            with mock.patch("campaigns.l4_release.subprocess.check_output", side_effect=["abc123\n", ""]):
+                release = freeze_mixed_release(
+                    root, commit="abc123", binary=binary, config=config,
+                    factor_manifest=factor_manifest, release_id="mixed-v1",
+                    release_base=root / "releases",
+                )
+            release_root = Path(release["release_root"])
+            self.assertEqual(release["factor_count"], 1)
+            self.assertTrue((release_root / "campaigns/sfm_stream_001/batches/mixed.json").is_file())
+            self.assertFalse((release_root / "campaigns/sfm_stream_001/manifests/formal-history-holdout-dates-v2.txt").exists())
+
     def test_freeze_release_copies_readonly_provenance(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

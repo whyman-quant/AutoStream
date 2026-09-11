@@ -35,6 +35,7 @@ RUNNER_FILES = (
     "evaluations/pilot_postprocess.py",
     "evaluations/convert_production_hdf5.py",
 )
+MIXED_RUNNER_FILES = RUNNER_FILES + ("campaigns/release_factor_manifest.py",)
 
 
 def sha256(path):
@@ -144,6 +145,108 @@ def freeze_release(repo_root, *, commit, binary, config, release_base=RELEASE_BA
     }
     _atomic_json(target / "release.json", metadata)
     # Freeze the entire tree only after all copies and metadata are complete.
+    for directory in sorted((path for path in target.rglob("*") if path.is_dir()), reverse=True):
+        directory.chmod(0o555)
+    (target / "release.json").chmod(0o444)
+    target.chmod(0o555)
+    return metadata
+
+
+def freeze_mixed_release(repo_root, *, commit, binary, config, factor_manifest,
+                         release_id, release_base=RELEASE_BASE):
+    """Freeze the exact manifest-selected factor set without copying holdout data."""
+    repo = Path(repo_root).resolve()
+    actual_commit = subprocess.check_output(
+        ["git", "-C", str(repo), "rev-parse", "HEAD"], text=True
+    ).strip()
+    if str(commit) != actual_commit:
+        raise ValueError("release commit must equal repository HEAD")
+    tracked_status = subprocess.check_output(
+        ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=no"],
+        text=True,
+    )
+    if tracked_status.strip():
+        raise ValueError("tracked repository files must be clean before release freeze")
+    source_manifest = Path(factor_manifest).resolve()
+    try:
+        manifest = json.loads(source_manifest.read_text(encoding="utf-8"))
+        factor_names = manifest["factor_names"]
+        batch_records = manifest["batches"]
+    except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
+        raise ValueError("invalid release factor manifest") from error
+    if (
+        manifest.get("kind") != "release_factor_manifest"
+        or not isinstance(factor_names, list)
+        or not factor_names
+        or len(factor_names) != len(set(factor_names))
+        or manifest.get("factor_count") != len(factor_names)
+        or not isinstance(batch_records, list)
+        or not batch_records
+    ):
+        raise ValueError("invalid release factor manifest")
+    target = Path(release_base).resolve() / (str(release_id) + "-" + str(commit))
+    if target.exists():
+        metadata_path = target / "release.json"
+        if not metadata_path.is_file():
+            raise ValueError("release exists without release.json: {}".format(target))
+        return json.loads(metadata_path.read_text(encoding="utf-8"))
+    target.mkdir(parents=True, mode=0o755)
+    copied = []
+
+    def copy_repo_file(relative):
+        relative = Path(relative)
+        source = (repo / relative).resolve()
+        try:
+            source.relative_to(repo)
+        except ValueError as error:
+            raise ValueError("release source escapes repository: {}".format(relative)) from error
+        if not source.is_file():
+            raise ValueError("missing release file: {}".format(source))
+        destination = _copy_readonly(source, target / relative,
+                                     executable=str(relative) == "l4_runner_bootstrap.py")
+        copied.append((str(relative), destination))
+        return destination
+
+    release_binary = _copy_readonly(Path(binary).resolve(), target / "factor_main", executable=True)
+    release_config = _copy_readonly(Path(config).resolve(), target / "config_factor.json")
+    for relative in MIXED_RUNNER_FILES:
+        copy_repo_file(relative)
+    campaign_relative = Path("campaigns/sfm_stream_001")
+    for relative in (
+        campaign_relative / "campaign.json",
+        campaign_relative / "manifests/formal-history-dataset-v2.json",
+        source_manifest.relative_to(repo),
+    ):
+        copy_repo_file(relative)
+    dataset = json.loads(
+        (repo / campaign_relative / "manifests/formal-history-dataset-v2.json").read_text(encoding="utf-8")
+    )
+    for key in ("production_date_list_path", "parent_date_list_path"):
+        copy_repo_file(dataset[key])
+    for record in batch_records:
+        copy_repo_file(record["path"])
+    files = {
+        relative: {"path": str(path), "sha256": sha256(path)}
+        for relative, path in copied
+    }
+    release_factor_manifest = target / source_manifest.relative_to(repo)
+    metadata = {
+        "schema_version": 1,
+        "release_id": str(release_id),
+        "source_commit": str(commit),
+        "release_root": str(target),
+        "runner_root": str(target),
+        "campaign_root": str(target / campaign_relative),
+        "binary": {"path": str(release_binary), "sha256": sha256(release_binary)},
+        "config": {"path": str(release_config), "sha256": sha256(release_config)},
+        "factor_manifest": {"path": str(release_factor_manifest), "sha256": sha256(release_factor_manifest)},
+        "factor_count": len(factor_names),
+        "files": files,
+        "immutable": True,
+        "holdout_data_included": False,
+        "holdout_date_list_included": False,
+    }
+    _atomic_json(target / "release.json", metadata)
     for directory in sorted((path for path in target.rglob("*") if path.is_dir()), reverse=True):
         directory.chmod(0o555)
     (target / "release.json").chmod(0o444)

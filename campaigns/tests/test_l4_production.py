@@ -829,6 +829,44 @@ class L4ProductionTests(unittest.TestCase):
             self.assertIn(str(root / "l4_runner_bootstrap.py"), command)
             self.assertIn("/usr/local/python3.8.10/bin/python3", command)
 
+    def test_mixed_factor_manifest_controls_provenance_and_chunk_validation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            campaign_root = root / "campaign"
+            output_root = root / "outputs"
+            manifest, production, _, names = _write_campaign(campaign_root)
+            binary, config = _write_inputs(root, output_root)
+            extra = campaign_root / "batches/l4g1.json"
+            extra.write_text(json.dumps({"batch_id": "l4g1", "candidate_ids": ["new_a"]}))
+            factor_manifest = campaign_root / "manifests/release-factors.json"
+            factor_manifest.write_text(json.dumps({
+                "kind": "release_factor_manifest", "factor_count": 49,
+                "factor_names": names + ["new_a"],
+                "batches": [
+                    {"batch_id": family, "path": "batches/{}_seed_v1.json".format(family)}
+                    for family in l4_production.FAMILIES
+                ] + [{"batch_id": "l4g1", "path": "batches/l4g1.json"}],
+            }))
+            provenance = l4_production.collect_runner_provenance(
+                root, campaign_root, factor_manifest_path=factor_manifest
+            )
+            self.assertEqual(sum(item["kind"] == "batch" for item in provenance), 5)
+            self.assertEqual(sum(item["kind"] == "factor_manifest" for item in provenance), 1)
+            plan = l4_production.build_resume_plan(
+                campaign_root, binary, config, output_root, root,
+                production[:5], factor_manifest_path=factor_manifest,
+            )
+            self.assertEqual(plan["factor_manifest_path"], str(factor_manifest.resolve()))
+            self.assertIn("--factor-manifest", l4_production._chunk_run_command(plan, plan["chunks"][0]))
+            _write_placeholder(output_root / production[0] / "all_families/factors.h5")
+            with mock.patch("evaluations.l4_preflight.validate_hdf5_only", return_value=_inspection(names + ["new_a"])) as validate:
+                l4_production.run_chunk(
+                    [production[0]], campaign_root, binary, config, output_root,
+                    _sha256(binary), _sha256(config), manifest["production_date_list_sha256"],
+                    root, provenance, factor_manifest_path=factor_manifest,
+                )
+            self.assertEqual(validate.call_args.kwargs["factor_manifest_path"], factor_manifest.resolve())
+
     def test_build_plan_rejects_feature_worktree_runner_root(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
