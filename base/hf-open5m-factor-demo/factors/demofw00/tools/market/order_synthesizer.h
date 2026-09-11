@@ -100,6 +100,9 @@ struct OrderSnapshot {
     uint16_t channel{0};
     uint8_t market{0};
     int8_t side{0};
+    // True when the parent order was reconstructed without its native order
+    // event.  Consumers must not mix this with exact parent-order snapshots.
+    bool estimated{false};
 };
 
 struct TradePairEvent {

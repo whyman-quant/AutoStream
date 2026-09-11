@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "kind": "factor_design_blueprint",
+  "round_id": "sfm_stream_002_round_001",
+  "design_rule": "Each reviewed mechanism has one representative and one single-variable control. No window-lag grid is permitted.",
+  "variants": [
+    {
+      "proposal_id": "counterfactual_depth_fragility_shock10_v1",
+      "idea_id": "counterfactual_depth_fragility_001",
+      "formula": "q=0.10*min(sum(bv_1_10),sum(av_1_10)); up=terminal_ask(q)/mid-1; down=1-terminal_bid(q)/mid; value=up-down",
+      "input_streams": ["quote"],
+      "operators": ["counterfactual_book_walk"],
+      "readiness": "Two-sided ordered book with at least three valid levels per side and enough depth to consume q. At 09:26, otherwise NaN with auction_book_unavailable.",
+      "falsification": "If the cross-sectional direction is unstable under the single shock-size control or collapses after spread and depth controls, reject the fragility mechanism.",
+      "novelty_claim": "Representative nonlinear counterfactual depth-consumption cost; it is not displayed-volume imbalance.",
+      "supported_events": [926, 1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "counterfactual_depth_fragility_shock25_v1",
+      "idea_id": "counterfactual_depth_fragility_001",
+      "formula": "q=0.25*min(sum(bv_1_10),sum(av_1_10)); up=terminal_ask(q)/mid-1; down=1-terminal_bid(q)/mid; value=up-down",
+      "input_streams": ["quote"],
+      "operators": ["counterfactual_book_walk"],
+      "readiness": "Same as the representative, except both sides must cover the 0.25 depth shock. At 09:26, otherwise NaN.",
+      "falsification": "Systematically opposite ranks between shock10 and shock25 imply arbitrary scale dependence rather than robust depth fragility.",
+      "novelty_claim": "Single-variable control changing only shock_fraction from 0.10 to 0.25.",
+      "supported_events": [926, 1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "trade_pair_parent_size_mismatch_volume_weighted_v1",
+      "idea_id": "trade_pair_parent_size_mismatch_001",
+      "formula": "z=aggressor_sign*(log1p(aggressor_original_qty)-log1p(passive_original_qty)); value=sum(trade_volume*z)/sum(trade_volume)",
+      "input_streams": ["order", "trade"],
+      "operators": ["parent_counterparty_sweep"],
+      "readiness": "At least 20 distinct exact TradePairResolved events; aggressor_source=BsFlag; both original quantities positive; estimated, Unknown and fallback pairs are diagnostics only.",
+      "falsification": "If the equal-pair control removes the structure, interpret it as large-trade exposure rather than parent-size mismatch.",
+      "novelty_claim": "Representative same-trade comparison of both parent-order sizes, weighted by executed volume.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "trade_pair_parent_size_mismatch_equal_weight_v1",
+      "idea_id": "trade_pair_parent_size_mismatch_001",
+      "formula": "z=aggressor_sign*(log1p(aggressor_original_qty)-log1p(passive_original_qty)); value=mean(z)",
+      "input_streams": ["order", "trade"],
+      "operators": ["parent_counterparty_sweep"],
+      "readiness": "Identical exact-pair quality and sample requirements to the representative.",
+      "falsification": "Disagreement with the volume-weighted representative identifies trade-size exposure and blocks a parent-size interpretation.",
+      "novelty_claim": "Single-variable control changing only pair weighting from trade volume to equal weight.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "resting_order_commitment_survival_age_weighted_v1",
+      "idea_id": "resting_order_commitment_survival_001",
+      "formula": "w=rest_qty*exp(-min(abs(price-mid)/spread,20)/4)*log1p(age_seconds/10); value=sum(side_sign*w)/sum(w)",
+      "input_streams": ["quote", "order"],
+      "operators": ["resting_commitment_survival"],
+      "readiness": "Valid two-sided spread and at least two exact active resting orders per side inside the current ten-level price band; denominator positive.",
+      "falsification": "If removing age has no stable effect or a few extreme-age orders dominate, survival time adds no commitment information.",
+      "novelty_claim": "Representative current commitment combines remaining quantity, price proximity and realized survival age.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "resting_order_commitment_survival_no_age_v1",
+      "idea_id": "resting_order_commitment_survival_001",
+      "formula": "w=rest_qty*exp(-min(abs(price-mid)/spread,20)/4); value=sum(side_sign*w)/sum(w)",
+      "input_streams": ["quote", "order"],
+      "operators": ["resting_commitment_survival"],
+      "readiness": "Identical exact active-order, quote-band and denominator requirements to the representative.",
+      "falsification": "No difference from the age-weighted representative means the result is remaining-depth imbalance, not survival commitment.",
+      "novelty_claim": "Single-variable control changing only age_weight from log1p(age/10) to one.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "cancel_execution_divergence_separate_norm_v1",
+      "idea_id": "cancel_execution_divergence_001",
+      "formula": "C=(cancel_ask-cancel_bid)/(cancel_ask+cancel_bid+eps); E=(buy_aggressive-sell_aggressive)/(buy_aggressive+sell_aggressive+eps); value=C-E",
+      "input_streams": ["order", "trade"],
+      "operators": ["lifecycle_increment_extractor"],
+      "readiness": "Trailing 15 elapsed minutes contain positive exact cancellation volume and BsFlag execution volume; cumulative cancelled_qty is differenced per order; estimated and fallback activity is diagnostic only.",
+      "falsification": "No incremental cross-sectional structure after controlling both channel totals rejects cancellation-execution divergence.",
+      "novelty_claim": "Representative separates liquidity withdrawal from realized aggressive execution and normalizes each channel independently.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "cancel_execution_divergence_joint_norm_v1",
+      "idea_id": "cancel_execution_divergence_001",
+      "formula": "value=((cancel_ask-cancel_bid)-(buy_aggressive-sell_aggressive))/(cancel_total+execution_total+eps)",
+      "input_streams": ["order", "trade"],
+      "operators": ["lifecycle_increment_extractor"],
+      "readiness": "Identical elapsed-window, exact-event and quality requirements to the representative.",
+      "falsification": "A result existing only under separate normalization flags low-activity denominator amplification for review.",
+      "novelty_claim": "Single-variable control changing only normalization from separate channel denominators to joint activity.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "execution_shock_replenishment_order_elasticity_v1",
+      "idea_id": "execution_shock_replenishment_elasticity_001",
+      "formula": "shock=trade_qty>causal_q90 && trade_qty>=0.25*opposite_l1_depth; response=exact_new_rest_qty_consumed_side_next_30s; value=mean(clip(aggressor_sign*response/(trade_qty+eps),-5,5))",
+      "input_streams": ["quote", "order", "trade"],
+      "operators": ["trade_queue_depletion", "post_shock_replenishment"],
+      "readiness": "At least 30 prior exact BsFlag trade pairs and one shock whose full 30-second response horizon has elapsed; valid pre-shock opposite L1 depth; exact additions only.",
+      "falsification": "Instability across shock sizes or domination by a few additions rejects replenishment per shock size as a recovery scale.",
+      "novelty_claim": "Representative explicitly detects a causal execution shock before measuring exact order replenishment.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "execution_shock_replenishment_quote_elasticity_v1",
+      "idea_id": "execution_shock_replenishment_elasticity_001",
+      "formula": "shock=trade_qty>causal_q90 && trade_qty>=0.25*opposite_l1_depth; response=max(depth_consumed_side_at_30s-depth_immediately_after_shock,0); value=mean(clip(aggressor_sign*response/(trade_qty+eps),-5,5))",
+      "input_streams": ["quote", "order", "trade"],
+      "operators": ["trade_queue_depletion", "post_shock_replenishment"],
+      "readiness": "Same matured shock set as the representative, with valid consumed-side quote snapshots immediately after shock and at 30 seconds.",
+      "falsification": "Systematic disagreement with exact order additions requires attribution to cancellation, execution or level migration and blocks a recovery claim.",
+      "novelty_claim": "Single-variable control changing only recovery measurement from exact additions to visible depth recovery.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "distinct_aggressor_run_surprisal_markov_v1",
+      "idea_id": "distinct_aggressor_run_surprisal_001",
+      "formula": "surprise_i=-log(P_past(side_i|previous_side_i)); value=current_run_side*sum(surprise_i)/sqrt(current_distinct_parent_run_length)",
+      "input_streams": ["order", "trade"],
+      "operators": ["distinct_mother_run_surprisal"],
+      "readiness": "At least 30 prior distinct exact BsFlag aggressor parents and a current same-side run containing at least two distinct parents; Unknown, estimated and fallback events are diagnostic only.",
+      "falsification": "If deduplication removes the run or the Markov score equals simple signed counts, independent-demand aggregation is unsupported.",
+      "novelty_claim": "Representative uses a causal first-order transition null after parent-order deduplication.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "proposal_id": "distinct_aggressor_run_surprisal_marginal_v1",
+      "idea_id": "distinct_aggressor_run_surprisal_001",
+      "formula": "surprise_i=-log(P_past(side_i)); value=current_run_side*sum(surprise_i)/sqrt(current_distinct_parent_run_length)",
+      "input_streams": ["order", "trade"],
+      "operators": ["distinct_mother_run_surprisal"],
+      "readiness": "Identical exact-parent history, current-run and quality requirements to the representative.",
+      "falsification": "No difference from the Markov representative means the preceding parent direction adds no state information.",
+      "novelty_claim": "Single-variable control changing only the probability model from first-order Markov to marginal Bernoulli.",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    }
+  ]
+}

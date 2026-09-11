@@ -207,7 +207,7 @@ struct FactorEntry::Impl {
             last_synth_execution_rate = SafeDiv(
                 static_cast<double>(filled_qty),
                 static_cast<double>(incoming->original_qty), 0.0);
-            last_synth_estimated = 0.0;
+            last_synth_estimated = BoolToDouble(incoming->estimated);
             last_aggressor = pair.aggressor_side;
         }
     }

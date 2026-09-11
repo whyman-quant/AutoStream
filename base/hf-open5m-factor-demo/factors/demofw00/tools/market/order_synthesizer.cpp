@@ -198,6 +198,7 @@ OrderSnapshot OrderSynthesizer::MakeSnapshot(const OrderState& state) {
     snapshot.channel = state.channel;
     snapshot.market = state.market;
     snapshot.side = static_cast<int8_t>(state.side);
+    snapshot.estimated = state.estimated;
     return snapshot;
 }
 
@@ -215,6 +216,7 @@ OrderSnapshot OrderSynthesizer::MakeSnapshot(const OrderEvent& event) {
     snapshot.channel = event.channel;
     snapshot.market = event.market;
     snapshot.side = static_cast<int8_t>(event.side);
+    snapshot.estimated = event.estimated;
     return snapshot;
 }
 
@@ -484,6 +486,10 @@ void OrderSynthesizer::FinalizeShanghaiPending(int safe_event_time_ms) {
         state.filled_amount_yuan = amount_yuan;
         state.initial_confirmed = true;
         state.volume_locked = true;
+        // Without the native Shanghai A event, original quantity is inferred
+        // from observed fills.  Preserve this weaker provenance in both
+        // OrderEvent and TradePairEvent snapshots.
+        state.estimated = !state.has_a;
 
         if (state.has_a) {
             state.original_qty = state.a_rest_qty + immediate_qty;

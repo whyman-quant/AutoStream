@@ -198,6 +198,35 @@ def build_candidate_proposal(idea, *, proposal_id, formula, input_streams, opera
     return proposal
 
 
+def compile_design_blueprint(logic_artifact, blueprint):
+    """Bind Agent-designed variants to reviewed ideas and sign each structure."""
+    ideas = {str(value["idea_id"]): value for value in logic_artifact.get("ideas", ())}
+    proposals = []
+    for variant in blueprint.get("variants", ()):
+        idea_id = str(variant.get("idea_id", ""))
+        if idea_id not in ideas:
+            raise AgentIdeaError("design references unknown reviewed idea: " + idea_id)
+        optional = {name: variant[name] for name in (
+            "readiness", "falsification", "novelty_claim", "supported_events"
+        ) if name in variant}
+        proposals.append(build_candidate_proposal(
+            ideas[idea_id], proposal_id=variant["proposal_id"],
+            formula=variant["formula"], input_streams=variant["input_streams"],
+            operators=variant["operators"], **optional
+        ))
+    if not proposals:
+        raise AgentIdeaError("design blueprint has no variants")
+    signatures = [value["structure_signature"] for value in proposals]
+    if len(signatures) != len(set(signatures)):
+        raise AgentIdeaError("design blueprint contains duplicate structures")
+    return {
+        "schema_version": 1,
+        "kind": "factor_design_artifact",
+        "round_id": logic_artifact.get("round_id"),
+        "proposals": proposals,
+    }
+
+
 def build_task_packet(round_data: Mapping[str, object], family_id: str,
                       operator_catalog: Mapping[str, object],
                       coverage_cells: Iterable[Mapping[str, object]]) -> dict:
@@ -207,7 +236,11 @@ def build_task_packet(round_data: Mapping[str, object], family_id: str,
         event = int(value)
         # Runtime contracts use HHMM*100000 timestamps; Agent IdeaSpecs use
         # compact HHMM minute codes to stay readable and portable.
-        if event >= 100000:
+        if event == 92700000:
+            # The engine's 09:27 source checkpoint is the compact research
+            # event 09:26 (auction snapshot), retained as 926 in contracts.
+            event = 926
+        elif event >= 100000:
             event //= 100000
         events.append(event)
     gaps = [dict(cell) for cell in coverage_cells
@@ -339,6 +372,7 @@ def validate_agent_idea(proposal: Mapping[str, object], task: Mapping[str, objec
 
 __all__ = [
     "AGENT_RESEARCH_STAGES", "AgentIdeaError", "AgentResearchHarness",
-    "build_candidate_proposal", "build_coverage_matrix", "build_task_packet", "load_task_packet",
+    "build_candidate_proposal", "build_coverage_matrix", "build_task_packet",
+    "compile_design_blueprint", "load_task_packet",
     "structure_signature", "validate_agent_idea",
 ]

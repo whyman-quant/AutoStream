@@ -284,6 +284,8 @@ int main() {
     CHECK(pair.sell_order.order_id == 42001);
     CHECK(pair.buy_order.original_qty == 1000);
     CHECK(pair.sell_order.original_qty == 3000);
+    CHECK(!pair.buy_order.estimated);
+    CHECK(!pair.sell_order.estimated);
     CHECK(pair.aggressor_side == AggressorSide::Buy);
     CHECK(pair.trade_volume == 500);
 
@@ -307,6 +309,24 @@ int main() {
     CHECK(sh_pair.buy_order.original_qty == 1000);
     CHECK(sh_pair.sell_order.original_qty == 3000);
     CHECK(sh_pair.aggressor_side == AggressorSide::Buy);
+
+    // A Shanghai incoming mother without an A event is reconstructed from
+    // trades.  The pair must expose that weaker provenance so factor code can
+    // exclude it instead of silently treating it as an exact parent order.
+    OrderSynthesizer sh_estimated_pair_builder(10000);
+    sh_estimated_pair_builder.OnOrder(
+        MakeShOrder(71001, 970001, 'A', 'S', 3000, 50, 97000000));
+    sh_estimated_pair_builder.AdvanceWatermark(97011000);
+    CHECK(sh_estimated_pair_builder.OnTrans(
+        MakeShTrade(72001, 71001, 'B', 500, 100, 97012000))
+              .trade_pairs.empty());
+    const auto& sh_estimated_pair_output =
+        sh_estimated_pair_builder.AdvanceWatermark(97023000);
+    CHECK(sh_estimated_pair_output.trade_pairs.size() == 1);
+    const auto& sh_estimated_pair =
+        sh_estimated_pair_output.trade_pairs.front();
+    CHECK(sh_estimated_pair.buy_order.estimated);
+    CHECK(!sh_estimated_pair.sell_order.estimated);
 
     // A real 2022 Shanghai sample has the A event arrive 11.741 seconds
     // before its biz_index-1 immediate fill. The production default must keep

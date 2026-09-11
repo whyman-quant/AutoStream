@@ -9,9 +9,12 @@
     "readiness_required": true
   },
   "available_fields": {
-    "quote": ["bp_array", "ap_array", "bv_array", "av_array", "last_px"],
-    "trade": ["trade_price", "trade_volume", "trade_type", "bsflag"],
-    "order": ["order_price", "order_volume", "order_type"]
+    "quote": ["bp_array", "ap_array", "bv_array", "av_array", "last_px", "exch_time", "status"],
+    "trade": ["trade_price", "trade_volume", "trade_amount", "trade_type", "bsflag", "biz_index", "trade_index", "buy_id", "sell_id"],
+    "order": ["order_price", "order_volume", "order_type", "bsflag", "market", "channel", "orderorino", "order_index", "biz_index"],
+    "derived_order_event": ["kind", "close_reason", "order_id", "original_qty", "immediate_fill_qty", "passive_fill_qty", "filled_qty", "cancelled_qty", "rest_qty", "first_time", "last_time", "estimated", "aggressor_side"],
+    "derived_trade_pair": ["trade_index", "biz_index", "trade_volume", "trade_amount_yuan", "aggressor_side", "aggressor_source", "buy_order", "sell_order"],
+    "derived_order_snapshot": ["order_id", "original_qty", "immediate_fill_qty", "passive_fill_qty", "cancelled_qty", "rest_qty", "first_time", "last_time", "market", "channel", "side", "estimated"]
   },
   "operators": [
     {"operator_id": "level_weighted_profile", "category": "spatial", "description": "Aggregate causal depth across price levels with declared weights.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "declared levels have valid prices and volumes"},

@@ -71,6 +71,7 @@ original_qty
 
 - `MotherOrderConfirmed`：原始母单量已经可以使用。
 - `TradePairResolved`：一笔正常成交的买卖两侧母单都已确认；通过 `TradePairEvent.buy_order` 和 `sell_order` 同时读取，不能只保留循环中的最后一侧。
+- `OrderSnapshot.estimated`：沪市缺少原生 `A` 事件、仅由成交重构出的母单标记为 `true`。需要精确母单容量的因子必须排除该快照，并单独记录覆盖率；不得与精确母单混算。
 - `RestQtyChanged`：挂单成交或部分撤单改变剩余量。
 - `MotherOrderClosed`：订单全部成交、撤单或收盘清算后关闭。
 

@@ -7,6 +7,7 @@ from campaigns.agent_harness import (
     build_task_packet,
     build_coverage_matrix,
     build_candidate_proposal,
+    compile_design_blueprint,
     load_task_packet,
     structure_signature,
     validate_agent_idea,
@@ -102,6 +103,11 @@ class AgentHarnessTests(unittest.TestCase):
         round_data = {"round_id": "r1", "campaign_id": "c1", "events": [92600000, 100000000]}
         packet = build_task_packet(round_data, "book_imbalance", {"operators": []}, [])
         self.assertEqual(packet["events"], [926, 1000])
+
+    def test_task_maps_engine_opening_checkpoint_to_research_event_926(self):
+        round_data = {"round_id": "r1", "campaign_id": "c1", "events": [92700000]}
+        packet = build_task_packet(round_data, "book_imbalance", {"operators": []}, [])
+        self.assertEqual(packet["events"], [926])
 
     def test_real_round_task_publishes_requested_opening_event_set(self):
         import json
@@ -243,6 +249,59 @@ class AgentHarnessTests(unittest.TestCase):
         )
         self.assertEqual(proposal["structure_signature"], structure_signature(proposal))
         self.assertEqual(proposal["supported_events"], idea["supported_events"])
+
+    def test_design_blueprint_compiles_against_reviewed_ideas(self):
+        idea = self._idea()
+        result = compile_design_blueprint(
+            {"ideas": [idea]},
+            {"variants": [{"proposal_id": "p1", "idea_id": idea["idea_id"],
+                            "formula": idea["formula"], "input_streams": ["quote"],
+                            "operators": idea["operators"]}]},
+        )
+        self.assertEqual(result["kind"], "factor_design_artifact")
+        self.assertEqual(result["proposals"][0]["idea_id"], idea["idea_id"])
+
+    def test_round_one_design_has_representative_and_control_for_each_idea(self):
+        import json
+        from collections import Counter
+        from pathlib import Path
+
+        logic = json.loads(
+            Path("campaigns/sfm_stream_002/logic/round_001.json").read_text()
+        )
+        blueprint = json.loads(
+            Path("campaigns/sfm_stream_002/design/round_001_blueprint.json").read_text()
+        )
+        artifact = compile_design_blueprint(logic, blueprint)
+        proposals = artifact["proposals"]
+        counts = Counter(value["idea_id"] for value in proposals)
+
+        self.assertEqual(len(proposals), 12)
+        self.assertEqual(set(counts.values()), {2})
+        self.assertEqual(
+            len({value["structure_signature"] for value in proposals}), 12
+        )
+        opening = [value for value in proposals if 926 in value["supported_events"]]
+        self.assertEqual(len(opening), 2)
+        self.assertEqual(
+            {value["idea_id"] for value in opening},
+            {"counterfactual_depth_fragility_001"},
+        )
+
+    def test_round_one_design_order_matches_cpp_metadata(self):
+        import json
+        import re
+        from pathlib import Path
+
+        blueprint = json.loads(
+            Path("campaigns/sfm_stream_002/design/round_001_blueprint.json").read_text()
+        )
+        proposal_ids = [value["proposal_id"] for value in blueprint["variants"]]
+        metadata = Path(
+            "base/hf-open5m-factor-demo/factors/market_microstructure/meta_config.h"
+        ).read_text()
+        factor_names = re.findall(r'^\s+"([a-z0-9_]+)",$', metadata, re.MULTILINE)
+        self.assertEqual(factor_names, proposal_ids)
 
 
 if __name__ == "__main__":

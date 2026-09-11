@@ -1145,7 +1145,7 @@ class L4ProductionTests(unittest.TestCase):
             target = output_root / production[0] / "all_families" / "factors.h5"
             _write_placeholder(target)
 
-            def validate(path, active_campaign_root):
+            def validate(path, active_campaign_root, factor_manifest_path=None):
                 binary.write_bytes(b"changed-during-validation")
                 return _inspection(names)
 
