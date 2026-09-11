@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "batch",
+  "batch_id": "l4_formal_history_next_v1_liquidity_resilience",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "generation": 1,
+  "parent_batch_ids": [
+    "liquidity_resilience_seed_v1"
+  ],
+  "parent_experience_ids": [
+    "experience_l4_formal_history_v3_liquidity_resilience"
+  ],
+  "hypothesis_id": "l4_liquidity_resilience_followup",
+  "objective": "Test bounded L4 follow-up parameter and mechanism variants after portrait review without promotion or holdout access.",
+  "change_dimension": "warmup_events_and_mechanism_variant",
+  "candidate_ids": [
+    "liquidity_resilience_l4g1_param_a",
+    "liquidity_resilience_l4g1_param_b",
+    "liquidity_resilience_l4g1_mechanism_a",
+    "liquidity_resilience_l4g1_mechanism_b"
+  ],
+  "search_policy": {
+    "method": "experience_variants",
+    "candidate_budget": 4
+  },
+  "created_at": "2026-09-10",
+  "source_commit": "676fc7a",
+  "status": "proposed"
+}

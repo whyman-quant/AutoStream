@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "kind": "candidate",
+  "candidate_id": "book_imbalance_l4g1_mechanism_a",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "book_imbalance",
+  "batch_id": "l4_formal_history_next_v1_book_imbalance",
+  "generation": 1,
+  "parent_candidate_ids": [
+    "book_imbalance_microprice_displacement_w64_v3_lag1"
+  ],
+  "hypothesis_id": "l4_book_imbalance_followup",
+  "operator_id": "microprice_displacement",
+  "formula": "microprice_displacement follow-up variant derived from parent book_imbalance_microprice_displacement_w64_v3_lag1",
+  "source_streams": [
+    "quote"
+  ],
+  "parameters": {
+    "window_events": 64,
+    "variant": 3,
+    "lag_events": 1,
+    "operation": 2,
+    "l4_variant": "mechanism_a"
+  },
+  "state": {
+    "window_type": "latest_event",
+    "window_events": null,
+    "warmup_events": 0,
+    "reset_policy": "trading_day"
+  },
+  "availability": {
+    "update_on": [
+      "quote"
+    ],
+    "output_at": "scheduled_snapshot",
+    "lag_events": 0,
+    "invalid_policy": "finite_or_zero",
+    "readiness_policy": "explicit_readiness_required"
+  },
+  "output": {
+    "factor_name": "book_imbalance_l4g1_mechanism_a",
+    "dtype": "float64",
+    "research_direction": "raw_signed"
+  },
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_001/ideas/book_imbalance.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/book_imbalance/factor_entry.cpp",
+    "source_commit": "676fc7a"
+  },
+  "evidence_level": "L4",
+  "canonical_hash": "sha256:1f01eb1dc042bbe34b57efa7da302e9146c1f7c87f0ae0e2df06945d69830dc1"
+}

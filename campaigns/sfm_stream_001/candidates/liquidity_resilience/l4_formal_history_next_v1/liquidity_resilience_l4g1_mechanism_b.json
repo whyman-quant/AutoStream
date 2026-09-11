@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "kind": "candidate",
+  "candidate_id": "liquidity_resilience_l4g1_mechanism_b",
+  "campaign_id": "sfm_stream_001",
+  "family_id": "liquidity_resilience",
+  "batch_id": "l4_formal_history_next_v1_liquidity_resilience",
+  "generation": 1,
+  "parent_candidate_ids": [
+    "liquidity_resilience_multi_level_depth_recovery_w128_lag2"
+  ],
+  "hypothesis_id": "l4_liquidity_resilience_followup",
+  "operator_id": "shock_recovery_speed",
+  "formula": "shock_recovery_speed follow-up variant derived from parent liquidity_resilience_multi_level_depth_recovery_w128_lag2",
+  "source_streams": [
+    "quote"
+  ],
+  "parameters": {
+    "window_events": 128,
+    "normalization": "relative_tick",
+    "depth_levels": 5,
+    "lag_events": 2,
+    "l4_variant": "mechanism_b"
+  },
+  "state": {
+    "window_type": "event_count",
+    "window_events": 128,
+    "warmup_events": 130,
+    "reset_policy": "trading_day"
+  },
+  "availability": {
+    "update_on": [
+      "quote"
+    ],
+    "output_at": "scheduled_snapshot",
+    "lag_events": 2,
+    "invalid_policy": "unavailable",
+    "readiness_policy": "explicit_readiness_required"
+  },
+  "output": {
+    "factor_name": "liquidity_resilience_l4g1_mechanism_b",
+    "dtype": "float64",
+    "research_direction": "raw_signed"
+  },
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_001/ideas/liquidity_resilience.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/liquidity_resilience/factor_entry.cpp",
+    "source_commit": "676fc7a"
+  },
+  "evidence_level": "L4",
+  "canonical_hash": "sha256:2799594a9e33aa8a2da71ae8e00cd50c943d44b138604f091b523b94eeee5cd1"
+}
