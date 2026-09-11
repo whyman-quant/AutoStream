@@ -173,6 +173,31 @@ def structure_signature(proposal: Mapping[str, object]) -> str:
     return "sha256:" + hashlib.sha256(_canonical(shape).encode("utf-8")).hexdigest()
 
 
+def build_candidate_proposal(idea, *, proposal_id, formula, input_streams, operators,
+                             readiness=None, falsification=None, novelty_claim=None,
+                             supported_events=None):
+    """Convert one reviewed Agent idea/design variant into a signed proposal."""
+    proposal = {
+        "schema_version": 1,
+        "kind": "candidate_proposal",
+        "proposal_id": str(proposal_id),
+        "idea_id": str(idea["idea_id"]),
+        "family_id": str(idea["family_id"]),
+        "mechanism": str(idea["mechanism"]),
+        "formula": str(formula),
+        "inputs": [str(value) for value in input_streams],
+        "operators": [str(value) for value in operators],
+        "readiness": str(readiness or idea["readiness"]),
+        "falsification": str(falsification or idea["falsification"]),
+        "novelty_claim": str(novelty_claim or idea["novelty_claim"]),
+        "supported_events": [int(value) for value in (supported_events or idea["supported_events"])],
+    }
+    proposal["structure_signature"] = structure_signature(proposal)
+    from campaigns.contracts import validate_document
+    validate_document("candidate_proposal", proposal)
+    return proposal
+
+
 def build_task_packet(round_data: Mapping[str, object], family_id: str,
                       operator_catalog: Mapping[str, object],
                       coverage_cells: Iterable[Mapping[str, object]]) -> dict:
@@ -314,6 +339,6 @@ def validate_agent_idea(proposal: Mapping[str, object], task: Mapping[str, objec
 
 __all__ = [
     "AGENT_RESEARCH_STAGES", "AgentIdeaError", "AgentResearchHarness",
-    "build_coverage_matrix", "build_task_packet", "load_task_packet",
+    "build_candidate_proposal", "build_coverage_matrix", "build_task_packet", "load_task_packet",
     "structure_signature", "validate_agent_idea",
 ]

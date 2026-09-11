@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "kind": "logic_proposal_artifact",
+  "round_id": "sfm_stream_002_round_001",
+  "source": "independent theory and data-semantics agents; reviewer deduplicated; no prior research conclusions",
+  "ideas": [
+    {
+      "idea_id": "counterfactual_depth_fragility_001",
+      "family_id": "market_microstructure",
+      "research_question": "同等规模的虚拟买单和卖单穿透当前多档盘口时，冲击成本的不对称能否预测下一评价区间方向？",
+      "mechanism": "价格风险取决于流动性沿价格轴的分布；同等规模冲击在更脆弱的一侧需要跨越更多价格档位。",
+      "inputs": ["bp_array", "ap_array", "bv_array", "av_array", "last_px"],
+      "operators": ["counterfactual_book_walk"],
+      "new_operator_specs": [{"operator_id": "counterfactual_book_walk", "category": "spatial", "description": "仅用当前多档盘口模拟两侧相同规模订单的成交成本。", "input_streams": ["quote"], "causal": true, "readiness_requirement": "双边至少三档有效且均能完成同规模虚拟成交"}],
+      "formula": "q=min(depth_bid_5,depth_ask_5)*0.25; (buy_vwap(q)-mid - (mid-sell_vwap(q)))/tick",
+      "readiness": "双边至少三档价格有序、数量为正、共同虚拟量可完全成交；否则 unavailable。",
+      "falsification": "控制价差与总深度后无增量关系，或效果完全等价于简单深度差。",
+      "novelty_claim": "比较完整价格数量曲线的反事实穿透成本，而非买卖总量差或窗口缩放。",
+      "supported_events": [926, 1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "idea_id": "trade_pair_parent_size_mismatch_001",
+      "family_id": "market_microstructure",
+      "research_question": "同笔成交的主动母单与被动母单容量错配以及扫单广度能否刻画主动方信息优势？",
+      "mechanism": "大主动母单连续消耗多个较小被动母单与大被动母单吸收小主动单代表不同博弈状态。",
+      "inputs": ["TradePairEvent.aggressor_side", "TradePairEvent.trade_volume", "OrderSnapshot.order_id", "OrderSnapshot.original_qty", "OrderSnapshot.rest_qty"],
+      "operators": ["parent_counterparty_sweep"],
+      "new_operator_specs": [{"operator_id": "parent_counterparty_sweep", "category": "interaction", "description": "按已确认主动母单统计双方容量比及不同被动母单数量。", "input_streams": ["trade", "order"], "causal": true, "readiness_requirement": "主动方向已知、双方母单已确认且至少一个主动母单有两个成交片段"}],
+      "formula": "weighted_mean(sign(aggressor)*log((aggressor_original+1)/(passive_original+1))*log1p(distinct_passive_orders))",
+      "readiness": "至少八个 fully-resolved TradePairEvent；排除 Unknown、estimated 和 SessionClose。",
+      "falsification": "按成交额标准化后无增量，或结果仅代理股票成交规模。",
+      "novelty_claim": "使用同笔成交双方母单容量和扫单广度，不是单边大单或成交量阈值。",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "idea_id": "resting_order_commitment_survival_001",
+      "family_id": "market_microstructure",
+      "research_question": "挂单被动成交或持续存活相对于主动撤销的生命周期差异，能否衡量真实流动性承诺？",
+      "mechanism": "可快速撤回的显示深度可能是假压力；存活并承受被动成交的委托代表更强供需承诺。",
+      "inputs": ["OrderEvent.side", "OrderEvent.original_qty", "OrderEvent.passive_fill_qty", "OrderEvent.cancelled_qty", "OrderEvent.rest_qty", "OrderEvent.first_time", "OrderEvent.last_time"],
+      "operators": ["resting_commitment_survival"],
+      "new_operator_specs": [{"operator_id": "resting_commitment_survival", "category": "temporal", "description": "对已确认且进入订单簿的母单计算被动成交或继续存活相对撤单的年龄加权承诺率。", "input_streams": ["order", "trade"], "causal": true, "readiness_requirement": "水位确认完成且买卖双方均有足够生命周期样本"}],
+      "formula": "logit(sum_bid(age_weight*(passive_fill+rest))/sum_bid(age_weight*(passive_fill+rest+cancel)))-symmetric_ask",
+      "readiness": "沪市母单跨过安全水位，双方各至少五个 confirmed resting orders，数量守恒。",
+      "falsification": "控制当前显示深度和订单到达量后不再有增量关系。",
+      "novelty_claim": "把显示压力转化为母单生命周期生存问题，区分成交、存活与撤单。",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "idea_id": "cancel_execution_divergence_001",
+      "family_id": "market_microstructure",
+      "research_question": "盘口流动性消失来自撤单还是实际成交消耗，两者方向背离时是否具有不同后续含义？",
+      "mechanism": "撤单代表供给主动退避，成交消耗代表对手方真实需求；相同盘口变薄可能来自不同因果来源。",
+      "inputs": ["OrderEvent.side", "OrderEvent.cancelled_qty", "OrderEvent.passive_fill_qty", "OrderEvent.original_qty", "bv_array", "av_array"],
+      "operators": ["lifecycle_increment_extractor"],
+      "new_operator_specs": [{"operator_id": "lifecycle_increment_extractor", "category": "interaction", "description": "由母单累计状态提取不重复的撤单与被动成交增量。", "input_streams": ["order", "trade"], "causal": true, "readiness_requirement": "母单已确认、数量守恒且存在上一状态"}],
+      "formula": "zscore((cancel_ask-cancel_bid)/displayed_depth)-zscore((passive_fill_ask-passive_fill_bid)/displayed_depth)",
+      "readiness": "至少二十个 confirmed 生命周期增量，撤单或成交至少一项非零，并有有效深度分母。",
+      "falsification": "相对单独撤单不平衡和成交不平衡没有增量，或沪深语义无法统一。",
+      "novelty_claim": "比较造成盘口变薄的两种可辨识原因，而不是订单量买卖差。",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "idea_id": "execution_shock_replenishment_elasticity_001",
+      "family_id": "market_microstructure",
+      "research_question": "真实主动成交造成队列冲击后，被冲击侧流动性的补回弹性是否区分延续与吸收？",
+      "mechanism": "冲击后快速补回代表隐藏供给或需求的吸收能力，迟迟不补回代表价格更容易延续。",
+      "inputs": ["TradePairEvent.aggressor_side", "TradePairEvent.trade_volume", "bp_array", "ap_array", "bv_array", "av_array", "OrderEvent.rest_qty"],
+      "operators": ["trade_queue_depletion", "post_shock_replenishment"],
+      "new_operator_specs": [],
+      "formula": "-sign(aggressor)*weighted_mean(replenished_depth/depleted_depth/(1+quote_updates_after_shock))",
+      "readiness": "至少一次 resolved 成交冲击及其后三个有效盘口更新；无冲击或恢复未观察完成时 unavailable。",
+      "falsification": "控制冲击规模、价差和成交方向后，补回速度不区分延续与吸收。",
+      "novelty_claim": "只在可归因成交冲击后测量条件响应，不把普通深度变化当恢复。",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    },
+    {
+      "idea_id": "distinct_aggressor_run_surprisal_001",
+      "family_id": "market_microstructure",
+      "research_question": "去除同一母单拆分后，多个独立主动母单连续同向到达的意外程度能否刻画订单流信息聚集？",
+      "mechanism": "长同向成交序列可能只是一个母单拆分；按母单去重后相对历史转移概率的异常序列更接近独立需求聚集。",
+      "inputs": ["TradePairEvent.aggressor_side", "TradePairEvent.aggressor_source", "OrderSnapshot.order_id", "OrderSnapshot.original_qty"],
+      "operators": ["distinct_mother_run_surprisal"],
+      "new_operator_specs": [{"operator_id": "distinct_mother_run_surprisal", "category": "temporal", "description": "按主动母单去除成交拆分，并以只含过去母单的方向转移概率计算当前序列惊讶度。", "input_streams": ["trade", "order"], "causal": true, "readiness_requirement": "至少二十个历史独立母单且当前同向序列至少三个不同母单"}],
+      "formula": "sum(sign(side_i)*(-log(P_past(side_i|side_i-1)))*log1p(parent_size_i/median_past_size))/sum(weights)",
+      "readiness": "主动方向与母单号有效，至少二十个 resolved 历史独立母单，当前 run 至少三个母单。",
+      "falsification": "控制净主动成交量和成交笔数后没有增量，或结果仅由单个超大母单驱动。",
+      "novelty_claim": "把成交序列建模为去母单拆分后的路径惊讶度，不是同向成交计数。",
+      "supported_events": [1000, 1030, 1100, 1130, 1330, 1400, 1430]
+    }
+  ]
+}

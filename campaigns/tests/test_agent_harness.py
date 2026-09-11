@@ -6,6 +6,7 @@ from campaigns.agent_harness import (
     AgentIdeaError,
     build_task_packet,
     build_coverage_matrix,
+    build_candidate_proposal,
     load_task_packet,
     structure_signature,
     validate_agent_idea,
@@ -218,6 +219,30 @@ class AgentHarnessTests(unittest.TestCase):
             with self.assertRaises(AgentIdeaError):
                 harness.start(stop_after="factor_design")
             self.assertFalse((root / "factor_design.json").exists())
+
+    def test_round_one_logic_has_six_novel_mechanisms_and_strict_926_support(self):
+        import json
+        from pathlib import Path
+        packet = load_task_packet(Path("campaigns/sfm_stream_002/rounds/round_001.json"), Path("."))
+        artifact = json.loads(Path("campaigns/sfm_stream_002/logic/round_001.json").read_text())
+        self.assertEqual(len(artifact["ideas"]), 6)
+        signatures = set()
+        for idea in artifact["ideas"]:
+            validate_agent_idea(idea, packet, existing_signatures=signatures)
+            signatures.add(structure_signature(idea))
+            if 926 in idea["supported_events"]:
+                self.assertEqual(idea["idea_id"], "counterfactual_depth_fragility_001")
+        self.assertEqual(len(signatures), 6)
+
+    def test_candidate_proposal_builder_signs_agent_design(self):
+        idea = self._idea()
+        proposal = build_candidate_proposal(
+            idea, proposal_id="queue_depletion_rep_v1",
+            formula=idea["formula"], input_streams=["quote", "order", "trade"],
+            operators=idea["operators"],
+        )
+        self.assertEqual(proposal["structure_signature"], structure_signature(proposal))
+        self.assertEqual(proposal["supported_events"], idea["supported_events"])
 
 
 if __name__ == "__main__":
