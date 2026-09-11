@@ -56,7 +56,7 @@ class FlowPressureMigrationTests(unittest.TestCase):
         names_block = re.search(r"kFactorNames\s*=\s*\{(.*?)\};", text, re.S)
         self.assertIsNotNone(names_block)
         names = re.findall(r'"([^"]+)"', names_block.group(1))
-        self.assertEqual(names, batch["candidate_ids"])
+        self.assertEqual(names[:len(batch["candidate_ids"])], batch["candidate_ids"])
 
     def test_grid_pilot_config_is_isolated_and_runs_the_whole_family(self):
         config = load_json(GRID_PILOT_CONFIG_PATH)

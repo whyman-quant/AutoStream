@@ -96,7 +96,8 @@ class LiquidityResilienceMigrationTests(unittest.TestCase):
         text = METADATA_PATH.read_text(encoding="utf-8")
         block = re.search(r"kFactorNames\s*=\s*\{(.*?)\};", text, re.S)
         self.assertIsNotNone(block)
-        self.assertEqual(re.findall(r'"([^"]+)"', block.group(1)), load_json(BATCH_PATH)["candidate_ids"])
+        expected = load_json(BATCH_PATH)["candidate_ids"]
+        self.assertEqual(re.findall(r'"([^"]+)"', block.group(1))[:len(expected)], expected)
 
 if __name__ == "__main__":
     unittest.main()

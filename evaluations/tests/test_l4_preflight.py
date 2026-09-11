@@ -25,6 +25,7 @@ from evaluations.l4_preflight import (
     validate_hdf5_only,
     validate_requested_dates,
 )
+from campaigns.release_factor_manifest import build_factor_manifest
 
 
 SOURCE_EVENTS = (92700000, 100000000, 103000000, 110000000)
@@ -133,6 +134,23 @@ def _write_frozen_fixture(root):
 
 
 class L4PreflightTests(unittest.TestCase):
+    def test_load_expected_factor_names_accepts_release_factor_manifest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            batches = root / "batches"
+            batches.mkdir()
+            paths = []
+            for family, names in (("book", ["book_a", "book_b"]), ("flow", ["flow_a"])):
+                path = batches / (family + ".json")
+                path.write_text(json.dumps({"family_id": family, "candidate_ids": names}))
+                paths.append(path)
+            manifest_path = root / "release-factor-manifest.json"
+            manifest_path.write_text(json.dumps(build_factor_manifest("r1", paths)))
+            self.assertEqual(
+                load_expected_factor_names(factor_manifest_path=manifest_path),
+                ["book_a", "book_b", "flow_a"],
+            )
+
     def test_validate_hdf5_only_enforces_exact_frozen_events_and_names(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

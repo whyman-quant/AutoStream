@@ -40,6 +40,7 @@ def run_scorecard(
     label_input: Optional[str] = None,
     label_contract: Optional[str] = None,
     evaluator_source: Optional[str] = None,
+    factor_manifest: Optional[str] = None,
 ) -> Dict[str, object]:
     root = Path(result_root)
     matrix = {}
@@ -77,6 +78,12 @@ def run_scorecard(
                     "event_keys": [int(value) for value in frame.index.get_level_values("event")],
                     "factor_names": factor_names,
                 })
+    if factor_manifest:
+        from campaigns.release_factor_manifest import load_factor_manifest
+        manifest_count = int(load_factor_manifest(factor_manifest)["factor_count"])
+        if expected_factor_count is not None and expected_factor_count != manifest_count:
+            raise ValueError("expected factor count disagrees with release manifest")
+        expected_factor_count = manifest_count
     report = build_scorecard(matrix, labels=labels, universes=universes, expected_factor_count=expected_factor_count)
     report["result_root"] = str(root)
     report["input_format"] = input_format
@@ -108,11 +115,12 @@ def main() -> None:
     parser.add_argument("--output", required=True)
     parser.add_argument("--input-format", choices=("parquet", "json"), default="parquet")
     parser.add_argument("--date", dest="expected_date")
-    parser.add_argument("--expected-factor-count", type=int, default=12)
+    parser.add_argument("--expected-factor-count", type=int)
     parser.add_argument("--factor-input")
     parser.add_argument("--label-input")
     parser.add_argument("--label-contract")
     parser.add_argument("--evaluator-source")
+    parser.add_argument("--factor-manifest")
     parser.add_argument("--labels", default=",".join(DEFAULT_LABELS))
     parser.add_argument("--universes", default=",".join(DEFAULT_UNIVERSES))
     args = parser.parse_args()
@@ -130,6 +138,7 @@ def main() -> None:
         label_input=args.label_input,
         label_contract=args.label_contract,
         evaluator_source=args.evaluator_source,
+        factor_manifest=args.factor_manifest,
     )
     print(f"{report['evaluation_scope']} {report['combination_count']} combinations promotion_allowed={report['promotion_allowed']}")
 

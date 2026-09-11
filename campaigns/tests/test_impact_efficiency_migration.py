@@ -37,4 +37,4 @@ class ImpactEfficiencyMigrationTests(unittest.TestCase):
         self.assertEqual(evidence["impact_efficiency_signed_price_impact_w16"], "L3")
         self.assertEqual({level for candidate_id, level in evidence.items() if candidate_id != "impact_efficiency_signed_price_impact_w16"}, {"L3"})
     def test_candidate_name_matches_cpp_metadata(self):
-        batch=load_json(BATCH_PATH); text=METADATA_PATH.read_text(encoding="utf-8"); block=re.search(r"kFactorNames\s*=\s*\{(.*?)\};",text,re.S); self.assertIsNotNone(block); self.assertEqual(re.findall(r'"([^"]+)"',block.group(1)),batch["candidate_ids"])
+        batch=load_json(BATCH_PATH); text=METADATA_PATH.read_text(encoding="utf-8"); block=re.search(r"kFactorNames\s*=\s*\{(.*?)\};",text,re.S); self.assertIsNotNone(block); names=re.findall(r'"([^"]+)"',block.group(1)); self.assertEqual(names[:len(batch["candidate_ids"])],batch["candidate_ids"])

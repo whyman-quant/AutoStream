@@ -72,7 +72,10 @@ def validate_candidate_batch(
         raise ValueError("batch candidate budget does not match candidate count")
     if len(ids) != idea["candidate_quota"]:
         raise ValueError("candidate count does not match family quota")
-    if set(ids) != set(_metadata_names(metadata_path)):
+    metadata_names = _metadata_names(metadata_path)
+    # A family metadata file may expose a superset for a newer mixed release;
+    # the historical seed Batch must still match its prefix exactly.
+    if not (metadata_names == ids or set(metadata_names[:len(ids)]) == set(ids)):
         raise ValueError("candidate identities do not match C++ metadata")
 
 

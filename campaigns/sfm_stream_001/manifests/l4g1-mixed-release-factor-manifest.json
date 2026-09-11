@@ -1,0 +1,330 @@
+{
+  "schema_version": 1,
+  "kind": "release_factor_manifest",
+  "release_id": "l4g1_mixed_v1",
+  "factor_count": 64,
+  "factor_names": [
+    "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+    "book_imbalance_microprice_displacement_w32_v0_lag1",
+    "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+    "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+    "book_imbalance_microprice_displacement_w16_v1_lag1",
+    "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+    "book_imbalance_weighted_depth_imbalance_w64_v2_lag0",
+    "book_imbalance_microprice_displacement_w128_v2_lag1",
+    "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+    "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+    "book_imbalance_microprice_displacement_w64_v3_lag1",
+    "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+    "book_imbalance_l4g1_param_a",
+    "book_imbalance_l4g1_param_b",
+    "book_imbalance_l4g1_mechanism_a",
+    "book_imbalance_l4g1_mechanism_b",
+    "flow_pressure_signed_trade_flow_w16",
+    "flow_pressure_signed_trade_flow_w32_lag0",
+    "flow_pressure_signed_trade_flow_w64_lag1",
+    "flow_pressure_signed_trade_flow_w128_lag2",
+    "flow_pressure_trade_flow_zscore_w16_lag0",
+    "flow_pressure_trade_flow_zscore_w32_lag0",
+    "flow_pressure_trade_flow_zscore_w64_lag1",
+    "flow_pressure_trade_flow_zscore_w128_lag2",
+    "flow_pressure_decayed_trade_flow_w16_lag0",
+    "flow_pressure_decayed_trade_flow_w32_lag0",
+    "flow_pressure_decayed_trade_flow_w64_lag1",
+    "flow_pressure_decayed_trade_flow_w128_lag2",
+    "flow_pressure_l4g1_param_a",
+    "flow_pressure_l4g1_param_b",
+    "flow_pressure_l4g1_mechanism_a",
+    "flow_pressure_l4g1_mechanism_b",
+    "liquidity_resilience_spread_adjusted_depth_recovery_w16",
+    "liquidity_resilience_spread_adjusted_depth_recovery_w32_lag0",
+    "liquidity_resilience_spread_adjusted_depth_recovery_w64_lag1",
+    "liquidity_resilience_spread_adjusted_depth_recovery_w128_lag2",
+    "liquidity_resilience_multi_level_depth_recovery_w16_lag0",
+    "liquidity_resilience_multi_level_depth_recovery_w32_lag0",
+    "liquidity_resilience_multi_level_depth_recovery_w64_lag1",
+    "liquidity_resilience_multi_level_depth_recovery_w128_lag2",
+    "liquidity_resilience_shock_recovery_speed_w16_lag0",
+    "liquidity_resilience_shock_recovery_speed_w32_lag0",
+    "liquidity_resilience_shock_recovery_speed_w64_lag1",
+    "liquidity_resilience_shock_recovery_speed_w128_lag2",
+    "liquidity_resilience_l4g1_param_a",
+    "liquidity_resilience_l4g1_param_b",
+    "liquidity_resilience_l4g1_mechanism_a",
+    "liquidity_resilience_l4g1_mechanism_b",
+    "impact_efficiency_signed_price_impact_w16",
+    "impact_efficiency_signed_price_impact_w32",
+    "impact_efficiency_signed_price_impact_w64",
+    "impact_efficiency_signed_price_impact_w128",
+    "impact_efficiency_mid_price_response_w16",
+    "impact_efficiency_mid_price_response_w32",
+    "impact_efficiency_mid_price_response_w64",
+    "impact_efficiency_mid_price_response_w128",
+    "impact_efficiency_ofi_response_w16",
+    "impact_efficiency_ofi_response_w32",
+    "impact_efficiency_absorption_divergence_w16",
+    "impact_efficiency_absorption_divergence_w32",
+    "impact_efficiency_l4g1_param_a",
+    "impact_efficiency_l4g1_param_b",
+    "impact_efficiency_l4g1_mechanism_a",
+    "impact_efficiency_l4g1_mechanism_b"
+  ],
+  "family_count": 4,
+  "families": [
+    {
+      "family_id": "book_imbalance",
+      "batch_ids": [
+        "book_imbalance_seed_v1",
+        "l4_formal_history_next_v1_book_imbalance"
+      ],
+      "factor_names": [
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0",
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2",
+        "book_imbalance_l4g1_param_a",
+        "book_imbalance_l4g1_param_b",
+        "book_imbalance_l4g1_mechanism_a",
+        "book_imbalance_l4g1_mechanism_b"
+      ],
+      "control_count": 12,
+      "candidate_count": 4
+    },
+    {
+      "family_id": "flow_pressure",
+      "batch_ids": [
+        "flow_pressure_seed_v1",
+        "l4_formal_history_next_v1_flow_pressure"
+      ],
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16",
+        "flow_pressure_signed_trade_flow_w32_lag0",
+        "flow_pressure_signed_trade_flow_w64_lag1",
+        "flow_pressure_signed_trade_flow_w128_lag2",
+        "flow_pressure_trade_flow_zscore_w16_lag0",
+        "flow_pressure_trade_flow_zscore_w32_lag0",
+        "flow_pressure_trade_flow_zscore_w64_lag1",
+        "flow_pressure_trade_flow_zscore_w128_lag2",
+        "flow_pressure_decayed_trade_flow_w16_lag0",
+        "flow_pressure_decayed_trade_flow_w32_lag0",
+        "flow_pressure_decayed_trade_flow_w64_lag1",
+        "flow_pressure_decayed_trade_flow_w128_lag2",
+        "flow_pressure_l4g1_param_a",
+        "flow_pressure_l4g1_param_b",
+        "flow_pressure_l4g1_mechanism_a",
+        "flow_pressure_l4g1_mechanism_b"
+      ],
+      "control_count": 12,
+      "candidate_count": 4
+    },
+    {
+      "family_id": "liquidity_resilience",
+      "batch_ids": [
+        "liquidity_resilience_seed_v1",
+        "l4_formal_history_next_v1_liquidity_resilience"
+      ],
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16",
+        "liquidity_resilience_spread_adjusted_depth_recovery_w32_lag0",
+        "liquidity_resilience_spread_adjusted_depth_recovery_w64_lag1",
+        "liquidity_resilience_spread_adjusted_depth_recovery_w128_lag2",
+        "liquidity_resilience_multi_level_depth_recovery_w16_lag0",
+        "liquidity_resilience_multi_level_depth_recovery_w32_lag0",
+        "liquidity_resilience_multi_level_depth_recovery_w64_lag1",
+        "liquidity_resilience_multi_level_depth_recovery_w128_lag2",
+        "liquidity_resilience_shock_recovery_speed_w16_lag0",
+        "liquidity_resilience_shock_recovery_speed_w32_lag0",
+        "liquidity_resilience_shock_recovery_speed_w64_lag1",
+        "liquidity_resilience_shock_recovery_speed_w128_lag2",
+        "liquidity_resilience_l4g1_param_a",
+        "liquidity_resilience_l4g1_param_b",
+        "liquidity_resilience_l4g1_mechanism_a",
+        "liquidity_resilience_l4g1_mechanism_b"
+      ],
+      "control_count": 12,
+      "candidate_count": 4
+    },
+    {
+      "family_id": "impact_efficiency",
+      "batch_ids": [
+        "impact_efficiency_seed_v1",
+        "l4_formal_history_next_v1_impact_efficiency"
+      ],
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16",
+        "impact_efficiency_signed_price_impact_w32",
+        "impact_efficiency_signed_price_impact_w64",
+        "impact_efficiency_signed_price_impact_w128",
+        "impact_efficiency_mid_price_response_w16",
+        "impact_efficiency_mid_price_response_w32",
+        "impact_efficiency_mid_price_response_w64",
+        "impact_efficiency_mid_price_response_w128",
+        "impact_efficiency_ofi_response_w16",
+        "impact_efficiency_ofi_response_w32",
+        "impact_efficiency_absorption_divergence_w16",
+        "impact_efficiency_absorption_divergence_w32",
+        "impact_efficiency_l4g1_param_a",
+        "impact_efficiency_l4g1_param_b",
+        "impact_efficiency_l4g1_mechanism_a",
+        "impact_efficiency_l4g1_mechanism_b"
+      ],
+      "control_count": 12,
+      "candidate_count": 4
+    }
+  ],
+  "batches": [
+    {
+      "batch_id": "book_imbalance_seed_v1",
+      "family_id": "book_imbalance",
+      "role": "control",
+      "path": "campaigns/sfm_stream_001/batches/book_imbalance_seed_v1.json",
+      "sha256": "sha256:20764267584d22e6c1dbd83c1ad6173588121a442dab8a1bc58a2871595bd7c1",
+      "factor_names": [
+        "book_imbalance_weighted_depth_imbalance_w16_v0_lag0",
+        "book_imbalance_microprice_displacement_w32_v0_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w64_v0_lag2",
+        "book_imbalance_weighted_depth_imbalance_w128_v1_lag0",
+        "book_imbalance_microprice_displacement_w16_v1_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w32_v1_lag2",
+        "book_imbalance_weighted_depth_imbalance_w64_v2_lag0",
+        "book_imbalance_microprice_displacement_w128_v2_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w16_v2_lag2",
+        "book_imbalance_weighted_depth_imbalance_w32_v3_lag0",
+        "book_imbalance_microprice_displacement_w64_v3_lag1",
+        "book_imbalance_spread_conditioned_imbalance_w128_v3_lag2"
+      ],
+      "factor_count": 12
+    },
+    {
+      "batch_id": "l4_formal_history_next_v1_book_imbalance",
+      "family_id": "book_imbalance",
+      "role": "candidate",
+      "path": "campaigns/sfm_stream_001/batches/l4_formal_history_next_v1_book_imbalance.json",
+      "sha256": "sha256:a929970c4ebfdf871da4d966bfcdf2f46ab6c3035a85177f48b419a9340388de",
+      "factor_names": [
+        "book_imbalance_l4g1_param_a",
+        "book_imbalance_l4g1_param_b",
+        "book_imbalance_l4g1_mechanism_a",
+        "book_imbalance_l4g1_mechanism_b"
+      ],
+      "factor_count": 4
+    },
+    {
+      "batch_id": "flow_pressure_seed_v1",
+      "family_id": "flow_pressure",
+      "role": "control",
+      "path": "campaigns/sfm_stream_001/batches/flow_pressure_seed_v1.json",
+      "sha256": "sha256:281ab6adf8dd26c1407a1bf3e358a1d113fe246078b3f3ac80c0b5e92433a450",
+      "factor_names": [
+        "flow_pressure_signed_trade_flow_w16",
+        "flow_pressure_signed_trade_flow_w32_lag0",
+        "flow_pressure_signed_trade_flow_w64_lag1",
+        "flow_pressure_signed_trade_flow_w128_lag2",
+        "flow_pressure_trade_flow_zscore_w16_lag0",
+        "flow_pressure_trade_flow_zscore_w32_lag0",
+        "flow_pressure_trade_flow_zscore_w64_lag1",
+        "flow_pressure_trade_flow_zscore_w128_lag2",
+        "flow_pressure_decayed_trade_flow_w16_lag0",
+        "flow_pressure_decayed_trade_flow_w32_lag0",
+        "flow_pressure_decayed_trade_flow_w64_lag1",
+        "flow_pressure_decayed_trade_flow_w128_lag2"
+      ],
+      "factor_count": 12
+    },
+    {
+      "batch_id": "l4_formal_history_next_v1_flow_pressure",
+      "family_id": "flow_pressure",
+      "role": "candidate",
+      "path": "campaigns/sfm_stream_001/batches/l4_formal_history_next_v1_flow_pressure.json",
+      "sha256": "sha256:ae40f4b051e20eb143b843681db6ddc14cbb9992989bae026496562bedc3a916",
+      "factor_names": [
+        "flow_pressure_l4g1_param_a",
+        "flow_pressure_l4g1_param_b",
+        "flow_pressure_l4g1_mechanism_a",
+        "flow_pressure_l4g1_mechanism_b"
+      ],
+      "factor_count": 4
+    },
+    {
+      "batch_id": "liquidity_resilience_seed_v1",
+      "family_id": "liquidity_resilience",
+      "role": "control",
+      "path": "campaigns/sfm_stream_001/batches/liquidity_resilience_seed_v1.json",
+      "sha256": "sha256:984fc452f68ff4bb0db73e678c897d8f56f4898bf593e3e51824cc31c676d1fe",
+      "factor_names": [
+        "liquidity_resilience_spread_adjusted_depth_recovery_w16",
+        "liquidity_resilience_spread_adjusted_depth_recovery_w32_lag0",
+        "liquidity_resilience_spread_adjusted_depth_recovery_w64_lag1",
+        "liquidity_resilience_spread_adjusted_depth_recovery_w128_lag2",
+        "liquidity_resilience_multi_level_depth_recovery_w16_lag0",
+        "liquidity_resilience_multi_level_depth_recovery_w32_lag0",
+        "liquidity_resilience_multi_level_depth_recovery_w64_lag1",
+        "liquidity_resilience_multi_level_depth_recovery_w128_lag2",
+        "liquidity_resilience_shock_recovery_speed_w16_lag0",
+        "liquidity_resilience_shock_recovery_speed_w32_lag0",
+        "liquidity_resilience_shock_recovery_speed_w64_lag1",
+        "liquidity_resilience_shock_recovery_speed_w128_lag2"
+      ],
+      "factor_count": 12
+    },
+    {
+      "batch_id": "l4_formal_history_next_v1_liquidity_resilience",
+      "family_id": "liquidity_resilience",
+      "role": "candidate",
+      "path": "campaigns/sfm_stream_001/batches/l4_formal_history_next_v1_liquidity_resilience.json",
+      "sha256": "sha256:36ebcba69805abec258cbb80df16fdbc40358a29e8f30bb9b2e07d21f10eeb13",
+      "factor_names": [
+        "liquidity_resilience_l4g1_param_a",
+        "liquidity_resilience_l4g1_param_b",
+        "liquidity_resilience_l4g1_mechanism_a",
+        "liquidity_resilience_l4g1_mechanism_b"
+      ],
+      "factor_count": 4
+    },
+    {
+      "batch_id": "impact_efficiency_seed_v1",
+      "family_id": "impact_efficiency",
+      "role": "control",
+      "path": "campaigns/sfm_stream_001/batches/impact_efficiency_seed_v1.json",
+      "sha256": "sha256:662fa9c339440bb824ec8661028ba7ea402da7a896d42844481287bfeceaa46c",
+      "factor_names": [
+        "impact_efficiency_signed_price_impact_w16",
+        "impact_efficiency_signed_price_impact_w32",
+        "impact_efficiency_signed_price_impact_w64",
+        "impact_efficiency_signed_price_impact_w128",
+        "impact_efficiency_mid_price_response_w16",
+        "impact_efficiency_mid_price_response_w32",
+        "impact_efficiency_mid_price_response_w64",
+        "impact_efficiency_mid_price_response_w128",
+        "impact_efficiency_ofi_response_w16",
+        "impact_efficiency_ofi_response_w32",
+        "impact_efficiency_absorption_divergence_w16",
+        "impact_efficiency_absorption_divergence_w32"
+      ],
+      "factor_count": 12
+    },
+    {
+      "batch_id": "l4_formal_history_next_v1_impact_efficiency",
+      "family_id": "impact_efficiency",
+      "role": "candidate",
+      "path": "campaigns/sfm_stream_001/batches/l4_formal_history_next_v1_impact_efficiency.json",
+      "sha256": "sha256:496cfe4ff763587dd8355e4898278ceb6c66fff0d34063410e3b714730654568",
+      "factor_names": [
+        "impact_efficiency_l4g1_param_a",
+        "impact_efficiency_l4g1_param_b",
+        "impact_efficiency_l4g1_mechanism_a",
+        "impact_efficiency_l4g1_mechanism_b"
+      ],
+      "factor_count": 4
+    }
+  ],
+  "manifest_sha256": "sha256:fa4bb3910c60194dfd764967cf3d06a0fcf9db8f534b3905f04c28a8902ce114"
+}

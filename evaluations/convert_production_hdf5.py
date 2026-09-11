@@ -112,10 +112,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--rows", type=int, default=4968)
     parser.add_argument("--events", default="92700000,100000000,103000000,110000000,113000000,133000000,140000000,143000000")
-    parser.add_argument("--factor-count", type=int, default=12)
+    parser.add_argument("--factor-count", type=int)
+    parser.add_argument("--factor-manifest", type=Path,
+                        help="release factor manifest; derives the expected count")
     args = parser.parse_args(argv)
     events = [int(value) for value in args.events.split(",") if value]
-    print(json.dumps(convert_hdf5(args.input, args.output, expected_rows=args.rows, expected_events=events, expected_factor_count=args.factor_count), ensure_ascii=False))
+    count = args.factor_count
+    if args.factor_manifest is not None:
+        from campaigns.release_factor_manifest import load_factor_manifest
+        manifest_count = load_factor_manifest(args.factor_manifest)["factor_count"]
+        if count is not None and count != manifest_count:
+            raise ValueError("--factor-count disagrees with release factor manifest")
+        count = manifest_count
+    if count is None:
+        raise ValueError("provide --factor-manifest or --factor-count")
+    print(json.dumps(convert_hdf5(args.input, args.output, expected_rows=args.rows, expected_events=events, expected_factor_count=count), ensure_ascii=False))
     return 0
 
 

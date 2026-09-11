@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import math
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
@@ -90,6 +91,18 @@ def _strict_frames(result_root, split_dates, labels, universes, factors, events,
 VALIDITY_STATES = ("pass", "not_ready", "metric_undefined", "coverage_fail", "data_error", "review")
 
 
+def _compact_validity_cell(cell):
+    """Keep receipt-sized readiness summaries, not one row per Arrow date."""
+    result = dict(cell)
+    cross = result.get("cross_sectional")
+    if isinstance(cross, dict) and "by_date" in cross:
+        cross = dict(cross)
+        rows = cross.pop("by_date")
+        result["cross_sectional"] = cross
+        result["cross_sectional"]["by_date_count"] = len(rows)
+    return result
+
+
 def classify_validity_cell(factor_values, metric_series, readiness=None, date_count=None,
                            coverage_threshold=.95, min_unique=2, min_rank_count=2,
                            min_nonzero_ratio=0.0, min_factor_std=0.0):
@@ -154,10 +167,11 @@ def classify_validity_cell(factor_values, metric_series, readiness=None, date_co
         false_mask = ~ready
         result["not_ready_count"] = int(false_mask.sum())
         result["not_ready_zero_count"] = int((false_mask & factor_values.eq(0)).sum())
-        if not false_mask.any() and factor_values.isna().any():
+        result["readiness_coverage"] = float(ready.mean())
+        if factor_values[ready].isna().any():
             result.update(status="data_error", reason="ready_factor_value_not_finite")
             return result
-        if false_mask.any():
+        if not ready.any() or result["readiness_coverage"] < coverage_threshold:
             result.update(status="not_ready", reason="explicit_readiness_false")
             return result
 
@@ -298,7 +312,7 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
         raise ValueError("holdout dates are forbidden")
     accum = {(factor, event): [] for factor in factors for event in events}
     available = {(factor, event): True for factor in factors for event in events}
-    for date in requested:
+    def read_date(date):
         path = Path(arrow_root) / (date + ".arrow")
         if not path.is_file():
             raise ValueError("missing Arrow {}".format(path))
@@ -323,6 +337,7 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
         if frame.duplicated(["symbol", "event"]).any():
             raise ValueError("Arrow duplicate symbol/event")
         event_groups = {event: group for event, group in frame.groupby("event", sort=False)}
+        date_stats = {}
         for factor in factors:
             readiness_name = _readiness_column(frame, factor)
             if factor not in frame.columns:
@@ -337,7 +352,13 @@ def _load_arrow_cross_section(arrow_root, dates, factors, events):
                     stats["status"] = "review"
                     stats["reason"] = "ready_factor_value_not_finite"
                 stats["date"] = date
-                accum[(factor, event)].append(stats)
+                date_stats[(factor, event)] = stats
+        return date, date_stats
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        for date, date_stats in executor.map(read_date, requested):
+            for key, stats in date_stats.items():
+                accum[key].append(stats)
     summaries = {}
     for key, rows in accum.items():
         factor, event = key
@@ -426,7 +447,35 @@ def build_validity_matrix(frames, split_dates, factors, events, labels, universe
                         metrics = {metric: event_frame[factor + "|" + metric] for metric in METRICS}
                         cross = arrow_summaries.get(split, {}).get((factor, event)) if arrow_root is not None else None
                         if factor not in event_frame:
-                            cell = classify_validity_cell(np.full(len(event_frame), np.nan), metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
+                            cross_readiness = None
+                            cross_values = np.full(len(event_frame), np.nan)
+                            if cross is not None and cross.get("factor_available") and cross.get("by_date"):
+                                by_date = cross["by_date"]
+                                if len(by_date) != len(expected_dates):
+                                    raise ValueError("Arrow readiness date count mismatch")
+                                if all(row.get("readiness_provided", False) for row in by_date):
+                                    cross_readiness = np.asarray(
+                                        [row.get("ready_count", 0) > 0 for row in by_date],
+                                        dtype=bool,
+                                    )
+                                    # A real, per-date Arrow diagnostic is used as the
+                                    # factor-value proxy. Cross-sectional variation is
+                                    # checked independently below, not fabricated from
+                                    # the date/event metric Parquet.
+                                    cross_values = np.asarray(
+                                        [row.get("unique_count", 0) for row in by_date],
+                                        dtype=float,
+                                    )
+                            cell = classify_validity_cell(
+                                cross_values,
+                                metrics,
+                                readiness=cross_readiness if cross_readiness is not None else readiness,
+                                date_count=len(expected_dates),
+                                coverage_threshold=coverage_threshold,
+                                min_unique=1,
+                                min_rank_count=1,
+                                min_factor_std=-1.0,
+                            )
                             cell["factor_value_source"] = "not_provided"
                             # Evaluation Parquet carries date/event metric series,
                             # not a symbol cross section.  When Arrow supplies the
@@ -434,7 +483,7 @@ def build_validity_matrix(frames, split_dates, factors, events, labels, universe
                             # only replace the synthetic "all NaN factor" outcome.
                             if cross is None or not cross.get("factor_available"):
                                 cell.update(status="review", reason="factor_values_not_provided")
-                            elif cell.get("reason") == "insufficient_cross_sectional_variation":
+                            elif cross_readiness is None and cell.get("status") == "pass":
                                 cell.update(status="review", reason="readiness_not_provided")
                         else:
                             cell = classify_validity_cell(event_frame[factor], metrics, readiness=readiness, date_count=len(expected_dates), coverage_threshold=coverage_threshold)
@@ -443,6 +492,16 @@ def build_validity_matrix(frames, split_dates, factors, events, labels, universe
                             cell["cross_sectional"] = cross
                             if cross.get("factor_available"):
                                 cell["factor_value_source"] = "arrow_cross_section"
+                                if cross.get("status") == "review":
+                                    cell["status"] = "data_error" if cross.get("reason") == "ready_factor_value_not_finite" else "review"
+                                    cell["reason"] = cross.get("reason")
+                                elif (cross.get("ready_count", 0) > 0 and
+                                      (cross.get("unique_count_min", 0) < 2 or
+                                       cross.get("effective_rank_count_min", 0) < 2 or
+                                       cross.get("std_min") is None or
+                                       cross.get("std_min") <= 0)):
+                                    cell["status"] = "metric_undefined"
+                                    cell["reason"] = "insufficient_cross_sectional_variation"
                             else:
                                 cell["factor_value_source"] = "not_provided"
                                 cell["reason"] = "raw_factor_column_missing"
@@ -502,18 +561,37 @@ def summarize_validity_matrix(cells, min_pass_events=6):
 
 
 def _value_correlations(arrow_root, dates, factors, events):
-    accum = {(a, b): [] for i, a in enumerate(factors) for b in factors[i + 1:]}
-    file_hashes = []
-    for date in dates:
+    pairs = [(a, b) for i, a in enumerate(factors) for b in factors[i + 1:]]
+
+    def read_date(date):
         path = Path(arrow_root) / (date + ".arrow")
         if not path.is_file(): raise ValueError("missing Arrow {}".format(date))
         frame = pd.read_feather(path, columns=["date", "event"] + list(factors))
         if set(str(x) for x in frame["date"].unique()) != {date}: raise ValueError("Arrow date mismatch")
         if set(frame["event"].unique()) != set(events): raise ValueError("Arrow event mismatch")
-        file_hashes.append({"date": date, "sha256": _sha(path)})
+        values_by_pair = {pair: [] for pair in pairs}
         for _, cross in frame.groupby("event", sort=False):
-            corr = cross[list(factors)].corr(method="spearman")
-            for pair in accum: accum[pair].append(corr.loc[pair[0], pair[1]])
+            values = cross[list(factors)]
+            # Rank once per event.  Most production rows are fully ready; the
+            # matrix path avoids 1,128 pairwise pandas calls while preserving
+            # Spearman semantics.  Fall back to pairwise pandas only for
+            # readiness-induced missing values.
+            ranked = values.rank(method="average")
+            if ranked.notna().all().all():
+                arr = ranked.to_numpy(dtype="float64")
+                corr = pd.DataFrame(np.corrcoef(arr, rowvar=False), index=factors, columns=factors)
+            else:
+                corr = ranked.corr(method="pearson")
+            for pair in pairs: values_by_pair[pair].append(corr.loc[pair[0], pair[1]])
+        return date, values_by_pair, {"date": date, "sha256": _sha(path)}
+
+    accum = {pair: [] for pair in pairs}
+    file_hashes = []
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(read_date, dates))
+    for _, values_by_pair, file_hash in results:
+        file_hashes.append(file_hash)
+        for pair in pairs: accum[pair].extend(values_by_pair[pair])
     peers = {factor: [] for factor in factors}
     for (a, b), values in accum.items():
         value = float(pd.Series(values).mean())
@@ -522,13 +600,16 @@ def _value_correlations(arrow_root, dates, factors, events):
     return peers, file_hashes
 
 
-def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]], labels: Sequence[str], universes: Sequence[str], expected_factors: Sequence[str], events: Sequence[int], arrow_root: Path, candidates_root: Path, coverage_threshold: float = .95, campaign_id: str = "sfm_stream_001", provenance: Optional[Mapping[str, str]] = None, return_validity_matrix: bool = False):
+def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]], labels: Sequence[str], universes: Sequence[str], expected_factors: Sequence[str], events: Sequence[int], arrow_root: Path, candidates_root: Path, coverage_threshold: float = .95, campaign_id: str = "sfm_stream_001", provenance: Optional[Mapping[str, str]] = None, return_validity_matrix: bool = False, dataset_id: str = "sfm_stream_001_formal_history_v2", portrait_suffix: str = "formal_history_v2", precomputed_validity: Optional[Sequence[Mapping[str, object]]] = None):
     factors, labels, universes, events = list(expected_factors), list(labels), list(universes), list(events)
     if len(set(factors)) != len(factors): raise ValueError("duplicate factors")
     frames, receipts = _strict_frames(result_root, split_dates, labels, universes, factors, events, coverage_threshold,
                                       allow_partial_metrics=return_validity_matrix)
-    validity_matrix = build_validity_matrix(frames, split_dates, factors, events, labels, universes, coverage_threshold,
-                                            arrow_root=arrow_root, dates=split_dates)
+    validity_matrix = list(precomputed_validity) if precomputed_validity is not None else build_validity_matrix(
+        frames, split_dates, factors, events, labels, universes, coverage_threshold,
+        arrow_root=arrow_root, dates=split_dates)
+    compact_validity = [_compact_validity_cell(cell) for cell in validity_matrix]
+    validity_by_factor = {factor: [cell for cell in compact_validity if cell["factor"] == factor] for factor in factors}
     candidates = _load_candidates(candidates_root, factors)
     all_dates = list(split_dates["training"]) + list(split_dates["observation"])
     value_peers, arrow_hashes = _value_correlations(arrow_root, all_dates, factors, events)
@@ -579,11 +660,16 @@ def build_portraits(result_root: Path, split_dates: Mapping[str, Sequence[str]],
         rolling_positive = [g["positive_fraction"] for g in rolling_groups if g["positive_fraction"] is not None]
         disagreement = np.sign(split_means["training"]) != np.sign(split_means["observation"])
         docs.append({
-            "schema_version": 2, "kind": "factor_portrait", "portrait_id": factor + "__formal_history_v2", "campaign_id": campaign_id, "family_id": candidate["family_id"], "candidate_id": factor, "factor": factor, "scope": "formal_history", "evidence_level": "L4",
-            "dataset": {"dataset_id": "sfm_stream_001_formal_history_v2", "date_start": all_dates[0], "date_end": all_dates[-1], "date_count": len(all_dates), "events": events, "labels": labels, "universes": universes, "split_date_list_sha256": {key: _dates_sha(list(value)) for key, value in split_dates.items()}},
+            "schema_version": 2, "kind": "factor_portrait", "portrait_id": factor + "__" + portrait_suffix, "campaign_id": campaign_id, "family_id": candidate["family_id"], "candidate_id": factor, "factor": factor, "scope": "formal_history", "evidence_level": "L4",
+            "dataset": {"dataset_id": dataset_id, "date_start": all_dates[0], "date_end": all_dates[-1], "date_count": len(all_dates), "events": events, "labels": labels, "universes": universes, "split_date_list_sha256": {key: _dates_sha(list(value)) for key, value in split_dates.items()}},
             "lineage": {"candidate_path": str(candidate_path), "candidate_hash": candidate["canonical_hash"], "candidate_source_commit": candidate["lineage"]["source_commit"], "dataset_manifest_path": provenance["dataset_manifest_path"], "dataset_manifest_sha256": provenance["dataset_manifest_sha256"], "binary_path": provenance["binary_path"], "binary_sha256": provenance["binary_sha256"], "config_path": provenance["config_path"], "config_sha256": provenance["config_sha256"], "evaluator_path": provenance["evaluator_path"], "evaluator_sha256": provenance["evaluator_sha256"], "label_contract_path": provenance["label_contract_path"], "label_contract_sha256": provenance["label_contract_sha256"], "methodology_path": provenance["methodology_path"], "methodology_sha256": provenance["methodology_sha256"], "evaluation_receipt_path": provenance["evaluation_receipt_path"], "evaluation_receipt_sha256": provenance["evaluation_receipt_sha256"], "evaluation_files": receipts, "correlation_artifact_path": correlation_artifact, "correlation_artifact_sha256": correlation_hash},
+            # The evaluator intentionally emits NaN for a not-ready event.  The
+            # raw Parquet column coverage therefore includes unavailable rows;
+            # readiness-aware cell coverage is recorded in the matrix and the
+            # portrait's quality gate is applied to the ready subset.
             "data_quality": {"coverage_threshold": coverage_threshold, "minimum_coverage": min(r["minimum_column_coverage"] for rows in receipts.values() for r in rows), "all_required_values_finite": True, "duplicate_date_event_count": 0, "matrix_complete": True},
             "direction": "raw_signed", "metrics": {"rank_ic": dict(_stats(all_rank), std_ddof=1, ir_formula="mean/std")}, "splits": split_output,
+            "validity": {"cell_count": len(validity_by_factor[factor]), "status_counts": {state: sum(cell.get("status") == state for cell in validity_by_factor[factor]) for state in VALIDITY_STATES}, "cells": validity_by_factor[factor]},
             "rolling_stability": {"window": 60, "min_periods": 30, "groups": rolling_groups, "positive_fraction": float(np.mean(rolling_positive)) if rolling_positive else None, "split_mean_sign_disagreement": bool(disagreement), "unstable": bool((rolling_positive and np.mean(rolling_positive) < .55) or disagreement)},
             "correlations": {"method": "Spearman", "redundancy_threshold_abs": .90, "ic_series": {"peers": peer_ic, "measured": True}, "factor_value": {"peers": value_peers[factor], "aggregation": "mean of per-date per-event cross-sectional Spearman", "measured": True}},
             "parameter_neighborhood": _neighbors(factor, candidates),
@@ -606,14 +692,19 @@ def write_portraits(documents, output_root):
 
 def main(argv: Optional[Sequence[str]] = None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--result-root", type=Path, required=True); parser.add_argument("--arrow-root", type=Path, required=True); parser.add_argument("--candidates-root", type=Path, required=True); parser.add_argument("--dataset-manifest", type=Path, required=True); parser.add_argument("--date-list", type=Path, required=True); parser.add_argument("--factors", type=Path, required=True); parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--result-root", type=Path, required=True); parser.add_argument("--arrow-root", type=Path, required=True); parser.add_argument("--candidates-root", type=Path, required=True); parser.add_argument("--dataset-manifest", type=Path, required=True); parser.add_argument("--date-list", type=Path, required=True); parser.add_argument("--factors", type=Path, required=True); parser.add_argument("--output-root", type=Path, required=True); parser.add_argument("--factor-manifest", type=Path)
     args = parser.parse_args(argv)
     manifest = json.loads(args.dataset_manifest.read_text()); dates = [x for x in args.date_list.read_text().splitlines() if x]
     if _sha(args.date_list) != manifest["production_date_list_sha256"]: raise ValueError("frozen date-list SHA mismatch")
     splits = {name: [d for d in dates if spec["date_start"] <= d <= spec["date_end"]] for name, spec in manifest["splits"].items() if name in ("training", "observation")}
     factors = [x for x in args.factors.read_text().splitlines() if x]
-    if len(factors) != 48: raise ValueError("formal L4 requires exactly 48 factors")
-    docs = build_portraits(args.result_root, splits, manifest["labels"]["names"], manifest["universes"], factors, manifest["events"]["evaluation_events"], args.arrow_root, args.candidates_root)
+    if args.factor_manifest is not None:
+        from campaigns.release_factor_manifest import load_factor_manifest
+        expected = load_factor_manifest(args.factor_manifest)["factor_names"]
+        if factors != expected:
+            raise ValueError("factor list does not match release factor manifest")
+    if not factors: raise ValueError("formal L4 requires at least one factor")
+    docs = build_portraits(args.result_root, splits, manifest["labels"]["names"], manifest["universes"], factors, manifest["events"]["evaluation_events"], args.arrow_root, args.candidates_root, dataset_id=manifest["dataset_id"], portrait_suffix="formal_history_v3_readiness")
     write_portraits(docs, args.output_root); return 0
 
 

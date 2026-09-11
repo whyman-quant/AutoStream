@@ -16,6 +16,7 @@ from .convert_production_hdf5 import (
     convert_hdf5,
 )
 from .pilot_postprocess import inspect_hdf5, validate_arrow
+from campaigns.release_factor_manifest import load_factor_manifest
 
 
 FAMILIES = (
@@ -62,10 +63,18 @@ def _batch_paths(campaign_root_or_batch_paths):
     return [by_name[name] for name in expected_names]
 
 
-def load_expected_factor_names(campaign_root=None, batch_paths=None):
-    """Load the frozen 48 factor names in all-families HDF5 column order."""
-    if (campaign_root is None) == (batch_paths is None):
-        raise ValueError("provide either campaign_root or batch_paths")
+def load_expected_factor_names(campaign_root=None, batch_paths=None, factor_manifest_path=None):
+    """Load factor names from the active release, preserving historical defaults.
+
+    ``factor_manifest_path`` is authoritative for mixed or future rounds.  The
+    legacy ``campaign_root``/``batch_paths`` form remains seed-only and keeps
+    its existing 48-column contract for backward compatibility.
+    """
+    provided = sum(value is not None for value in (campaign_root, batch_paths, factor_manifest_path))
+    if provided != 1:
+        raise ValueError("provide exactly one of campaign_root, batch_paths, factor_manifest_path")
+    if factor_manifest_path is not None:
+        return list(load_factor_manifest(factor_manifest_path)["factor_names"])
     source = campaign_root if campaign_root is not None else batch_paths
     names = []
     for path in _batch_paths(source):
@@ -170,14 +179,17 @@ def validate_hdf5_only(
     *,
     expected_events=DEFAULT_SOURCE_EVENTS,
     expected_factor_names=None,
+    factor_manifest_path=None,
 ):
     """Strictly validate one frozen all-families HDF5 without Arrow or labels."""
     source_events = [int(event) for event in expected_events]
     if source_events != list(DEFAULT_SOURCE_EVENTS):
         raise ValueError("HDF5-only production validation requires frozen events")
-    provided_names = expected_factor_names is not None
+    provided_names = expected_factor_names is not None or factor_manifest_path is not None
     factor_names = (
-        load_expected_factor_names(campaign_root=campaign_root)
+        load_expected_factor_names(factor_manifest_path=factor_manifest_path)
+        if factor_manifest_path is not None
+        else load_expected_factor_names(campaign_root=campaign_root)
         if expected_factor_names is None
         else [str(name) for name in expected_factor_names]
     )
@@ -270,11 +282,14 @@ def preflight_dates(
     *,
     expected_source_events=DEFAULT_SOURCE_EVENTS,
     expected_factor_names=None,
+    factor_manifest_path=None,
 ):
     """Validate and convert factor HDF5 files without reading labels or results."""
     requested_dates = validate_requested_dates(dates, production_date_list_path)
     factor_names = (
-        load_expected_factor_names(campaign_root=campaign_root)
+        load_expected_factor_names(factor_manifest_path=factor_manifest_path)
+        if factor_manifest_path is not None
+        else load_expected_factor_names(campaign_root=campaign_root)
         if expected_factor_names is None
         else [str(name) for name in expected_factor_names]
     )
@@ -421,6 +436,7 @@ def run_frozen_preflight(
     arrow_root,
     campaign_root=DEFAULT_CAMPAIGN_ROOT,
     production_date_list_path=None,
+    factor_manifest_path=None,
 ):
     requested_dates = [str(date) for date in dates]
     if requested_dates != list(FROZEN_PREFLIGHT_DATES):
@@ -429,11 +445,14 @@ def run_frozen_preflight(
                 list(FROZEN_PREFLIGHT_DATES)
             )
         )
-    recorded_date_list, factor_names = _load_frozen_contract(
+    recorded_date_list, seed_factor_names = _load_frozen_contract(
         campaign_root, production_date_list_path
     )
-    if len(factor_names) != 48:
-        raise ValueError("frozen production requires exactly 48 factor names")
+    factor_names = load_expected_factor_names(
+        factor_manifest_path=factor_manifest_path
+    ) if factor_manifest_path is not None else seed_factor_names
+    if not factor_names:
+        raise ValueError("frozen production requires at least one factor name")
     result = preflight_dates(
         requested_dates,
         hdf5_root,
@@ -442,6 +461,7 @@ def run_frozen_preflight(
         recorded_date_list,
         expected_source_events=DEFAULT_SOURCE_EVENTS,
         expected_factor_names=factor_names,
+        factor_manifest_path=factor_manifest_path,
     )
     result["aggregate"]["decision"] = "continue_to_bulk_l4"
     return result
@@ -475,6 +495,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     parser.add_argument("--production-date-list", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--factor-manifest", type=Path)
     args = parser.parse_args(argv)
     dates = args.dates.split(",")
     result = run_frozen_preflight(
@@ -483,6 +504,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         args.arrow_root,
         args.campaign_root,
         args.production_date_list,
+        args.factor_manifest,
     )
     if args.output is not None:
         _write_json_atomic(args.output, result)

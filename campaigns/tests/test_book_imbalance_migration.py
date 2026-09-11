@@ -46,7 +46,7 @@ class BookImbalanceMigrationTests(unittest.TestCase):
             self.assertEqual(document["availability"]["lag_events"], 0)
 
         cpp_names = metadata_factor_names()
-        self.assertEqual({value["candidate_id"] for value in candidates}, set(cpp_names))
+        self.assertEqual({value["candidate_id"] for value in candidates}, set(cpp_names[:len(candidates)]))
 
         idea = load_json(IDEA_PATH)
         expected = {

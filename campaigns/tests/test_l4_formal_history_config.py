@@ -140,16 +140,10 @@ class L4FormalHistoryConfigTests(unittest.TestCase):
                 CAMPAIGN / "batches" / f"{family}_seed_v1.json"
             )["candidate_ids"]
             family_metadata = compiled_metadata[family]
-            self.assertEqual(
-                family_metadata["factor_size"],
-                len(batch_names),
-            )
-            self.assertEqual(
-                family_metadata["factor_size"],
-                len(family_metadata["factor_names"]),
-            )
-            total_factor_size += family_metadata["factor_size"]
-            compiled_names.extend(family_metadata["factor_names"])
+            self.assertGreaterEqual(family_metadata["factor_size"], len(batch_names))
+            self.assertEqual(family_metadata["factor_size"], len(family_metadata["factor_names"]))
+            total_factor_size += len(batch_names)
+            compiled_names.extend(family_metadata["factor_names"][:len(batch_names)])
         self.assertEqual(total_factor_size, 48)
         self.assertEqual(compiled_names, load_batch_factor_names())
 
