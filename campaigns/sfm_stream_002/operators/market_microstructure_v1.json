@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "operator_catalog",
+  "catalog_id": "market_microstructure_v1",
+  "policy": {
+    "catalog_is_extensible": true,
+    "new_operator_requires_definition": true,
+    "causal_only": true,
+    "readiness_required": true
+  },
+  "available_fields": {
+    "quote": ["bp_array", "ap_array", "bv_array", "av_array", "last_px"],
+    "trade": ["trade_price", "trade_volume", "trade_type", "bsflag"],
+    "order": ["order_price", "order_volume", "order_type"]
+  },
+  "operators": [
+    {"operator_id": "level_weighted_profile", "category": "spatial", "description": "Aggregate causal depth across price levels with declared weights.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "declared levels have valid prices and volumes"},
+    {"operator_id": "depth_slope", "category": "spatial", "description": "Estimate the shape of displayed depth over distance from touch.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "at least three valid levels on both sides"},
+    {"operator_id": "depth_convexity", "category": "spatial", "description": "Measure curvature of depth over price distance.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "at least four valid levels on both sides"},
+    {"operator_id": "near_far_divergence", "category": "spatial", "description": "Contrast touch liquidity with deeper displayed liquidity.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "valid near and far level groups"},
+    {"operator_id": "rolling_slope", "category": "temporal", "description": "Slope fitted only on prior and current observations.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "minimum declared history window"},
+    {"operator_id": "persistence", "category": "temporal", "description": "Measure sign and magnitude persistence over prior events.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "minimum declared history window"},
+    {"operator_id": "reversal", "category": "temporal", "description": "Measure reversal from a backward-looking extreme.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "historical extreme and current observation exist"},
+    {"operator_id": "causal_zscore", "category": "normalization", "description": "Normalize using only prior and current observations.", "input_streams": ["quote"], "causal": true, "readiness_requirement": "nonzero historical standard deviation"},
+    {"operator_id": "order_add_cancel_decomposition", "category": "interaction", "description": "Attribute queue change to additions and cancellations.", "input_streams": ["quote", "order"], "causal": true, "readiness_requirement": "order reconstruction is valid for the instrument and interval"},
+    {"operator_id": "trade_queue_depletion", "category": "interaction", "description": "Attribute displayed queue reduction to observed executions.", "input_streams": ["quote", "trade"], "causal": true, "readiness_requirement": "quote transition and matching trade observations exist"},
+    {"operator_id": "post_shock_replenishment", "category": "temporal", "description": "Measure replenishment only after a backward-visible queue shock.", "input_streams": ["quote", "order", "trade"], "causal": true, "readiness_requirement": "shock is observed and at least one later causal update exists"},
+    {"operator_id": "regime_condition", "category": "state", "description": "Condition a signal on a state computed only from current and prior data.", "input_streams": ["quote", "trade"], "causal": true, "readiness_requirement": "state variable and base signal are ready"}
+  ]
+}

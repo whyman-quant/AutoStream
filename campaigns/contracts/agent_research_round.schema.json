@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "kind", "round_id", "campaign_id", "status", "events", "research_domains", "operator_catalog_path", "coverage_matrix_path", "reuse_policy", "stages", "promotion_allowed", "recursive", "stop_after"],
+  "properties": {
+    "schema_version": {"const": 1}, "kind": {"const": "agent_research_round"},
+    "round_id": {"type": "string", "minLength": 1}, "campaign_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["planned", "running", "complete", "blocked"]},
+    "events": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 2359}},
+    "research_domains": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "operator_catalog_path": {"type": "string", "minLength": 1}, "coverage_matrix_path": {"type": "string", "minLength": 1},
+    "reuse_policy": {"type": "object", "additionalProperties": false, "required": ["infrastructure", "prior_research_conclusions"], "properties": {"infrastructure": {"const": true}, "prior_research_conclusions": {"const": false}}},
+    "stages": {"const": ["logic_proposal", "factor_design", "code_implementation", "factor_calculation", "backtest", "experience", "next_logic"]},
+    "promotion_allowed": {"const": false}, "recursive": {"const": false}, "stop_after": {"const": "next_logic"}
+  }
+}

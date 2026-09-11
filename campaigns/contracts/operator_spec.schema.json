@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "kind", "operator_id", "category", "description", "input_streams", "causal", "readiness_requirement"],
+  "properties": {
+    "schema_version": {"const": 1}, "kind": {"const": "operator_spec"},
+    "operator_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "category": {"enum": ["raw", "spatial", "temporal", "state", "normalization", "interaction"]},
+    "description": {"type": "string", "minLength": 1},
+    "input_streams": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["quote", "trade", "order"]}},
+    "causal": {"const": true},
+    "readiness_requirement": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "kind", "cell_id", "family_id", "mechanism_axis", "structure_axis", "data_axis", "status", "artifact_ids"],
+  "properties": {
+    "schema_version": {"const": 1}, "kind": {"const": "coverage_cell"},
+    "cell_id": {"type": "string", "minLength": 1}, "family_id": {"type": "string", "minLength": 1},
+    "mechanism_axis": {"type": "string", "minLength": 1}, "structure_axis": {"type": "string", "minLength": 1},
+    "data_axis": {"type": "string", "minLength": 1},
+    "status": {"enum": ["unexplored", "proposed", "implemented", "l2_failed", "l3_observed", "l4_evaluated", "blocked", "redundant"]},
+    "artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

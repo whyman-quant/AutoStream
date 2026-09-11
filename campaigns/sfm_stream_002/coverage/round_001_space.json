@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "kind": "coverage_space",
+  "round_id": "sfm_stream_002_round_001",
+  "purpose": "Ensure diverse research proposals without prescribing formulas or conclusions.",
+  "axes": {
+    "hypothesis_origin": ["microstructure_theory", "data_anomaly", "cross_stream_interaction", "adversarial_counterexample", "free_exploration"],
+    "representation": ["spatial_state", "temporal_path", "event_attribution", "state_conditional"],
+    "data_scope": ["quote", "order", "trade", "cross_stream"]
+  },
+  "initial_status": "unexplored",
+  "allocation": {
+    "mechanism_breadth_min_fraction": 0.5,
+    "new_operator_min_fraction": 0.2,
+    "free_exploration_min_fraction": 0.1,
+    "parameter_only_max_fraction": 0.2
+  }
+}

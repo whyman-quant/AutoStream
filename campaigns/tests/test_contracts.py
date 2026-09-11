@@ -223,6 +223,41 @@ def experience_document():
 
 
 class ContractTests(unittest.TestCase):
+    def test_accepts_agent_driven_research_contracts(self):
+        validate_document("operator_spec", {
+            "schema_version": 1, "kind": "operator_spec", "operator_id": "rolling_slope",
+            "category": "temporal", "description": "Slope over prior events.",
+            "input_streams": ["quote"], "causal": True,
+            "readiness_requirement": "window contains at least three valid events",
+        })
+        validate_document("coverage_cell", {
+            "schema_version": 1, "kind": "coverage_cell", "cell_id": "book.temporal.slope",
+            "family_id": "book_imbalance", "mechanism_axis": "queue_shape",
+            "structure_axis": "temporal_slope", "data_axis": "quote",
+            "status": "unexplored", "artifact_ids": [],
+        })
+        validate_document("candidate_proposal", {
+            "schema_version": 1, "kind": "candidate_proposal", "proposal_id": "queue_replenishment_001",
+            "idea_id": "queue_replenishment", "family_id": "book_imbalance",
+            "mechanism": "Ask depletion followed by bid replenishment.",
+            "formula": "rolling_slope(new_bid - executed_ask, 16)",
+            "inputs": ["order", "trade", "quote"], "operators": ["rolling_slope"],
+            "readiness": "three quotes and one queue change", "falsification": "no parent increment",
+            "novelty_claim": "adds causal queue attribution", "supported_events": [926, 1000],
+            "structure_signature": SHA256,
+        })
+        validate_document("agent_research_round", {
+            "schema_version": 1, "kind": "agent_research_round",
+            "round_id": "sfm_stream_002_round_001", "campaign_id": "sfm_stream_002",
+            "status": "planned", "events": [926, 1000, 1030, 1100, 1130, 1330, 1400, 1430],
+            "research_domains": ["market_microstructure"],
+            "operator_catalog_path": "campaigns/sfm_stream_002/operators/market_microstructure_v1.json",
+            "coverage_matrix_path": "campaigns/sfm_stream_002/coverage/round_001.json",
+            "reuse_policy": {"infrastructure": True, "prior_research_conclusions": False},
+            "stages": ["logic_proposal", "factor_design", "code_implementation", "factor_calculation", "backtest", "experience", "next_logic"],
+            "promotion_allowed": False, "recursive": False, "stop_after": "next_logic"
+        })
+
     def test_accepts_valid_documents(self):
         for kind, document in (
             ("idea_spec", idea_spec_document()),

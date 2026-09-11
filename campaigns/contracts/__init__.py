@@ -16,6 +16,10 @@ CONTRACT_FILES = {
     "factor_portrait": "factor_portrait.schema.json",
     "experience_record": "experience_record.schema.json",
     "research_round": "research_round.schema.json",
+    "operator_spec": "operator_spec.schema.json",
+    "coverage_cell": "coverage_cell.schema.json",
+    "candidate_proposal": "candidate_proposal.schema.json",
+    "agent_research_round": "agent_research_round.schema.json",
 }
 
 

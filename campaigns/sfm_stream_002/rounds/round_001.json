@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "agent_research_round",
+  "round_id": "sfm_stream_002_round_001",
+  "campaign_id": "sfm_stream_002",
+  "status": "planned",
+  "events": [926, 1000, 1030, 1100, 1130, 1330, 1400, 1430],
+  "research_domains": ["market_microstructure"],
+  "operator_catalog_path": "campaigns/sfm_stream_002/operators/market_microstructure_v1.json",
+  "coverage_matrix_path": "campaigns/sfm_stream_002/coverage/round_001_space.json",
+  "reuse_policy": {
+    "infrastructure": true,
+    "prior_research_conclusions": false
+  },
+  "stages": [
+    "logic_proposal",
+    "factor_design",
+    "code_implementation",
+    "factor_calculation",
+    "backtest",
+    "experience",
+    "next_logic"
+  ],
+  "promotion_allowed": false,
+  "recursive": false,
+  "stop_after": "next_logic"
+}
