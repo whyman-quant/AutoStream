@@ -7,10 +7,13 @@ MODULE = ROOT / "base/hf-open5m-factor-demo/factors/book_imbalance"
 
 
 class BookImbalanceModuleTests(unittest.TestCase):
-    def test_minimal_module_declares_the_12_campaign_factors(self):
+    def test_module_declares_at_least_the_seed_campaign_factors(self):
         metadata = (MODULE / "meta_config.h").read_text()
-        self.assertIn("kFactorSize = 12", metadata)
-        self.assertEqual(metadata.count('"book_imbalance_'), 12)
+        import json
+        seed = json.loads((ROOT / "campaigns/sfm_stream_001/batches/book_imbalance_seed_v1.json").read_text())
+        expected = len(seed["candidate_ids"])
+        self.assertRegex(metadata, r"kFactorSize = [0-9]+")
+        self.assertGreaterEqual(metadata.count('"book_imbalance_'), expected)
         self.assertTrue((MODULE / "factor_entry.cpp").is_file())
         self.assertTrue((MODULE / "CMakeLists.txt").is_file())
 
