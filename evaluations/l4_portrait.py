@@ -692,12 +692,21 @@ def write_portraits(documents, output_root):
 
 def main(argv: Optional[Sequence[str]] = None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--result-root", type=Path, required=True); parser.add_argument("--arrow-root", type=Path, required=True); parser.add_argument("--candidates-root", type=Path, required=True); parser.add_argument("--dataset-manifest", type=Path, required=True); parser.add_argument("--date-list", type=Path, required=True); parser.add_argument("--factors", type=Path, required=True); parser.add_argument("--output-root", type=Path, required=True); parser.add_argument("--factor-manifest", type=Path)
+    parser.add_argument("--result-root", type=Path, required=True); parser.add_argument("--arrow-root", type=Path, required=True); parser.add_argument("--candidates-root", type=Path, required=True); parser.add_argument("--dataset-manifest", type=Path, required=True); parser.add_argument("--date-list", type=Path); parser.add_argument("--factors", type=Path); parser.add_argument("--output-root", type=Path, required=True); parser.add_argument("--factor-manifest", type=Path)
     args = parser.parse_args(argv)
-    manifest = json.loads(args.dataset_manifest.read_text()); dates = [x for x in args.date_list.read_text().splitlines() if x]
+    if args.factors is None and args.factor_manifest is None:
+        raise ValueError("provide --factors or --factor-manifest")
+    manifest = json.loads(args.dataset_manifest.read_text())
+    if args.date_list is None:
+        raise ValueError("--date-list is required")
+    dates = [x for x in args.date_list.read_text().splitlines() if x]
     if _sha(args.date_list) != manifest["production_date_list_sha256"]: raise ValueError("frozen date-list SHA mismatch")
     splits = {name: [d for d in dates if spec["date_start"] <= d <= spec["date_end"]] for name, spec in manifest["splits"].items() if name in ("training", "observation")}
-    factors = [x for x in args.factors.read_text().splitlines() if x]
+    if args.factors is not None:
+        factors = [x for x in args.factors.read_text().splitlines() if x]
+    else:
+        from campaigns.release_factor_manifest import load_factor_manifest
+        factors = list(load_factor_manifest(args.factor_manifest)["factor_names"])
     if args.factor_manifest is not None:
         from campaigns.release_factor_manifest import load_factor_manifest
         expected = load_factor_manifest(args.factor_manifest)["factor_names"]
