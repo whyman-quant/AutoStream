@@ -49,6 +49,13 @@ def inspect_hdf5(path: Path, *, expected_events: Sequence[int]) -> dict:
                 readiness = np.ones(values.shape, dtype=np.uint8)
             if np.any((readiness != 0) & ~np.isfinite(values)):
                 raise ValueError("event {} contains non-finite ready values".format(event))
+            reason_key = "readiness_reason_" + key
+            if reason_key in source:
+                reasons = np.asarray(source[reason_key][:])
+                if reasons.shape != values.shape or reasons.dtype.kind not in "ui":
+                    raise ValueError("event {} readiness reason shape/type mismatch".format(event))
+                if np.any(reasons > 255) or np.any(readiness != (reasons == 0)):
+                    raise ValueError("event {} readiness reason disagrees with readiness".format(event))
     return {"path": str(path), "stock_count": stock_count or 0, "factor_count": len(factor_names), "factor_names": factor_names, "events": list(expected_events)}
 
 
