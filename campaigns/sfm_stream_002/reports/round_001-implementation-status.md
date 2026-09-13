@@ -18,7 +18,7 @@
 - `OrderSnapshot.estimated` 已从沪市母单重构状态透传至 `TradePairEvent`，精确母单与估算母单可以分开。
 - 新建独立 `market_microstructure` 因子集。
 - 盘口反事实脆弱度的两个因子已经实现；有效双边三档盘口下输出有限值。
-- 其余 10 个因子尚未接完状态机，当前明确输出 `NaN` 且 `readiness=false`，不会用 0 冒充信号。
+- 其余 10 个因子已接入第一版 `OrderSynthesizer` 状态机；精确成交对、挂单生命周期、撤单/成交、冲击补回和去母单序列均有独立 readiness 门槛。
 - readiness reason codebook 已固定为机器可读 JSON，并已接通 `FactorEntry → RowWriter → CalculationThread → ScanThread → HDF5 → Arrow`；Arrow 辅助列为 `reason_<factor>`。
 - 已完成 20251014 单股票真实数据 smoke：HDF5 8 个事件、12 列，reason 矩阵与 readiness 同形；Arrow 8 行、39 列，逐格满足 `ready == (reason == 0)`。
 
@@ -29,6 +29,7 @@
 ## 尚未完成
 
 - 其余 10 个候选已接入第一版 `OrderSynthesizer` 状态机：精确成交对容量错配、挂单承诺、撤单/成交背离、成交冲击后补回、去母单主动序列惊讶度；仍需用真实沪深回放校准样本门槛、生命周期增量和覆盖计数。
-- 12 因子 L2、17 日 L3、回测、经验总结和下一批逻辑。
+- 已完成 20251014 全市场 L2：4,968 只股票、8 个事件、39,744 行 Arrow；12 个因子名称和 readiness/reason 校验通过。
+- 尚未完成 17 日 L3、回测、经验总结和下一批逻辑。
 
-因此本轮当前状态是 `code_implementation_in_progress`，不能提交生产、不能评价效果，也没有“有效因子”结论。
+因此本轮当前状态是 `l2_complete`；允许提交 17 日 L3 Pilot，但仍不能评价效果、淘汰或晋级因子。
