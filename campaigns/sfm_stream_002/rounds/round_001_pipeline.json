@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "round_pipeline",
+  "round_id": "sfm_stream_002_round_001",
+  "stages": [
+    "logic_proposal",
+    "factor_design",
+    "code_implementation",
+    "l2_technical",
+    "l3_production",
+    "l3_evaluation",
+    "l4_production",
+    "l4_evaluation",
+    "portrait",
+    "effect_plots",
+    "experience",
+    "next_logic"
+  ],
+  "resume_policy": "continue_from_first_stage_without_complete_receipt",
+  "retry_policy": {
+    "out_of_memory": "retry_failed_dates_only_at_max(2x_requested,1.25x_observed_peak),rounded_to_8GB",
+    "pending_or_running": "wait",
+    "code_data_hash_leakage_failure": "block",
+    "metric_weakness": "continue_as_observation_only"
+  },
+  "l4_dataset": {
+    "calendar_contract": "campaigns/sfm_stream_001/manifests/formal-history-dataset-v2.json",
+    "date_list": "campaigns/sfm_stream_001/manifests/formal-history-production-dates-v2.txt",
+    "training": "20210104-20221230",
+    "observation": "20230103-20241231",
+    "holdout": "20250102-20251210",
+    "holdout_access": "sealed_until_selection_and_best_event_are_frozen",
+    "reuse_prior_factor_conclusions": false
+  },
+  "evaluation_granularity": "factor x event x universe x label x split",
+  "outputs": ["portraits", "ic_cumsum", "long_cumsum", "best_event_deciles", "experience_records", "next_logic"],
+  "automatic_promotion": false,
+  "promotion_allowed": false
+}

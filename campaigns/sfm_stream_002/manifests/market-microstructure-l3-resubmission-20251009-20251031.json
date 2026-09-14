@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "kind": "l3_pilot_resubmission",
+  "campaign_id": "sfm_stream_002",
+  "round_id": "sfm_stream_002_round_001",
+  "family_id": "market_microstructure",
+  "supersedes_submission": "campaigns/sfm_stream_002/manifests/market-microstructure-l3-submission-20251009-20251031.json",
+  "initial_job_outcome": {
+    "completed_job_ids": [18644998, 18644999, 18645000],
+    "out_of_memory_job_ids": [18644990, 18644991, 18644992, 18644993, 18644994, 18644995, 18644996, 18644997, 18645001, 18645002, 18645003, 18645004, 18645005, 18645006],
+    "observed_max_rss_gb_range": [77.4, 88.1],
+    "requested_memory": "64G"
+  },
+  "retained_dates": ["20251021", "20251022", "20251023"],
+  "retried_dates": ["20251009", "20251010", "20251013", "20251014", "20251015", "20251016", "20251017", "20251020", "20251024", "20251027", "20251028", "20251029", "20251030", "20251031"],
+  "retry_job_ids": [18645043, 18645044, 18645045, 18645046, 18645047, 18645048, 18645049, 18645050, 18645051, 18645052, 18645053, 18645054, 18645055, 18645056],
+  "retry_resources": {"cpus_per_task": 10, "memory": "128G", "partition": "cpu_wgh", "time": "02:00:00", "factor_threads": 8},
+  "retry_policy": "failed_dates_only; next memory=max(2x requested,1.25x observed peak), rounded to 8GB",
+  "status": "retry_running",
+  "decision": "observation_only",
+  "promotion_allowed": false
+}
