@@ -12,6 +12,8 @@
     "l4_production",
     "l4_evaluation",
     "portrait",
+    "selection_freeze",
+    "holdout_display",
     "effect_plots",
     "experience",
     "next_logic"
@@ -33,7 +35,7 @@
     "reuse_prior_factor_conclusions": false
   },
   "evaluation_granularity": "factor x event x universe x label x split",
-  "outputs": ["portraits", "ic_cumsum", "long_cumsum", "best_event_deciles", "experience_records", "next_logic"],
+  "outputs": ["portraits", "selection_receipt", "holdout_display", "ic_cumsum", "long_cumsum", "best_event_deciles", "experience_records", "next_logic"],
   "automatic_promotion": false,
   "promotion_allowed": false
 }

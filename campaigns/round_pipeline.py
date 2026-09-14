@@ -25,6 +25,8 @@ PIPELINE_STAGES = (
     "l4_production",
     "l4_evaluation",
     "portrait",
+    "selection_freeze",
+    "holdout_display",
     "effect_plots",
     "experience",
     "next_logic",

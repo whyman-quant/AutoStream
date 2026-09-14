@@ -1,0 +1,13 @@
+{
+  "kind": "round_pipeline_stage_receipt",
+  "promotion_allowed": false,
+  "result": {
+    "artifact": "campaigns/sfm_stream_002/manifests/market-microstructure-l2-20251014.json",
+    "outcome": "complete",
+    "promotion_allowed": false
+  },
+  "round_id": "sfm_stream_002_round_001",
+  "schema_version": 1,
+  "stage": "l2_technical",
+  "status": "complete"
+}
