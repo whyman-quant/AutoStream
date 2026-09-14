@@ -106,6 +106,35 @@ def validate_arrow(path: Path, *, expected_stock_count: int, expected_events: Se
     return {"path": str(path), "rows": rows, "events": events, "factor_count": len(factors), "factor_names": factors}
 
 
+def write_evaluator_view(source_path: Path, output_path: Path) -> dict:
+    """Write a legacy-evaluator view without treating reason codes as factors.
+
+    The evidence Arrow remains unchanged and retains ``reason_*``.  The view
+    keeps ``ready_*`` so unavailable values are excluded by the evaluator.
+    """
+    import pyarrow as pa
+    import pyarrow.ipc as ipc
+
+    with ipc.open_file(str(source_path)) as reader:
+        table = reader.read_all()
+    kept = [name for name in table.column_names if not name.startswith("reason_")]
+    removed = len(table.column_names) - len(kept)
+    if removed == 0:
+        raise ValueError("evaluator view requires explicit readiness reason columns")
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    view = table.select(kept)
+    with pa.OSFile(str(output_path), "wb") as sink:
+        with ipc.RecordBatchFileWriter(sink, view.schema) as writer:
+            writer.write_table(view)
+    return {
+        "path": str(output_path),
+        "rows": view.num_rows,
+        "columns": view.num_columns,
+        "removed_reason_columns": removed,
+    }
+
+
 def postprocess_pilot(family: str, dates: Sequence[str], hdf5_root: Path, arrow_root: Path, *, expected_events: Sequence[int]) -> list[dict]:
     results = []
     for date in dates:
@@ -137,7 +166,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     return 0
 
 
-__all__ = ["inspect_hdf5", "validate_arrow", "postprocess_pilot"]
+__all__ = ["inspect_hdf5", "validate_arrow", "write_evaluator_view", "postprocess_pilot"]
 
 
 if __name__ == "__main__":

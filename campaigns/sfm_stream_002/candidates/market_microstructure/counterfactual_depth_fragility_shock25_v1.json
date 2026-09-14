@@ -1,0 +1,57 @@
+{
+  "availability": {
+    "invalid_policy": "unavailable",
+    "lag_events": 0,
+    "output_at": "scheduled_snapshot",
+    "readiness_policy": "Same as the representative, except both sides must cover the 0.25 depth shock. At 09:26, otherwise NaN.",
+    "unsupported_events": [],
+    "update_on": [
+      "quote"
+    ]
+  },
+  "batch_id": "market_microstructure_round_001",
+  "campaign_id": "sfm_stream_002",
+  "candidate_id": "counterfactual_depth_fragility_shock25_v1",
+  "canonical_hash": "sha256:b49d2df2bffb161f2383e6706ed51ee6e6ab55a1969904e05f6c1fcb3d89546e",
+  "evidence_level": "L3",
+  "family_id": "market_microstructure",
+  "formula": "q=0.25*min(sum(bv_1_10),sum(av_1_10)); up=terminal_ask(q)/mid-1; down=1-terminal_bid(q)/mid; value=up-down",
+  "generation": 0,
+  "hypothesis_id": "counterfactual_depth_fragility_001",
+  "kind": "candidate",
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_002/logic/round_001.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/market_microstructure/factor_entry.cpp",
+    "source_commit": "624eed9"
+  },
+  "operator_id": "counterfactual_book_walk",
+  "output": {
+    "dtype": "float64",
+    "factor_name": "counterfactual_depth_fragility_shock25_v1",
+    "research_direction": "raw_signed"
+  },
+  "parameters": {
+    "design_variant": "counterfactual_depth_fragility_shock25_v1",
+    "supported_events": [
+      926,
+      1000,
+      1030,
+      1100,
+      1130,
+      1330,
+      1400,
+      1430
+    ]
+  },
+  "parent_candidate_ids": [],
+  "schema_version": 1,
+  "source_streams": [
+    "quote"
+  ],
+  "state": {
+    "reset_policy": "trading_day",
+    "warmup_events": 0,
+    "window_events": null,
+    "window_type": "latest_event"
+  }
+}

@@ -2,7 +2,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from evaluations.pilot_postprocess import inspect_hdf5, postprocess_pilot, validate_arrow
+from evaluations.pilot_postprocess import (
+    inspect_hdf5, postprocess_pilot, validate_arrow, write_evaluator_view,
+)
 
 
 SOURCE_EVENTS = [92700000, 100000000]
@@ -49,6 +51,26 @@ def _write_arrow(path, symbols, events, values):
 
 
 class PilotPostprocessTests(unittest.TestCase):
+    def test_evaluator_view_keeps_readiness_but_drops_reason_columns(self):
+        import pyarrow as pa
+        import pyarrow.ipc as ipc
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.arrow"
+            output = Path(directory) / "eval" / "view.arrow"
+            table = pa.table({
+                "symbol": ["000001"], "date": ["20251014"],
+                "event": [92600000], "factor": [float("nan")],
+                "ready_factor": [False], "reason_factor": [4],
+            })
+            with pa.OSFile(str(source), "wb") as sink:
+                with ipc.RecordBatchFileWriter(sink, table.schema) as writer:
+                    writer.write_table(table)
+            result = write_evaluator_view(source, output)
+            with ipc.open_file(str(output)) as reader:
+                names = reader.schema.names
+            self.assertEqual(names, ["symbol", "date", "event", "factor", "ready_factor"])
+            self.assertEqual(result["removed_reason_columns"], 1)
+
     def test_inspects_each_date_and_converts_with_inferred_dimensions(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

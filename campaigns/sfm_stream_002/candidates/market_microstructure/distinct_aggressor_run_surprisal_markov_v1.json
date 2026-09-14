@@ -1,0 +1,60 @@
+{
+  "availability": {
+    "invalid_policy": "unavailable",
+    "lag_events": 0,
+    "output_at": "scheduled_snapshot",
+    "readiness_policy": "At least 30 prior distinct exact BsFlag aggressor parents and a current same-side run containing at least two distinct parents; Unknown, estimated and fallback events are diagnostic only.",
+    "unsupported_events": [
+      926
+    ],
+    "update_on": [
+      "order",
+      "trade"
+    ]
+  },
+  "batch_id": "market_microstructure_round_001",
+  "campaign_id": "sfm_stream_002",
+  "candidate_id": "distinct_aggressor_run_surprisal_markov_v1",
+  "canonical_hash": "sha256:ab359c29deb070407796bd4497be34548b60e6151e78f480459d50beebd1bb7d",
+  "evidence_level": "L3",
+  "family_id": "market_microstructure",
+  "formula": "surprise_i=-log(P_past(side_i|previous_side_i)); value=current_run_side*sum(surprise_i)/sqrt(current_distinct_parent_run_length)",
+  "generation": 0,
+  "hypothesis_id": "distinct_aggressor_run_surprisal_001",
+  "kind": "candidate",
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_002/logic/round_001.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/market_microstructure/factor_entry.cpp",
+    "source_commit": "624eed9"
+  },
+  "operator_id": "distinct_mother_run_surprisal",
+  "output": {
+    "dtype": "float64",
+    "factor_name": "distinct_aggressor_run_surprisal_markov_v1",
+    "research_direction": "raw_signed"
+  },
+  "parameters": {
+    "design_variant": "distinct_aggressor_run_surprisal_markov_v1",
+    "supported_events": [
+      1000,
+      1030,
+      1100,
+      1130,
+      1330,
+      1400,
+      1430
+    ]
+  },
+  "parent_candidate_ids": [],
+  "schema_version": 1,
+  "source_streams": [
+    "order",
+    "trade"
+  ],
+  "state": {
+    "reset_policy": "trading_day",
+    "warmup_events": 30,
+    "window_events": 4096,
+    "window_type": "event_count"
+  }
+}

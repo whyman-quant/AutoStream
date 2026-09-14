@@ -1,0 +1,62 @@
+{
+  "availability": {
+    "invalid_policy": "unavailable",
+    "lag_events": 0,
+    "output_at": "scheduled_snapshot",
+    "readiness_policy": "Same matured shock set as the representative, with valid consumed-side quote snapshots immediately after shock and at 30 seconds.",
+    "unsupported_events": [
+      926
+    ],
+    "update_on": [
+      "quote",
+      "order",
+      "trade"
+    ]
+  },
+  "batch_id": "market_microstructure_round_001",
+  "campaign_id": "sfm_stream_002",
+  "candidate_id": "execution_shock_replenishment_quote_elasticity_v1",
+  "canonical_hash": "sha256:cf7efedad2901254baa830c6b78eee33060553b78ce1f48e0df860244581c79b",
+  "evidence_level": "L3",
+  "family_id": "market_microstructure",
+  "formula": "shock=trade_qty>causal_q90 && trade_qty>=0.25*opposite_l1_depth; response=max(depth_consumed_side_at_30s-depth_immediately_after_shock,0); value=mean(clip(aggressor_sign*response/(trade_qty+eps),-5,5))",
+  "generation": 0,
+  "hypothesis_id": "execution_shock_replenishment_elasticity_001",
+  "kind": "candidate",
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_002/logic/round_001.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/market_microstructure/factor_entry.cpp",
+    "source_commit": "624eed9"
+  },
+  "operator_id": "trade_queue_depletion",
+  "output": {
+    "dtype": "float64",
+    "factor_name": "execution_shock_replenishment_quote_elasticity_v1",
+    "research_direction": "raw_signed"
+  },
+  "parameters": {
+    "design_variant": "execution_shock_replenishment_quote_elasticity_v1",
+    "supported_events": [
+      1000,
+      1030,
+      1100,
+      1130,
+      1330,
+      1400,
+      1430
+    ]
+  },
+  "parent_candidate_ids": [],
+  "schema_version": 1,
+  "source_streams": [
+    "quote",
+    "order",
+    "trade"
+  ],
+  "state": {
+    "reset_policy": "trading_day",
+    "warmup_events": 31,
+    "window_events": 4096,
+    "window_type": "event_count"
+  }
+}

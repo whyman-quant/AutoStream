@@ -1,0 +1,60 @@
+{
+  "availability": {
+    "invalid_policy": "unavailable",
+    "lag_events": 0,
+    "output_at": "scheduled_snapshot",
+    "readiness_policy": "Trailing 15 elapsed minutes contain positive exact cancellation volume and BsFlag execution volume; cumulative cancelled_qty is differenced per order; estimated and fallback activity is diagnostic only.",
+    "unsupported_events": [
+      926
+    ],
+    "update_on": [
+      "order",
+      "trade"
+    ]
+  },
+  "batch_id": "market_microstructure_round_001",
+  "campaign_id": "sfm_stream_002",
+  "candidate_id": "cancel_execution_divergence_separate_norm_v1",
+  "canonical_hash": "sha256:ac65472e778efd7eeb52d979e8e7e710fc1a1a6a7e828d5199026aa31e2ce249",
+  "evidence_level": "L3",
+  "family_id": "market_microstructure",
+  "formula": "C=(cancel_ask-cancel_bid)/(cancel_ask+cancel_bid+eps); E=(buy_aggressive-sell_aggressive)/(buy_aggressive+sell_aggressive+eps); value=C-E",
+  "generation": 0,
+  "hypothesis_id": "cancel_execution_divergence_001",
+  "kind": "candidate",
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_002/logic/round_001.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/market_microstructure/factor_entry.cpp",
+    "source_commit": "624eed9"
+  },
+  "operator_id": "lifecycle_increment_extractor",
+  "output": {
+    "dtype": "float64",
+    "factor_name": "cancel_execution_divergence_separate_norm_v1",
+    "research_direction": "raw_signed"
+  },
+  "parameters": {
+    "design_variant": "cancel_execution_divergence_separate_norm_v1",
+    "supported_events": [
+      1000,
+      1030,
+      1100,
+      1130,
+      1330,
+      1400,
+      1430
+    ]
+  },
+  "parent_candidate_ids": [],
+  "schema_version": 1,
+  "source_streams": [
+    "order",
+    "trade"
+  ],
+  "state": {
+    "reset_policy": "trading_day",
+    "warmup_events": 20,
+    "window_events": 4096,
+    "window_type": "event_count"
+  }
+}

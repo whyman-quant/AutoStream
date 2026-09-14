@@ -1,0 +1,60 @@
+{
+  "availability": {
+    "invalid_policy": "unavailable",
+    "lag_events": 0,
+    "output_at": "scheduled_snapshot",
+    "readiness_policy": "At least 20 distinct exact TradePairResolved events; aggressor_source=BsFlag; both original quantities positive; estimated, Unknown and fallback pairs are diagnostics only.",
+    "unsupported_events": [
+      926
+    ],
+    "update_on": [
+      "order",
+      "trade"
+    ]
+  },
+  "batch_id": "market_microstructure_round_001",
+  "campaign_id": "sfm_stream_002",
+  "candidate_id": "trade_pair_parent_size_mismatch_volume_weighted_v1",
+  "canonical_hash": "sha256:52e9d19bd4e24879cbf9b2a1ffa790bc848a2efefe4b999d7c39c99445eb8dc2",
+  "evidence_level": "L3",
+  "family_id": "market_microstructure",
+  "formula": "z=aggressor_sign*(log1p(aggressor_original_qty)-log1p(passive_original_qty)); value=sum(trade_volume*z)/sum(trade_volume)",
+  "generation": 0,
+  "hypothesis_id": "trade_pair_parent_size_mismatch_001",
+  "kind": "candidate",
+  "lineage": {
+    "idea_path": "campaigns/sfm_stream_002/logic/round_001.json",
+    "implementation_path": "base/hf-open5m-factor-demo/factors/market_microstructure/factor_entry.cpp",
+    "source_commit": "624eed9"
+  },
+  "operator_id": "parent_counterparty_sweep",
+  "output": {
+    "dtype": "float64",
+    "factor_name": "trade_pair_parent_size_mismatch_volume_weighted_v1",
+    "research_direction": "raw_signed"
+  },
+  "parameters": {
+    "design_variant": "trade_pair_parent_size_mismatch_volume_weighted_v1",
+    "supported_events": [
+      1000,
+      1030,
+      1100,
+      1130,
+      1330,
+      1400,
+      1430
+    ]
+  },
+  "parent_candidate_ids": [],
+  "schema_version": 1,
+  "source_streams": [
+    "order",
+    "trade"
+  ],
+  "state": {
+    "reset_policy": "trading_day",
+    "warmup_events": 20,
+    "window_events": 4096,
+    "window_type": "event_count"
+  }
+}
