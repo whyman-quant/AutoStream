@@ -73,7 +73,7 @@ def convert_all(hdf5_root, arrow_root, dates, factor_manifest, repo_root, worker
         return list(pool.map(one, dates))
 
 
-def build_evaluator_views(source_root, output_root, dates, workers=8):
+def materialize_evaluator_views(source_root, output_root, dates, workers=8):
     """Create the evaluator-only view while retaining evidence Arrow intact."""
     from evaluations.pilot_postprocess import write_evaluator_view
     output_root = Path(output_root)
@@ -143,8 +143,8 @@ def main(argv=None):
                              args.factor_manifest, Path.cwd(), workers=args.workers)
     evaluator_arrow_root = (args.evaluator_arrow_root or
                             (str(args.arrow_root).rstrip("/") + "-evaluator"))
-    evaluator_views = build_evaluator_views(args.arrow_root, evaluator_arrow_root, all_dates,
-                                            workers=args.workers)
+    evaluator_views = materialize_evaluator_views(
+        args.arrow_root, evaluator_arrow_root, all_dates, workers=args.workers)
     evaluation = evaluate(args.result_root, evaluator_arrow_root, splits,
                           args.factor_group, args.toolkit, workers=args.workers)
 
