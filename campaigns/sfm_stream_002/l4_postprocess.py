@@ -73,6 +73,23 @@ def convert_all(hdf5_root, arrow_root, dates, factor_manifest, repo_root, worker
         return list(pool.map(one, dates))
 
 
+def build_evaluator_views(source_root, output_root, dates, workers=8):
+    """Create the evaluator-only view while retaining evidence Arrow intact."""
+    from evaluations.pilot_postprocess import write_evaluator_view
+    output_root = Path(output_root)
+    def one(date):
+        source = Path(source_root) / (date + ".arrow")
+        target = output_root / (date + ".arrow")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            return {"date": date, "path": str(target), "reused": True}
+        result = write_evaluator_view(source, target)
+        result.update({"date": date, "reused": False})
+        return result
+    with ThreadPoolExecutor(max_workers=int(workers)) as pool:
+        return list(pool.map(one, dates))
+
+
 def evaluate(result_root, arrow_root, split_dates, factor_group, toolkit, workers=8):
     result = {}
     for split, dates in split_dates.items():
@@ -106,11 +123,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--hdf5-root", required=True)
     parser.add_argument("--arrow-root", required=True)
+    parser.add_argument("--evaluator-arrow-root")
     parser.add_argument("--result-root", required=True)
     parser.add_argument("--factor-manifest", required=True)
     parser.add_argument("--candidates-root", required=True)
     parser.add_argument("--portrait-root", required=True)
     parser.add_argument("--receipt", required=True)
+    parser.add_argument("--submission-manifest", default="campaigns/sfm_stream_002/manifests/market-microstructure-l4-submission-20260914.json")
     parser.add_argument("--date-list", required=True)
     parser.add_argument("--toolkit", default="/mnt/beegfs_ssd_raid91/10513_fangwei/factor_eval_toolkit/scripts/evaluate_factors.py")
     parser.add_argument("--factor-group", default="market_microstructure_round_001")
@@ -122,21 +141,40 @@ def main(argv=None):
     all_dates = splits["training"] + splits["observation"]
     conversion = convert_all(args.hdf5_root, args.arrow_root, all_dates,
                              args.factor_manifest, Path.cwd(), workers=args.workers)
-    evaluation = evaluate(args.result_root, args.arrow_root, splits,
+    evaluator_arrow_root = (args.evaluator_arrow_root or
+                            (str(args.arrow_root).rstrip("/") + "-evaluator"))
+    evaluator_views = build_evaluator_views(args.arrow_root, evaluator_arrow_root, all_dates,
+                                            workers=args.workers)
+    evaluation = evaluate(args.result_root, evaluator_arrow_root, splits,
                           args.factor_group, args.toolkit, workers=args.workers)
 
     from evaluations.l4_portrait import build_portraits, write_portraits
     manifest = json.loads(Path(args.factor_manifest).read_text(encoding="utf-8"))
+    submission = json.loads(Path(args.submission_manifest).read_text(encoding="utf-8"))
     factors = list(manifest["factor_names"])
+    evaluation_receipt = Path(args.receipt).with_name(Path(args.receipt).stem + "-evaluation.json")
+    evaluation_payload = {
+        "schema_version": 1, "kind": "l4_evaluation_receipt",
+        "status": "complete", "decision": "observation_only",
+        "promotion_allowed": False, "holdout_read": False,
+        "dates": splits, "factor_count": len(factors), "events": list(EVAL_EVENTS),
+        "evidence_arrow_root": str(Path(args.arrow_root).resolve()),
+        "evaluator_arrow_root": str(Path(evaluator_arrow_root).resolve()),
+        "results": evaluation,
+    }
+    evaluation_receipt.parent.mkdir(parents=True, exist_ok=True)
+    evaluation_receipt.write_text(json.dumps(evaluation_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    release_root = Path(submission["release_root"])
+    dataset_manifest = REPOSITORY_ROOT / "campaigns/sfm_stream_001/manifests/formal-history-dataset-v2.json"
     provenance = {
-        "dataset_manifest_path": str(Path(args.date_list).resolve()),
-        "dataset_manifest_sha256": _sha(args.date_list),
-        "binary_path": "frozen-release/factor_main", "binary_sha256": "frozen-release",
-        "config_path": "frozen-release/config_factor.json", "config_sha256": "frozen-release",
+        "dataset_manifest_path": str(dataset_manifest.resolve()),
+        "dataset_manifest_sha256": _sha(dataset_manifest),
+        "binary_path": str(release_root / "factor_main"), "binary_sha256": _sha(release_root / "factor_main"),
+        "config_path": str(release_root / "config_factor.json"), "config_sha256": _sha(release_root / "config_factor.json"),
         "evaluator_path": str(Path(args.toolkit).resolve()), "evaluator_sha256": _sha(args.toolkit),
-        "label_contract_path": "evaluations/label_contract.json", "label_contract_sha256": _sha("evaluations/label_contract.json"),
-        "methodology_path": "evaluations/README.md", "methodology_sha256": _sha("evaluations/README.md"),
-        "evaluation_receipt_path": str(Path(args.receipt).resolve()), "evaluation_receipt_sha256": "pending",
+        "label_contract_path": str((REPOSITORY_ROOT / "evaluations/label_contract.json").resolve()), "label_contract_sha256": _sha(REPOSITORY_ROOT / "evaluations/label_contract.json"),
+        "methodology_path": str((REPOSITORY_ROOT / "evaluations/README.md").resolve()), "methodology_sha256": _sha(REPOSITORY_ROOT / "evaluations/README.md"),
+        "evaluation_receipt_path": str(evaluation_receipt.resolve()), "evaluation_receipt_sha256": _sha(evaluation_receipt),
     }
     portraits = build_portraits(Path(args.result_root), splits, LABELS, UNIVERSES, factors, EVAL_EVENTS,
                                 Path(args.arrow_root), Path(args.candidates_root),
@@ -151,8 +189,10 @@ def main(argv=None):
         "promotion_allowed": False, "holdout_read": False,
         "dates": splits, "factor_count": len(factors), "events": list(EVAL_EVENTS),
         "arrow_root": str(Path(args.arrow_root).resolve()),
+        "evaluator_arrow_root": str(Path(evaluator_arrow_root).resolve()),
         "result_root": str(Path(args.result_root).resolve()),
         "conversion_count": len(conversion), "conversion": conversion,
+        "evaluator_view_count": len(evaluator_views), "evaluator_views": evaluator_views,
         "evaluation": evaluation, "portrait_count": len(portrait_paths),
         "portrait_root": str(Path(args.portrait_root).resolve()),
         "validity_status_counts": {state: sum(x.get("status") == state for x in validity)
