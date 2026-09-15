@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import importlib.util
 from pathlib import Path
 
 
@@ -15,6 +16,7 @@ class MarketMicrostructureL4PostprocessTest(unittest.TestCase):
             self.assertEqual(resolve_candidates_root(root), root)
             self.assertEqual(resolve_candidates_root(family), root)
 
+    @unittest.skipUnless(importlib.util.find_spec("pandas"), "pandas is optional in campaign-only environment")
     def test_completed_evaluation_is_reused_only_when_contract_matches(self):
         import pandas as pd
         from campaigns.sfm_stream_002.l4_postprocess import valid_evaluation_result
@@ -32,6 +34,8 @@ class MarketMicrostructureL4PostprocessTest(unittest.TestCase):
             self.assertFalse(valid_evaluation_result(
                 path, ["20210104"], ["beta"], [92600000, 100000000]))
 
+    @unittest.skipUnless(importlib.util.find_spec("pyarrow") and importlib.util.find_spec("numpy"),
+                         "pyarrow/numpy are optional in campaign-only environment")
     def test_factor_view_contains_only_values_and_masks_unready_as_nan(self):
         import pyarrow as pa
         import pyarrow.ipc as ipc

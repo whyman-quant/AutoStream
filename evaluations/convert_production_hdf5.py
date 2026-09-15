@@ -34,6 +34,7 @@ def convert_hdf5(
     expected_factor_count: int,
     require_explicit_reason: bool = False,
     factor_only: bool = False,
+    output_factors: Optional[Sequence[str]] = None,
 ) -> dict:
     try:
         import h5py
@@ -47,6 +48,12 @@ def convert_hdf5(
         names = [_decode(value) for value in source["factorlist"][:]]
         if len(names) != expected_factor_count or len(set(names)) != len(names):
             raise ValueError("factorlist count or uniqueness mismatch")
+        selected_names = list(output_factors) if output_factors is not None else list(names)
+        if len(selected_names) != len(set(selected_names)) or not set(selected_names).issubset(names):
+            raise ValueError("output_factors must be a unique subset of factorlist")
+        if output_factors is not None and not factor_only:
+            raise ValueError("output_factors requires factor_only output")
+        selected_indices = [names.index(name) for name in selected_names]
         events = [int(value) for value in expected_events]
         missing = [event for event in events if str(event) not in source]
         if missing:
@@ -123,7 +130,8 @@ def convert_hdf5(
             "symbol": pa.array(symbols, type=pa.string()),
             "date": pa.array(dates, type=pa.string()),
             "event": pa.array(event_values, type=pa.int64()),
-            **{name: pa.array(output_matrix[:, index], type=pa.float64()) for index, name in enumerate(names)},
+            **{name: pa.array(output_matrix[:, source_index], type=pa.float64())
+               for name, source_index in zip(selected_names, selected_indices)},
         }
         if not factor_only:
             columns.update({"ready_" + name: pa.array(readiness_matrix[:, index].astype(bool), type=pa.bool_()) for index, name in enumerate(names)})
@@ -140,7 +148,7 @@ def convert_hdf5(
         if temporary.exists():
             temporary.unlink()
     evaluation_events = [EVALUATION_EVENT_BY_SOURCE_EVENT.get(event, event) for event in events]
-    return {"path": str(output_path), "rows": table.num_rows, "columns": table.num_columns, "source_events": events, "events": evaluation_events, "factor_count": len(names), "output_mode": "factor_only" if factor_only else "factor_with_status"}
+    return {"path": str(output_path), "rows": table.num_rows, "columns": table.num_columns, "source_events": events, "events": evaluation_events, "factor_count": len(selected_names), "source_factor_count": len(names), "output_mode": "factor_only" if factor_only else "factor_with_status"}
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

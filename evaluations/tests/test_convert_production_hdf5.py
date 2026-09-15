@@ -94,6 +94,31 @@ class ProductionHdf5ConversionTests(unittest.TestCase):
             self.assertTrue(np.isnan(values[1]))
             self.assertEqual(result["output_mode"], "factor_only")
 
+    def test_factor_only_can_emit_a_frozen_selected_subset(self):
+        import h5py
+        import numpy as np
+        import pyarrow as pa
+        import pyarrow.ipc as ipc
+
+        with tempfile.TemporaryDirectory() as directory:
+            input_path = Path(directory) / "20251014" / "factors.h5"
+            input_path.parent.mkdir(parents=True)
+            with h5py.File(str(input_path), "w") as target:
+                target.create_dataset("factorlist", data=np.asarray([b"f0", b"f1"]))
+                target.create_dataset("92700000", data=np.asarray([[1.0, 2.0]]))
+                target.create_dataset("codelist_92700000", data=np.asarray([b"000001"]))
+                target.create_dataset("readiness_92700000", data=np.asarray([[1, 1]], dtype=np.uint8))
+            output_path = Path(directory) / "selected.arrow"
+            result = convert_hdf5(
+                input_path, output_path, expected_rows=1,
+                expected_events=[92700000], expected_factor_count=2,
+                factor_only=True, output_factors=["f1"],
+            )
+            table = ipc.open_file(pa.memory_map(str(output_path), "r")).read_all()
+            self.assertEqual(table.column_names, ["symbol", "date", "event", "f1"])
+            self.assertEqual(result["factor_count"], 1)
+            self.assertEqual(result["source_factor_count"], 2)
+
     def test_carries_readiness_reason_codes_into_arrow(self):
         import h5py
         import numpy as np

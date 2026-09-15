@@ -26,7 +26,7 @@ def _col(frame, *names):
     return None
 
 
-def _frozen_selection(receipt, factor, key):
+def _frozen_selection(receipt, factor, key, event):
     if isinstance(receipt, (str, Path)):
         receipt = json.loads(Path(receipt).read_text())
     if not isinstance(receipt, dict):
@@ -36,9 +36,15 @@ def _frozen_selection(receipt, factor, key):
         raise ValueError("factor is not selected for holdout display")
     directions = receipt.get("directions", receipt.get("factor_directions", {}))
     direction = directions.get(factor, receipt.get("direction", "positive")) if isinstance(directions, dict) else "positive"
+    cell_directions = receipt.get("cell_directions", {})
+    cell_key = "{}|{}|{}".format(factor, event, key)
+    if isinstance(cell_directions, dict):
+        direction = cell_directions.get(cell_key, direction)
     events = receipt.get("best_events", receipt.get("frozen_best_events", {}))
-    event = events.get(key) if isinstance(events, dict) else None
-    return str(direction), (str(event) if event is not None else None)
+    best_event = None
+    if isinstance(events, dict):
+        best_event = events.get(factor + "|" + key, events.get(key))
+    return str(direction), (str(best_event) if best_event is not None else None)
 
 
 def _check_holdout(frame, selection_receipt, authorization, factor):
@@ -86,13 +92,11 @@ def build_effect_timeseries(frame, factor, selection_receipt=None, authorization
     receipt_obj = json.loads(Path(selection_receipt).read_text()) if isinstance(selection_receipt, (str, Path)) else selection_receipt
     rows = []
     for (universe, label, event), group in frame.groupby(["universe", "label", "event"], sort=False):
-        direction, best_event = _frozen_selection(receipt_obj or {}, factor, universe + "|" + label)
-        # Once holdout display is authorized, only the frozen event may be read
-        # from 2025; all pre-holdout events remain available for comparison.
-        if best_event is not None and (group["date"] >= "20250101").any() and event != best_event:
-            group = group[group["date"] < "20250101"]
-            if group.empty:
-                continue
+        direction, best_event = _frozen_selection(
+            receipt_obj or {}, factor, universe + "|" + label, event)
+        # Every event direction is frozen before holdout.  Therefore all eight
+        # event curves may be displayed through 2025; only the decile panel's
+        # best event is chosen pre-holdout.
         group = group.sort_values("date")
         ready_col = _col(group, "ready", "readiness")
         ready = group[ready_col].astype(bool) if ready_col else pd.Series(True, index=group.index)
@@ -108,7 +112,9 @@ def build_effect_timeseries(frame, factor, selection_receipt=None, authorization
                 ic += float(rank)
             long_name = _col(group, "long_return", "long", "long_top_return")
             if long_name is None:
-                preferred = 10 if direction != "negative" else 1
+                # D1 is the highest-factor bucket.  Positive signals long D1;
+                # negative signals long D10 after frozen sign orientation.
+                preferred = 10 if direction == "negative" else 1
                 long_name = _col(group, "q%d_return" % preferred, "q%d" % preferred)
             lr = record[long_name] if long_name else np.nan
             if pd.notna(lr):
@@ -119,7 +125,7 @@ def build_effect_timeseries(frame, factor, selection_receipt=None, authorization
                 if pd.notna(value):
                     q[decile] *= (1.0 + float(value))
             payload = {"date": record["date"], "event": event, "universe": universe,
-                       "label": label, "factor": factor, "ready": True,
+                       "label": label, "factor": factor,
                        "ic_cumulative": ic, "long_cumulative": long - 1.0,
                        "coverage": float(ready_count / total) if total else 0.0,
                        "best_event": best_event}

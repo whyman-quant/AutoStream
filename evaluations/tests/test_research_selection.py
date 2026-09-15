@@ -10,7 +10,7 @@ class ResearchSelectionTests(unittest.TestCase):
                 "ready": True, "metric_defined": True, "data_error": False,
                 "training_rank_ic": .02, "observation_rank_ic": .01,
                 "training_ls": .01, "observation_ls": .02,
-                "training_monotonicity": .8, "observation_monotonicity": .7,
+                "training_monotonicity": -.8, "observation_monotonicity": -.7,
                 "parent_rank_ic": .005}
         return [base]
 
@@ -27,7 +27,8 @@ class ResearchSelectionTests(unittest.TestCase):
         selection = freeze_holdout_selection(classify_cells(cells), allowed_years=(2021, 2022, 2023, 2024))
         self.assertEqual(selection["selected_for_holdout_display"], ["f"])
         self.assertEqual(selection["directions"]["f"], "positive")
-        self.assertEqual(selection["best_events"]["000906|raw926"], 103000000)
+        self.assertEqual(selection["best_events"]["f|000906|raw926"], 103000000)
+        self.assertEqual(selection["cell_directions"]["f|100000000|000906|raw926"], "positive")
         self.assertEqual(selection["selection_years"], [2021, 2022, 2023, 2024])
         self.assertFalse(selection["holdout_read"])
 
@@ -35,6 +36,14 @@ class ResearchSelectionTests(unittest.TestCase):
         cells = [{**self._cells()[0], "data_error": True}]
         with self.assertRaisesRegex(ValueError, "data_error"):
             freeze_holdout_selection(classify_cells(cells))
+
+    def test_negative_raw_direction_can_be_supported(self):
+        cell = {**self._cells()[0], "training_rank_ic": -.03,
+                "observation_rank_ic": -.02, "training_ls": -.01,
+                "observation_ls": -.02, "training_monotonicity": .8,
+                "observation_monotonicity": .7}
+        classified = classify_cells([cell])[0]
+        self.assertEqual(classified["status"], "supported")
 
 
 if __name__ == "__main__":
