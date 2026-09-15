@@ -135,6 +135,67 @@ def write_evaluator_view(source_path: Path, output_path: Path) -> dict:
     }
 
 
+def write_factor_only_view(source_path: Path, output_path: Path) -> dict:
+    """Write only numeric factor columns, masking unavailable values as NaN.
+
+    Readiness and reason columns are consumed as production metadata and are
+    intentionally not emitted.  A real numeric zero is left unchanged.
+    """
+    import numpy as np
+    import pyarrow as pa
+    import pyarrow.ipc as ipc
+
+    with ipc.open_file(str(source_path)) as reader:
+        table = reader.read_all()
+    key_names = [name for name in ("symbol", "date", "event") if name in table.column_names]
+    if key_names != ["symbol", "date", "event"]:
+        raise ValueError("factor view requires symbol, date and event columns")
+    factor_names = [
+        name for name in table.column_names
+        if name not in key_names
+        and not name.startswith("ready_")
+        and not name.startswith("reason_")
+    ]
+    if not factor_names:
+        raise ValueError("factor view has no numeric factor columns")
+    arrays = [table[name] for name in key_names]
+    masked_count = 0
+    for name in factor_names:
+        values = np.asarray(table[name].to_numpy(zero_copy_only=False), dtype="float64")
+        ready_name = "ready_" + name
+        if ready_name in table.column_names:
+            ready = np.asarray(table[ready_name].to_numpy(zero_copy_only=False), dtype=bool)
+            if ready.shape != values.shape:
+                raise ValueError("readiness shape mismatch for {}".format(name))
+            if np.any(ready & ~np.isfinite(values)):
+                raise ValueError("ready factor value is non-finite for {}".format(name))
+            values = values.copy()
+            masked_count += int((~ready).sum())
+            values[~ready] = np.nan
+        arrays.append(pa.array(values, type=pa.float64()))
+    view = pa.Table.from_arrays(arrays, names=key_names + factor_names)
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output_path.with_name("." + output_path.name + ".tmp")
+    try:
+        with pa.OSFile(str(temporary), "wb") as sink:
+            with ipc.RecordBatchFileWriter(sink, view.schema) as writer:
+                writer.write_table(view)
+        temporary.replace(output_path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return {
+        "path": str(output_path),
+        "rows": view.num_rows,
+        "columns": view.num_columns,
+        "factor_count": len(factor_names),
+        "factor_names": factor_names,
+        "removed_status_columns": len(table.column_names) - len(view.column_names),
+        "masked_unready_values": masked_count,
+    }
+
+
 def postprocess_pilot(family: str, dates: Sequence[str], hdf5_root: Path, arrow_root: Path, *, expected_events: Sequence[int]) -> list[dict]:
     results = []
     for date in dates:
@@ -166,7 +227,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     return 0
 
 
-__all__ = ["inspect_hdf5", "validate_arrow", "write_evaluator_view", "postprocess_pilot"]
+__all__ = ["inspect_hdf5", "validate_arrow", "write_evaluator_view", "write_factor_only_view", "postprocess_pilot"]
 
 
 if __name__ == "__main__":

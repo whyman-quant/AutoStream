@@ -24,6 +24,7 @@ SOURCE_EVENTS = (92700000, 100000000, 103000000, 110000000, 113000000, 133000000
 EVAL_EVENTS = (92600000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000)
 LABELS = ("raw926", "ease926")
 UNIVERSES = ("000985", "003800", "000906")
+METRICS = tuple(["D{}".format(i) for i in range(1, 11)] + ["LS", "Monotonicity", "IC", "RankIC"])
 
 
 def _sha(path):
@@ -46,16 +47,30 @@ def split_dates(date_list):
     }
 
 
+def _factor_arrow_is_valid(path, date, factor_names):
+    try:
+        import pyarrow.ipc as ipc
+        with ipc.open_file(str(path)) as reader:
+            table = reader.read_all()
+        expected = ["symbol", "date", "event"] + list(factor_names)
+        return (table.column_names == expected and table.num_rows > 0 and
+                set(table["date"].to_pylist()) == {str(date)} and
+                set(table["event"].to_pylist()) == set(EVAL_EVENTS))
+    except Exception:
+        return False
+
+
 def convert_all(hdf5_root, arrow_root, dates, factor_manifest, repo_root, workers=8):
     from evaluations.convert_production_hdf5 import convert_hdf5
     manifest = json.loads(Path(factor_manifest).read_text(encoding="utf-8"))
     count = int(manifest["factor_count"])
+    factor_names = list(manifest["factor_names"])
 
     def one(date):
         source = Path(hdf5_root) / date / "all_families" / "factors.h5"
         target = Path(arrow_root) / (date + ".arrow")
         target.parent.mkdir(parents=True, exist_ok=True)
-        if target.exists():
+        if target.exists() and _factor_arrow_is_valid(target, date, factor_names):
             return {"date": date, "path": str(target), "sha256": _sha(target), "reused": True}
         import h5py
         with h5py.File(str(source), "r") as handle:
@@ -63,7 +78,8 @@ def convert_all(hdf5_root, arrow_root, dates, factor_manifest, repo_root, worker
         result = convert_hdf5(source, target, expected_rows=expected_rows,
                               expected_events=SOURCE_EVENTS,
                               expected_factor_count=count,
-                              require_explicit_reason=True)
+                              require_explicit_reason=True,
+                              factor_only=True)
         result["date"] = date
         result["sha256"] = _sha(target)
         result["reused"] = False
@@ -73,24 +89,48 @@ def convert_all(hdf5_root, arrow_root, dates, factor_manifest, repo_root, worker
         return list(pool.map(one, dates))
 
 
-def materialize_evaluator_views(source_root, output_root, dates, workers=8):
-    """Create the evaluator-only view while retaining evidence Arrow intact."""
-    from evaluations.pilot_postprocess import write_evaluator_view
+def materialize_factor_views(source_root, output_root, dates, workers=8):
+    """Create clean evaluator inputs; readiness is not emitted."""
+    from evaluations.pilot_postprocess import write_factor_only_view
     output_root = Path(output_root)
     def one(date):
         source = Path(source_root) / (date + ".arrow")
         target = output_root / (date + ".arrow")
         target.parent.mkdir(parents=True, exist_ok=True)
-        if target.exists():
-            return {"date": date, "path": str(target), "reused": True}
-        result = write_evaluator_view(source, target)
+        result = write_factor_only_view(source, target)
         result.update({"date": date, "reused": False})
         return result
     with ThreadPoolExecutor(max_workers=int(workers)) as pool:
         return list(pool.map(one, dates))
 
 
-def evaluate(result_root, arrow_root, split_dates, factor_group, toolkit, workers=8):
+def resolve_candidates_root(path):
+    """Accept either the campaign candidates root or one family directory."""
+    root = Path(path)
+    if any(root.glob("*/*.json")):
+        return root
+    if any(root.glob("*.json")):
+        return root.parent
+    raise ValueError("candidate directory has no Candidate JSON files: {}".format(root))
+
+
+def valid_evaluation_result(path, dates, factors, events=EVAL_EVENTS):
+    try:
+        import pandas as pd
+        frame = pd.read_parquet(path)
+        expected_index = pd.MultiIndex.from_product(
+            [[str(x) for x in dates], list(events)], names=["date", "event"])
+        expected_columns = [factor + "|" + metric for factor in factors for metric in METRICS]
+        frame.index = pd.MultiIndex.from_arrays(
+            [[str(x) for x in frame.index.get_level_values(0)],
+             frame.index.get_level_values(1)], names=frame.index.names)
+        return (frame.index.equals(expected_index) and
+                list(frame.columns) == expected_columns)
+    except Exception:
+        return False
+
+
+def evaluate(result_root, arrow_root, split_dates, factor_group, toolkit, factors, workers=8):
     result = {}
     for split, dates in split_dates.items():
         if not dates:
@@ -108,13 +148,18 @@ def evaluate(result_root, arrow_root, split_dates, factor_group, toolkit, worker
                     "--factor_path", str(arrow_root),
                     "--workers", str(int(workers)), "--output_dir", str(output),
                 ]
-                subprocess.run(command, check=True)
                 path = output / "res_full.parquet"
+                reused = valid_evaluation_result(path, dates, factors)
+                if not reused:
+                    subprocess.run(command, check=True)
                 if not path.is_file():
                     raise RuntimeError("evaluator did not produce " + str(path))
+                if not valid_evaluation_result(path, dates, factors):
+                    raise RuntimeError("evaluator result violates frozen contract: " + str(path))
                 result[split + "/" + label + "/" + universe] = {
                     "path": str(path), "sha256": _sha(path),
                     "rows": int(len(__import__("pandas").read_parquet(path))),
+                    "reused": reused,
                 }
     return result
 
@@ -123,7 +168,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--hdf5-root", required=True)
     parser.add_argument("--arrow-root", required=True)
-    parser.add_argument("--evaluator-arrow-root")
+    parser.add_argument("--factor-arrow-root", "--evaluator-arrow-root", dest="factor_arrow_root")
     parser.add_argument("--result-root", required=True)
     parser.add_argument("--factor-manifest", required=True)
     parser.add_argument("--candidates-root", required=True)
@@ -139,27 +184,26 @@ def main(argv=None):
     dates = [x.strip() for x in Path(args.date_list).read_text(encoding="utf-8").splitlines() if x.strip()]
     splits = split_dates(dates)
     all_dates = splits["training"] + splits["observation"]
-    conversion = convert_all(args.hdf5_root, args.arrow_root, all_dates,
+    manifest = json.loads(Path(args.factor_manifest).read_text(encoding="utf-8"))
+    factors = list(manifest["factor_names"])
+    factor_arrow_root = (args.factor_arrow_root or
+                         (str(args.arrow_root).rstrip("/") + "-factor-only"))
+    conversion = convert_all(args.hdf5_root, factor_arrow_root, all_dates,
                              args.factor_manifest, Path.cwd(), workers=args.workers)
-    evaluator_arrow_root = (args.evaluator_arrow_root or
-                            (str(args.arrow_root).rstrip("/") + "-evaluator"))
-    evaluator_views = materialize_evaluator_views(
-        args.arrow_root, evaluator_arrow_root, all_dates, workers=args.workers)
-    evaluation = evaluate(args.result_root, evaluator_arrow_root, splits,
-                          args.factor_group, args.toolkit, workers=args.workers)
+    evaluation = evaluate(args.result_root, factor_arrow_root, splits,
+                          args.factor_group, args.toolkit, factors, workers=args.workers)
 
     from evaluations.l4_portrait import build_portraits, write_portraits
-    manifest = json.loads(Path(args.factor_manifest).read_text(encoding="utf-8"))
     submission = json.loads(Path(args.submission_manifest).read_text(encoding="utf-8"))
-    factors = list(manifest["factor_names"])
     evaluation_receipt = Path(args.receipt).with_name(Path(args.receipt).stem + "-evaluation.json")
     evaluation_payload = {
         "schema_version": 1, "kind": "l4_evaluation_receipt",
         "status": "complete", "decision": "observation_only",
         "promotion_allowed": False, "holdout_read": False,
         "dates": splits, "factor_count": len(factors), "events": list(EVAL_EVENTS),
-        "evidence_arrow_root": str(Path(args.arrow_root).resolve()),
-        "evaluator_arrow_root": str(Path(evaluator_arrow_root).resolve()),
+        "factor_arrow_root": str(Path(factor_arrow_root).resolve()),
+        "factor_arrow_columns": ["symbol", "date", "event"] + factors,
+        "status_columns_emitted": False,
         "results": evaluation,
     }
     evaluation_receipt.parent.mkdir(parents=True, exist_ok=True)
@@ -177,7 +221,7 @@ def main(argv=None):
         "evaluation_receipt_path": str(evaluation_receipt.resolve()), "evaluation_receipt_sha256": _sha(evaluation_receipt),
     }
     portraits = build_portraits(Path(args.result_root), splits, LABELS, UNIVERSES, factors, EVAL_EVENTS,
-                                Path(args.arrow_root), Path(args.candidates_root),
+                                Path(factor_arrow_root), resolve_candidates_root(args.candidates_root),
                                 campaign_id="sfm_stream_002",
                                 provenance=provenance, dataset_id="sfm_stream_002_market_microstructure_formal_v1",
                                 portrait_suffix="market_microstructure_l4_v1", return_validity_matrix=True)
@@ -188,11 +232,11 @@ def main(argv=None):
         "status": "complete", "decision": "observation_only",
         "promotion_allowed": False, "holdout_read": False,
         "dates": splits, "factor_count": len(factors), "events": list(EVAL_EVENTS),
-        "arrow_root": str(Path(args.arrow_root).resolve()),
-        "evaluator_arrow_root": str(Path(evaluator_arrow_root).resolve()),
+        "factor_arrow_root": str(Path(factor_arrow_root).resolve()),
+        "factor_arrow_columns": ["symbol", "date", "event"] + factors,
+        "status_columns_emitted": False,
         "result_root": str(Path(args.result_root).resolve()),
         "conversion_count": len(conversion), "conversion": conversion,
-        "evaluator_view_count": len(evaluator_views), "evaluator_views": evaluator_views,
         "evaluation": evaluation, "portrait_count": len(portrait_paths),
         "portrait_root": str(Path(args.portrait_root).resolve()),
         "validity_status_counts": {state: sum(x.get("status") == state for x in validity)

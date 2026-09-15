@@ -65,6 +65,35 @@ class ProductionHdf5ConversionTests(unittest.TestCase):
             self.assertEqual(table.column("ready_f0").to_pylist(), [False])
             self.assertEqual(table.column("ready_f1").to_pylist(), [True])
 
+    def test_factor_only_output_masks_unready_without_emitting_status_columns(self):
+        import h5py
+        import numpy as np
+        import pyarrow as pa
+        import pyarrow.ipc as ipc
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "20251014" / "market_microstructure"
+            root.mkdir(parents=True)
+            input_path = root / "factors.h5"
+            output_path = root / "20251014.arrow"
+            with h5py.File(str(input_path), "w") as target:
+                target.create_dataset("factorlist", data=np.asarray([b"f0", b"f1"]))
+                target.create_dataset("92700000", data=np.asarray([[0.0, 1.0], [2.0, 3.0]]))
+                target.create_dataset("codelist_92700000", data=np.asarray([b"000001", b"000002"]))
+                target.create_dataset("readiness_92700000", data=np.asarray([[1, 1], [0, 1]], dtype=np.uint8))
+                target.create_dataset("readiness_reason_92700000", data=np.asarray([[0, 0], [4, 0]], dtype=np.uint8))
+            result = convert_hdf5(
+                input_path, output_path, expected_rows=2,
+                expected_events=[92700000], expected_factor_count=2,
+                require_explicit_reason=True, factor_only=True,
+            )
+            table = ipc.open_file(pa.memory_map(str(output_path), "r")).read_all()
+            self.assertEqual(table.column_names, ["symbol", "date", "event", "f0", "f1"])
+            values = np.asarray(table.column("f0").to_pylist(), dtype=float)
+            self.assertEqual(values[0], 0.0)
+            self.assertTrue(np.isnan(values[1]))
+            self.assertEqual(result["output_mode"], "factor_only")
+
     def test_carries_readiness_reason_codes_into_arrow(self):
         import h5py
         import numpy as np

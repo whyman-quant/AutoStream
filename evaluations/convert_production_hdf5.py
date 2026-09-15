@@ -33,6 +33,7 @@ def convert_hdf5(
     expected_events: Sequence[int],
     expected_factor_count: int,
     require_explicit_reason: bool = False,
+    factor_only: bool = False,
 ) -> dict:
     try:
         import h5py
@@ -112,14 +113,22 @@ def convert_hdf5(
         matrix = np.concatenate(factor_values, axis=0)
         readiness_matrix = np.concatenate(readiness_values, axis=0)
         reason_matrix = np.concatenate(reason_values, axis=0)
-        table = pa.table({
+        output_matrix = matrix.copy()
+        if factor_only:
+            # Availability metadata is a producer-side validation detail.  In
+            # the consumer table it is represented only by NaN, while a real
+            # ready zero remains exactly zero.
+            output_matrix[readiness_matrix == 0] = np.nan
+        columns = {
             "symbol": pa.array(symbols, type=pa.string()),
             "date": pa.array(dates, type=pa.string()),
             "event": pa.array(event_values, type=pa.int64()),
-            **{name: pa.array(matrix[:, index], type=pa.float64()) for index, name in enumerate(names)},
-            **{"ready_" + name: pa.array(readiness_matrix[:, index].astype(bool), type=pa.bool_()) for index, name in enumerate(names)},
-            **{"reason_" + name: pa.array(reason_matrix[:, index], type=pa.uint8()) for index, name in enumerate(names)},
-        })
+            **{name: pa.array(output_matrix[:, index], type=pa.float64()) for index, name in enumerate(names)},
+        }
+        if not factor_only:
+            columns.update({"ready_" + name: pa.array(readiness_matrix[:, index].astype(bool), type=pa.bool_()) for index, name in enumerate(names)})
+            columns.update({"reason_" + name: pa.array(reason_matrix[:, index], type=pa.uint8()) for index, name in enumerate(names)})
+        table = pa.table(columns)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = output_path.with_name("." + output_path.name + ".tmp")
     try:
@@ -131,7 +140,7 @@ def convert_hdf5(
         if temporary.exists():
             temporary.unlink()
     evaluation_events = [EVALUATION_EVENT_BY_SOURCE_EVENT.get(event, event) for event in events]
-    return {"path": str(output_path), "rows": table.num_rows, "columns": table.num_columns, "source_events": events, "events": evaluation_events, "factor_count": len(names)}
+    return {"path": str(output_path), "rows": table.num_rows, "columns": table.num_columns, "source_events": events, "events": evaluation_events, "factor_count": len(names), "output_mode": "factor_only" if factor_only else "factor_with_status"}
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -143,6 +152,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--factor-count", type=int)
     parser.add_argument("--factor-manifest", type=Path,
                         help="release factor manifest; derives the expected count")
+    parser.add_argument("--factor-only", action="store_true",
+                        help="emit only keys and factor values; unavailable values become NaN")
     args = parser.parse_args(argv)
     events = [int(value) for value in args.events.split(",") if value]
     count = args.factor_count
@@ -154,7 +165,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         count = manifest_count
     if count is None:
         raise ValueError("provide --factor-manifest or --factor-count")
-    print(json.dumps(convert_hdf5(args.input, args.output, expected_rows=args.rows, expected_events=events, expected_factor_count=count), ensure_ascii=False))
+    print(json.dumps(convert_hdf5(args.input, args.output, expected_rows=args.rows, expected_events=events, expected_factor_count=count, factor_only=args.factor_only), ensure_ascii=False))
     return 0
 
 
