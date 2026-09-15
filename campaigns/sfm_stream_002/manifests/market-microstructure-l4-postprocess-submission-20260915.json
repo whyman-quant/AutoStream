@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "kind": "l4_postprocess_submission",
+  "round_id": "sfm_stream_002_round_001",
+  "status": "submitted",
+  "job_id": "18653212",
+  "after_production": true,
+  "production_job_count": 194,
+  "production_job_state": "194/194 COMPLETED",
+  "production_job_id_range": ["18645106", "18645299"],
+  "stages": ["arrow_conversion", "l4_evaluation", "portrait"],
+  "holdout_read": false,
+  "decision": "observation_only",
+  "promotion_allowed": false,
+  "hdf5_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-formal-v1",
+  "arrow_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-formal-v1-arrow",
+  "result_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-evaluation",
+  "portrait_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-portraits"
+}
