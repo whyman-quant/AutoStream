@@ -10,9 +10,14 @@ import argparse
 import hashlib
 import json
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
 
 
 SOURCE_EVENTS = (92700000, 100000000, 103000000, 110000000, 113000000, 133000000, 140000000, 143000000)
