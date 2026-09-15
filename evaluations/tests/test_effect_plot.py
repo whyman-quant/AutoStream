@@ -16,6 +16,7 @@ class EffectPlotTests(unittest.TestCase):
         self.assertEqual(len(fig.axes), 18)
         self.assertEqual([ax.get_ylabel() for ax in fig.axes[::3]], ["000906 · raw926","000906 · ease926","003800 · raw926","003800 · ease926","000985 · raw926","000985 · ease926"])
         self.assertTrue(any("holdout" in t.get_text().lower() for ax in fig.axes for t in ax.texts))
+        self.assertLessEqual(max(len(ax.get_xticks()) for ax in fig.axes), 12)
 
 
 if __name__ == "__main__":

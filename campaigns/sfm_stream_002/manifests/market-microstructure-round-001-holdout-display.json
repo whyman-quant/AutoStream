@@ -1,0 +1,77 @@
+{
+  "allowed_use": "display_only",
+  "conversion_count": 228,
+  "elimination_allowed": false,
+  "evaluation": {
+    "holdout/ease926/000906": {
+      "path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-evaluation/holdout/ease926/000906/res_full.parquet",
+      "reused": false,
+      "rows": 1824,
+      "sha256": "sha256:6dbd49e14e40432cf352ba98b54e5f7400391a1d7422b37196f51fb00db9c40e"
+    },
+    "holdout/ease926/000985": {
+      "path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-evaluation/holdout/ease926/000985/res_full.parquet",
+      "reused": false,
+      "rows": 1824,
+      "sha256": "sha256:9ced6124c1f9d6cd0b3f3098894956ed442e469704a306d9741b61a94e463985"
+    },
+    "holdout/ease926/003800": {
+      "path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-evaluation/holdout/ease926/003800/res_full.parquet",
+      "reused": false,
+      "rows": 1824,
+      "sha256": "sha256:8134108fac249d940506039a0d0957a72a88ee3681c4138744dd475738184666"
+    },
+    "holdout/raw926/000906": {
+      "path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-evaluation/holdout/raw926/000906/res_full.parquet",
+      "reused": false,
+      "rows": 1824,
+      "sha256": "sha256:573d501f9a899c5b2e7b7a53cf3710b426f2b0b7bde258637bcc9e27c61fc61f"
+    },
+    "holdout/raw926/000985": {
+      "path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-evaluation/holdout/raw926/000985/res_full.parquet",
+      "reused": false,
+      "rows": 1824,
+      "sha256": "sha256:93f077bbfb0458a8fd36ef94a98dd3b37a3dc18df0fdafd2d2ccf54b3bf41586"
+    },
+    "holdout/raw926/003800": {
+      "path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream-market-microstructure-l4-evaluation/holdout/raw926/003800/res_full.parquet",
+      "reused": false,
+      "rows": 1824,
+      "sha256": "sha256:04386fe1036a57d5633ddd7565ea3810718a9f67929aa7c307d0150c3c4f6713"
+    }
+  },
+  "experience_count": 6,
+  "experience_root": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream/.worktrees/l4-recent-history/campaigns/sfm_stream_002/experience/round_001",
+  "feedback_allowed": false,
+  "holdout_date_count": 228,
+  "holdout_read": true,
+  "kind": "holdout_display_receipt",
+  "next_logic_path": "/mnt/beegfs_ssd_raid91/10513_fangwei/AutoStream/.worktrees/l4-recent-history/campaigns/sfm_stream_002/logic/round_002.json",
+  "next_round_candidate_budget": 96,
+  "plots": [
+    "campaigns/sfm_stream_002/reports/round_001_effects/counterfactual_depth_fragility_shock10_v1.png",
+    "campaigns/sfm_stream_002/reports/round_001_effects/counterfactual_depth_fragility_shock25_v1.png",
+    "campaigns/sfm_stream_002/reports/round_001_effects/trade_pair_parent_size_mismatch_volume_weighted_v1.png",
+    "campaigns/sfm_stream_002/reports/round_001_effects/trade_pair_parent_size_mismatch_equal_weight_v1.png",
+    "campaigns/sfm_stream_002/reports/round_001_effects/resting_order_commitment_survival_age_weighted_v1.png",
+    "campaigns/sfm_stream_002/reports/round_001_effects/cancel_execution_divergence_separate_norm_v1.png",
+    "campaigns/sfm_stream_002/reports/round_001_effects/cancel_execution_divergence_joint_norm_v1.png",
+    "campaigns/sfm_stream_002/reports/round_001_effects/distinct_aggressor_run_surprisal_markov_v1.png"
+  ],
+  "promotion_allowed": false,
+  "round_id": "sfm_stream_002_round_001",
+  "schema_version": 1,
+  "selected_factors": [
+    "counterfactual_depth_fragility_shock10_v1",
+    "counterfactual_depth_fragility_shock25_v1",
+    "trade_pair_parent_size_mismatch_volume_weighted_v1",
+    "trade_pair_parent_size_mismatch_equal_weight_v1",
+    "resting_order_commitment_survival_age_weighted_v1",
+    "cancel_execution_divergence_separate_norm_v1",
+    "cancel_execution_divergence_joint_norm_v1",
+    "distinct_aggressor_run_surprisal_markov_v1"
+  ],
+  "selection_sha256": "sha256:0cc7937197238e655b1e021d7b45217a3475b14745335c63c66998869645ab7f",
+  "status": "complete",
+  "status_columns_emitted": false
+}

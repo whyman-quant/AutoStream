@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "kind": "round_pipeline_stage_receipt",
+  "round_id": "sfm_stream_002_round_001",
+  "stage": "effect_plots",
+  "status": "complete",
+  "result": {
+    "outcome": "complete",
+    "artifact": "campaigns/sfm_stream_002/reports/round_001_effects",
+    "plot_count": 8,
+    "layout": "6x3",
+    "period": "2023-2025",
+    "promotion_allowed": false
+  },
+  "promotion_allowed": false
+}

@@ -100,13 +100,19 @@ def build_effect_timeseries(frame, factor, selection_receipt=None, authorization
         group = group.sort_values("date")
         ready_col = _col(group, "ready", "readiness")
         ready = group[ready_col].astype(bool) if ready_col else pd.Series(True, index=group.index)
+        rank_name = _col(group, "rank_ic", "rankic", "RankIC")
+        decile_names = [_col(group, "q%d_return" % i, "q%d" % i)
+                        for i in range(1, 11)]
         total = 0; ready_count = 0; ic = 0.0; long = 1.0; q = dict((i, 1.0) for i in range(1, 11))
         for idx, (_, record) in enumerate(group.iterrows()):
             total += 1
             if not bool(ready.loc[idx] if idx in ready.index else record.get(ready_col, True)):
                 continue
+            observed = ([record[rank_name]] if rank_name else []) + [
+                record[name] for name in decile_names if name]
+            if not any(pd.notna(value) for value in observed):
+                continue
             ready_count += 1
-            rank_name = _col(group, "rank_ic", "rankic", "RankIC")
             rank = record[rank_name] if rank_name else np.nan
             if pd.notna(rank):
                 ic += float(rank)

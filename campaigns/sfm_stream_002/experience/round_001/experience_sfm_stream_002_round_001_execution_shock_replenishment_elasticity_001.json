@@ -1,0 +1,40 @@
+{
+  "action": {
+    "changed_dimension": "adaptive_shock_threshold_x_response_horizon",
+    "falsifiable_test": {
+      "dataset_scope": "next_round_training_and_observation_only",
+      "expected_observation": "At least one variant adds supported cells without duplicating its parent panel.",
+      "reject_condition": "All variants are not evaluable, split-unstable, direction-incoherent, or exactly redundant."
+    },
+    "proposal": "Explore 16 controlled structures over adaptive_shock_threshold_x_response_horizon without a blind window grid.",
+    "target_family_id": "market_microstructure",
+    "type": "request_data"
+  },
+  "campaign_id": "sfm_stream_002",
+  "experience_id": "experience_sfm_stream_002_round_001_execution_shock_replenishment_elasticity_001",
+  "fact": {
+    "evidence": [
+      {
+        "metric_path": "selection.cells.status.supported_count",
+        "observed_value": 0,
+        "portrait_id": "execution_shock_replenishment_order_elasticity_v1__market_microstructure_l4_v1"
+      }
+    ],
+    "statement": "真实主动成交造成队列冲击后，被冲击侧流动性的补回弹性是否区分延续与吸收？: supported=0, promising=0, unsupported=0, not_evaluable=96 at factor×event×universe×label granularity; no holdout result was used."
+  },
+  "family_id": "market_microstructure",
+  "generated_batch_ids": [
+    "market_microstructure_round_002_wide_search"
+  ],
+  "interpretation": {
+    "falsifiable_by": "Reject the next mechanism branch if no variant clears the same frozen split, coverage, magnitude and directional-coherence gates.",
+    "statement": "The current implementation did not produce evaluable repeated evidence; measurement and event formation must be changed before judging the mechanism."
+  },
+  "kind": "experience_record",
+  "schema_version": 1,
+  "source_portrait_ids": [
+    "execution_shock_replenishment_order_elasticity_v1__market_microstructure_l4_v1",
+    "execution_shock_replenishment_quote_elasticity_v1__market_microstructure_l4_v1"
+  ],
+  "status": "proposed"
+}

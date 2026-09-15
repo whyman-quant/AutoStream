@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "kind": "round_pipeline_stage_receipt",
+  "round_id": "sfm_stream_002_round_001",
+  "stage": "next_logic",
+  "status": "complete",
+  "result": {
+    "outcome": "complete",
+    "artifact": "campaigns/sfm_stream_002/logic/round_002.json",
+    "target_candidate_count": 96,
+    "candidate_count_range": [80, 140],
+    "holdout_feedback_used": false,
+    "promotion_allowed": false
+  },
+  "promotion_allowed": false
+}

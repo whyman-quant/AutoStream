@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "kind": "round_pipeline_stage_receipt",
+  "round_id": "sfm_stream_002_round_001",
+  "stage": "experience",
+  "status": "complete",
+  "result": {
+    "outcome": "complete",
+    "artifact": "campaigns/sfm_stream_002/experience/round_001",
+    "mechanism_count": 6,
+    "holdout_feedback_used": false,
+    "promotion_allowed": false
+  },
+  "promotion_allowed": false
+}

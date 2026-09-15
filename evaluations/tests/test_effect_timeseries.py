@@ -39,6 +39,16 @@ class EffectTimeseriesTests(unittest.TestCase):
         self.assertAlmostEqual(out["rows"][0]["long_cumulative"], .10)
         self.assertEqual(out["rows"][0]["best_event"], "100000000")
 
+    def test_fully_undefined_observation_is_not_drawn_as_zero(self):
+        frame = pd.DataFrame([{
+            "date": "20240102", "event": "92600000", "universe": "000906",
+            "label": "raw926", "rank_ic": float("nan"),
+            **{"q%d_return" % i: float("nan") for i in range(1, 11)},
+        }])
+        receipt = {"selected_for_holdout_display": ["f"], "directions": {"f": "positive"}}
+        out = build_effect_timeseries(frame, factor="f", selection_receipt=receipt)
+        self.assertEqual(out["rows"], [])
+
 
 if __name__ == "__main__":
     unittest.main()

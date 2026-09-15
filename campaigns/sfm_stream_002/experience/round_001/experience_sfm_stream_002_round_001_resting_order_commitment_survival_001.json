@@ -1,0 +1,40 @@
+{
+  "action": {
+    "changed_dimension": "lifecycle_outcome_x_age_kernel_x_price_distance",
+    "falsifiable_test": {
+      "dataset_scope": "next_round_training_and_observation_only",
+      "expected_observation": "At least one variant adds supported cells without duplicating its parent panel.",
+      "reject_condition": "All variants are not evaluable, split-unstable, direction-incoherent, or exactly redundant."
+    },
+    "proposal": "Explore 16 controlled structures over lifecycle_outcome_x_age_kernel_x_price_distance without a blind window grid.",
+    "target_family_id": "market_microstructure",
+    "type": "generate_variants"
+  },
+  "campaign_id": "sfm_stream_002",
+  "experience_id": "experience_sfm_stream_002_round_001_resting_order_commitment_survival_001",
+  "fact": {
+    "evidence": [
+      {
+        "metric_path": "selection.cells.status.supported_count",
+        "observed_value": 78,
+        "portrait_id": "resting_order_commitment_survival_age_weighted_v1__market_microstructure_l4_v1"
+      }
+    ],
+    "statement": "挂单被动成交或持续存活相对于主动撤销的生命周期差异，能否衡量真实流动性承诺？: supported=78, promising=6, unsupported=0, not_evaluable=12 at factor×event×universe×label granularity; no holdout result was used."
+  },
+  "family_id": "market_microstructure",
+  "generated_batch_ids": [
+    "market_microstructure_round_002_wide_search"
+  ],
+  "interpretation": {
+    "falsifiable_by": "Reject the next mechanism branch if no variant clears the same frozen split, coverage, magnitude and directional-coherence gates.",
+    "statement": "The mechanism has repeatable pre-holdout cells and should be expanded structurally."
+  },
+  "kind": "experience_record",
+  "schema_version": 1,
+  "source_portrait_ids": [
+    "resting_order_commitment_survival_age_weighted_v1__market_microstructure_l4_v1",
+    "resting_order_commitment_survival_no_age_v1__market_microstructure_l4_v1"
+  ],
+  "status": "proposed"
+}

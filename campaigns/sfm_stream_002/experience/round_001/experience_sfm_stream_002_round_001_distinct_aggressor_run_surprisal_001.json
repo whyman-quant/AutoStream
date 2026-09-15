@@ -1,0 +1,40 @@
+{
+  "action": {
+    "changed_dimension": "state_order_x_run_definition_x_size_surprise",
+    "falsifiable_test": {
+      "dataset_scope": "next_round_training_and_observation_only",
+      "expected_observation": "At least one variant adds supported cells without duplicating its parent panel.",
+      "reject_condition": "All variants are not evaluable, split-unstable, direction-incoherent, or exactly redundant."
+    },
+    "proposal": "Explore 16 controlled structures over state_order_x_run_definition_x_size_surprise without a blind window grid.",
+    "target_family_id": "market_microstructure",
+    "type": "generate_variants"
+  },
+  "campaign_id": "sfm_stream_002",
+  "experience_id": "experience_sfm_stream_002_round_001_distinct_aggressor_run_surprisal_001",
+  "fact": {
+    "evidence": [
+      {
+        "metric_path": "selection.cells.status.supported_count",
+        "observed_value": 2,
+        "portrait_id": "distinct_aggressor_run_surprisal_markov_v1__market_microstructure_l4_v1"
+      }
+    ],
+    "statement": "去除同一母单拆分后，多个独立主动母单连续同向到达的意外程度能否刻画订单流信息聚集？: supported=2, promising=65, unsupported=17, not_evaluable=12 at factor×event×universe×label granularity; no holdout result was used."
+  },
+  "family_id": "market_microstructure",
+  "generated_batch_ids": [
+    "market_microstructure_round_002_wide_search"
+  ],
+  "interpretation": {
+    "falsifiable_by": "Reject the next mechanism branch if no variant clears the same frozen split, coverage, magnitude and directional-coherence gates.",
+    "statement": "The mechanism has repeatable pre-holdout cells and should be expanded structurally."
+  },
+  "kind": "experience_record",
+  "schema_version": 1,
+  "source_portrait_ids": [
+    "distinct_aggressor_run_surprisal_markov_v1__market_microstructure_l4_v1",
+    "distinct_aggressor_run_surprisal_marginal_v1__market_microstructure_l4_v1"
+  ],
+  "status": "proposed"
+}

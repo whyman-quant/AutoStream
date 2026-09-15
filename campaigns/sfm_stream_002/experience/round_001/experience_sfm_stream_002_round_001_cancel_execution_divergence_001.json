@@ -1,0 +1,40 @@
+{
+  "action": {
+    "changed_dimension": "withdrawal_execution_horizon_x_activity_regime",
+    "falsifiable_test": {
+      "dataset_scope": "next_round_training_and_observation_only",
+      "expected_observation": "At least one variant adds supported cells without duplicating its parent panel.",
+      "reject_condition": "All variants are not evaluable, split-unstable, direction-incoherent, or exactly redundant."
+    },
+    "proposal": "Explore 16 controlled structures over withdrawal_execution_horizon_x_activity_regime without a blind window grid.",
+    "target_family_id": "market_microstructure",
+    "type": "generate_variants"
+  },
+  "campaign_id": "sfm_stream_002",
+  "experience_id": "experience_sfm_stream_002_round_001_cancel_execution_divergence_001",
+  "fact": {
+    "evidence": [
+      {
+        "metric_path": "selection.cells.status.supported_count",
+        "observed_value": 27,
+        "portrait_id": "cancel_execution_divergence_joint_norm_v1__market_microstructure_l4_v1"
+      }
+    ],
+    "statement": "盘口流动性消失来自撤单还是实际成交消耗，两者方向背离时是否具有不同后续含义？: supported=27, promising=45, unsupported=12, not_evaluable=12 at factor×event×universe×label granularity; no holdout result was used."
+  },
+  "family_id": "market_microstructure",
+  "generated_batch_ids": [
+    "market_microstructure_round_002_wide_search"
+  ],
+  "interpretation": {
+    "falsifiable_by": "Reject the next mechanism branch if no variant clears the same frozen split, coverage, magnitude and directional-coherence gates.",
+    "statement": "The mechanism has repeatable pre-holdout cells and should be expanded structurally."
+  },
+  "kind": "experience_record",
+  "schema_version": 1,
+  "source_portrait_ids": [
+    "cancel_execution_divergence_separate_norm_v1__market_microstructure_l4_v1",
+    "cancel_execution_divergence_joint_norm_v1__market_microstructure_l4_v1"
+  ],
+  "status": "proposed"
+}

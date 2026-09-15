@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from matplotlib import dates as mdates
 import pandas as pd
 
 ROW_ORDER = (("000906", "raw926"), ("000906", "ease926"),
@@ -40,9 +41,9 @@ def plot_effect_grid(data, factor="factor", best_events=None, output_path=None,
         for i, event in enumerate(event_values):
             part = block[block["event"].astype(str) == event].sort_values("date")
             if not part.empty and "ic_cumulative" in part:
-                ax_ic.plot(part["date"].astype(str), part["ic_cumulative"], color=event_colors[i], label=event)
+                ax_ic.plot(pd.to_datetime(part["date"].astype(str)), part["ic_cumulative"], color=event_colors[i], label=event)
             if not part.empty and "long_cumulative" in part:
-                ax_long.plot(part["date"].astype(str), part["long_cumulative"], color=event_colors[i], label=event)
+                ax_long.plot(pd.to_datetime(part["date"].astype(str)), part["long_cumulative"], color=event_colors[i], label=event)
         if row == 0:
             ax_ic.set_title("IC cumulative (8 events)")
             ax_long.set_title("Long cumulative (8 events)")
@@ -51,14 +52,18 @@ def plot_effect_grid(data, factor="factor", best_events=None, output_path=None,
             for i in range(1, 11):
                 name = "q%d_cumulative" % i
                 if name in chosen:
-                    ax_q.plot(chosen["date"].astype(str), chosen[name], color=q_colors[i - 1], label="Q%d" % i)
-        ax_q.set_title("Q1–Q10 · best event {}".format(best if best is not None else "(frozen)"))
+                    ax_q.plot(pd.to_datetime(chosen["date"].astype(str)), chosen[name], color=q_colors[i - 1], label="Q%d" % i)
+        ax_q.set_title("Q1–Q10 · best event {}".format(
+            best if best is not None else "none supported"))
         for ax in (ax_ic, ax_long, ax_q):
             # Date strings keep natural ordering while allowing fixed audit marks.
-            ax.axvline("20241231", color="black", linewidth=.7, linestyle="--")
-            ax.axvline("20250101", color="black", linewidth=.9, linestyle=":")
+            ax.axvline(pd.Timestamp("2024-12-31"), color="black", linewidth=.7, linestyle="--")
+            ax.axvline(pd.Timestamp("2025-01-01"), color="black", linewidth=.9, linestyle=":")
             ax.text(.99, .03, "2025 holdout", transform=ax.transAxes, ha="right", va="bottom", fontsize=7)
-            ax.tick_params(axis="x", labelrotation=45)
+            locator = mdates.AutoDateLocator(minticks=4, maxticks=8)
+            ax.xaxis.set_major_locator(locator)
+            ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+            ax.tick_params(axis="x", labelrotation=0, labelsize=7)
         if row == 0:
             ax_ic.legend(title="event", fontsize=7)
             ax_long.legend(title="event", fontsize=7)

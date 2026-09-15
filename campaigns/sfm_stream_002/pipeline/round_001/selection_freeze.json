@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "round_pipeline_stage_receipt",
+  "round_id": "sfm_stream_002_round_001",
+  "stage": "selection_freeze",
+  "status": "complete",
+  "result": {
+    "outcome": "complete",
+    "artifact": "campaigns/sfm_stream_002/manifests/market-microstructure-round-001-selection.json",
+    "selected_factor_count": 8,
+    "supported_cell_count": 192,
+    "holdout_read": false,
+    "manual_review_required": false,
+    "promotion_allowed": false
+  },
+  "promotion_allowed": false
+}

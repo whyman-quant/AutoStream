@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "round_pipeline_stage_receipt",
+  "round_id": "sfm_stream_002_round_001",
+  "stage": "l4_evaluation",
+  "status": "complete",
+  "result": {
+    "outcome": "complete",
+    "artifact": "campaigns/sfm_stream_002/manifests/market-microstructure-l4-postprocess-evaluation.json",
+    "factor_count": 12,
+    "result_group_count": 12,
+    "status_columns_emitted": false,
+    "holdout_read": false,
+    "promotion_allowed": false
+  },
+  "promotion_allowed": false
+}

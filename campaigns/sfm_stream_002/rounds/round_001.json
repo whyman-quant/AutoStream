@@ -3,7 +3,7 @@
   "kind": "agent_research_round",
   "round_id": "sfm_stream_002_round_001",
   "campaign_id": "sfm_stream_002",
-  "status": "planned",
+  "status": "complete",
   "events": [926, 1000, 1030, 1100, 1130, 1330, 1400, 1430],
   "research_domains": ["market_microstructure"],
   "operator_catalog_path": "campaigns/sfm_stream_002/operators/market_microstructure_v1.json",

@@ -2,6 +2,8 @@
   "schema_version": 1,
   "kind": "round_pipeline",
   "round_id": "sfm_stream_002_round_001",
+  "status": "complete",
+  "stage_receipt_root": "campaigns/sfm_stream_002/pipeline/round_001",
   "stages": [
     "logic_proposal",
     "factor_design",
